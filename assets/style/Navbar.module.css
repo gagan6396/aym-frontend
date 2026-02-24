@@ -1,0 +1,497 @@
+/* ================================================================
+   Navbar.module.css — AYM Yoga School
+   Full responsive navbar with dropdown & animated hamburger drawer
+   ================================================================ */
+
+/* ── Header shell ── */
+.header {
+  width: 100%;
+  background-image: url('../icons/Artboard.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* ── Main nav row ── */
+.navbar {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  min-height: 68px;
+  gap: 0.5rem;
+}
+
+/* ── Logo ── */
+.logoWrapper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  width: auto;
+  height: 56px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.45));
+  transition: transform 0.2s ease;
+}
+
+.logo:hover {
+  transform: scale(1.04);
+}
+
+/* ================================================================
+   DESKTOP NAV LIST
+   ================================================================ */
+.navList {
+  display: flex;
+  align-items: stretch;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+/* Vertical divider between items */
+.navItem + .navItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 22%;
+  height: 56%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 0.85rem;
+  color: #fff;
+  text-decoration: none;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  transition: background 0.2s ease;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.navLink:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+/* Active state when dropdown is open */
+.hasDropdown:hover > .navLink,
+.hasDropdown:focus-within > .navLink {
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.arrow {
+  font-size: 0.65rem;
+  opacity: 0.85;
+  transition: transform 0.25s ease;
+  margin-top: 1px;
+}
+
+.hasDropdown:hover .arrow,
+.hasDropdown:focus-within .arrow {
+  transform: rotate(180deg);
+}
+
+/* ================================================================
+   DROPDOWN MENU
+   ================================================================ */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 230px;
+  background: #fff;
+  border-top: 3px solid #e07b00;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0,0,0,0.1);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  /* Hidden by default */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
+  z-index: 999;
+  overflow: hidden;
+}
+
+/* Show on hover or focus-within */
+.hasDropdown:hover .dropdown,
+.hasDropdown:focus-within .dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Dropdown header label */
+.dropdownHeader {
+  background: linear-gradient(135deg, #e07b00 0%, #f59500 100%);
+  color: #fff;
+  font-family: 'Georgia', serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.55rem 1rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dropdownItem {
+  border-bottom: 1px solid #f0ede8;
+}
+
+.dropdownItem:last-child {
+  border-bottom: none;
+}
+
+.dropdownLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.6rem 1rem;
+  color: #333;
+  text-decoration: none;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 0.82rem;
+  transition: background 0.15s ease, color 0.15s ease, padding-left 0.15s ease;
+}
+
+.dropdownLink:hover {
+  background: #fff7ee;
+  color: #c46a00;
+  padding-left: 1.25rem;
+}
+
+.dropdownDot {
+  color: #e07b00;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   HAMBURGER BUTTON
+   ================================================================ */
+.hamburgerBtn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 9px 10px;
+  flex-shrink: 0;
+  align-self: center;
+  transition: background 0.2s ease;
+}
+
+.hamburgerBtn:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.bar {
+  width: 22px;
+  height: 2px;
+  background: #fff;
+  border-radius: 3px;
+  display: block;
+  transition: transform 0.3s ease, opacity 0.3s ease, width 0.3s ease;
+  transform-origin: center;
+}
+
+/* Animated X state */
+.hamburgerBtn.open .bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburgerBtn.open .bar:nth-child(2) {
+  opacity: 0;
+  width: 0;
+}
+.hamburgerBtn.open .bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ================================================================
+   MOBILE MENU OVERLAY
+   ================================================================ */
+.mobileOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 998;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.mobileOverlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Mobile Drawer ── */
+.mobileDrawer {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: min(320px, 85vw);
+  height: 100dvh;
+  background: #fff;
+  z-index: 999;
+  flex-direction: column;
+  overflow: hidden;
+  transition: right 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.2);
+}
+
+.mobileDrawer.open {
+  right: 0;
+}
+
+/* Drawer top bar */
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.1rem;
+  background: linear-gradient(135deg, #e07b00 0%, #f59500 100%);
+  flex-shrink: 0;
+}
+
+.drawerLogo {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.drawerClose {
+  background: rgba(255,255,255,0.2);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 1.1rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+  line-height: 1;
+}
+
+.drawerClose:hover {
+  background: rgba(255,255,255,0.35);
+}
+
+/* Scrollable nav list */
+.mobileNavScroll {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.mobileNavList {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0 2rem;
+}
+
+/* Category header (colored band) */
+.mobileCategoryHeader {
+  background: linear-gradient(90deg, #e07b00 0%, #f59500 100%);
+  color: #fff;
+  font-family: 'Georgia', serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.55rem 1.1rem;
+  margin-top: 0.25rem;
+}
+
+/* Accordion toggle row */
+.mobileAccordionBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.1rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #ece8e1;
+  cursor: pointer;
+  text-align: left;
+  gap: 8px;
+}
+
+.mobileAccordionLabel {
+  color: #222;
+  font-family: 'Georgia', serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.mobileAccordionArrow {
+  font-size: 0.65rem;
+  color: #e07b00;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+.mobileAccordionArrow.open {
+  transform: rotate(180deg);
+}
+
+/* Sub-links inside accordion */
+.mobileSubList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  background: #fdf9f4;
+}
+
+.mobileSubList.open {
+  max-height: 800px;
+}
+
+.mobileSubItem {
+  border-bottom: 1px solid #f0ebe1;
+}
+
+.mobileSubLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.6rem 1.4rem;
+  color: #555;
+  text-decoration: none;
+  font-family: 'Georgia', serif;
+  font-size: 0.82rem;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.mobileSubLink:hover {
+  color: #c46a00;
+  background: #fff3e0;
+}
+
+.mobileSubDot {
+  color: #e07b00;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* Plain link (no children) */
+.mobilePlainLink {
+  display: block;
+  padding: 0.75rem 1.1rem;
+  color: #222;
+  text-decoration: none;
+  font-family: 'Georgia', serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-bottom: 1px solid #ece8e1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.mobilePlainLink:hover {
+  color: #c46a00;
+  background: #fff7ee;
+}
+
+/* ================================================================
+   BREAKPOINTS
+   ================================================================ */
+
+/* Wide desktop */
+@media (min-width: 1280px) {
+  .navLink {
+    padding: 0 1rem;
+    font-size: 0.84rem;
+  }
+}
+
+/* Tablet landscape */
+@media (max-width: 1100px) {
+  .navLink {
+    padding: 0 0.6rem;
+    font-size: 0.76rem;
+  }
+}
+
+/* Tablet portrait — switch to hamburger */
+@media (max-width: 900px) {
+  .navList {
+    display: none;
+  }
+
+  .hamburgerBtn {
+    display: flex;
+  }
+
+  .mobileOverlay {
+    display: block;
+  }
+
+  .mobileDrawer {
+    display: flex;
+  }
+
+  .navbar {
+    min-height: 62px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .logo {
+    height: 48px;
+  }
+
+  .navbar {
+    padding: 0 0.85rem;
+    min-height: 58px;
+  }
+}

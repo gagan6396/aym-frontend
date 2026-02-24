@@ -1,0 +1,219 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;600&display=swap');
+
+/* ===== SECTION ===== */
+.section {
+  position: relative;
+  background: #fdf6ec;
+  overflow: hidden;
+}
+
+.container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== WATERMARK ===== */
+.bgWatermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 25rem;
+  color: rgba(224, 123, 0, 0.04);
+  pointer-events: none;
+}
+
+/* ===== DECORATIVE CORNERS ===== */
+.corner {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(224, 123, 0, 0.3);
+}
+
+.cornerTL { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+.cornerTR { top: 20px; right: 20px; border-left: none; border-bottom: none; }
+.cornerBL { bottom: 20px; left: 20px; border-right: none; border-top: none; }
+.cornerBR { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+
+/* ===== HEADER ===== */
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-family: 'Cinzel', serif;
+  font-size: 2.2rem;
+  color: #e07b00;
+}
+
+.subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  color: #7a5c2e;
+  font-style: italic;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.divider span {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e07b00, transparent);
+}
+
+.om {
+  font-size: 1.5rem;
+  color: #e07b00;
+}
+
+/* ===== GRID ===== */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin-bottom: 4rem;
+}
+
+/* ===== CARDS ===== */
+.formCard,
+.infoCard {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  border-left: 4px solid #e07b00;
+  box-shadow: 0 10px 30px rgba(92, 45, 0, 0.08);
+}
+
+.cardTitle {
+  font-family: 'Cinzel', serif;
+  margin-bottom: 1.5rem;
+  color: #3d1d00;
+}
+
+/* ===== FORM ===== */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.2rem;
+}
+
+.formGroup label {
+  margin-bottom: 0.4rem;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.formGroup input,
+.formGroup textarea {
+  padding: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #eadcc8;
+  background: #fff8f0;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus {
+  border-color: #e07b00;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(224, 123, 0, 0.15);
+}
+
+/* ===== BUTTON ===== */
+.submitBtn {
+  margin-top: 0.5rem;
+  padding: 0.8rem;
+  background: linear-gradient(135deg, #e07b00, #f59500);
+  border: none;
+  color: white;
+  font-family: 'Cinzel', serif;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.submitBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(224, 123, 0, 0.4);
+}
+
+/* ===== SUCCESS MESSAGE ===== */
+.success {
+  margin-top: 1rem;
+  color: #2d6a4f;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* ===== INFO ITEMS ===== */
+.infoItem {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.infoItem h4 {
+  margin: 0;
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+}
+
+.infoItem p {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  color: #7a5c2e;
+}
+
+/* ===== MAP ===== */
+.mapSection {
+  text-align: center;
+}
+
+.mapSection h2 {
+  font-family: 'Cinzel', serif;
+  margin-bottom: 1rem;
+  color: #3d1d00;
+}
+
+.mapWrapper {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 3px solid #e07b00;
+  box-shadow: 0 8px 30px rgba(92, 45, 0, 0.1);
+}
+
+.mapWrapper iframe {
+  width: 100%;
+  height: 350px;
+  border: none;
+}
+
+/* ===== BORDERS ===== */
+.topBorder,
+.bottomBorder {
+  height: 6px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%, #e07b00 20%, #f5b800 50%,
+    #e07b00 80%, transparent 100%
+  );
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bgWatermark {
+    font-size: 12rem;
+  }
+}
