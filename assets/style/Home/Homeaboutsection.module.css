@@ -9,7 +9,7 @@
 /* ── Section shell ── */
 .section {
   position: relative;
-  background: #fdf6ec;
+ background-image: url("../../images/bannerbackground1.png");
   overflow: hidden;
 }
 

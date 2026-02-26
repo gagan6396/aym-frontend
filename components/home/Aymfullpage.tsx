@@ -1,5 +1,7 @@
 import React from 'react';
 import styles from '../../assets/style/Home/Aymfullpage.module.css';
+import yogaoutdoor from '../../assets/images/yoga-ttc-classes-outdoor.webp';
+import yogaBodyPlanes from '../../assets/images/Alignment-and-Adjustment.jpg';
 
 // ── Data ────────────────────────────────────────────────────────────
 const campusFacilities = [
@@ -106,23 +108,23 @@ export const AYMFullPage: React.FC = () => {
           <div className={styles.planesGrid}>
             <div className={styles.planesImageBlock}>
               <div className={styles.planesImagePlaceholder}>
+
+                {/* Body Planes Diagram — Local Image */}
                 <div className={styles.diagramBox}>
-                  <div className={styles.diagramLabel}>Sagittal plane</div>
-                  <div className={styles.diagramFigure}>🧘</div>
-                  <div className={styles.diagramLabel}>Coronal plane</div>
-                  <div className={styles.diagramLabel}>Transverse plane</div>
-                </div>
-                <div className={styles.alignCompare}>
-                  <div className={styles.compareItem}>
-                    <span className={styles.compareLabel}>Alignment fault</span>
-                    <div className={styles.poseIcon}>🏃</div>
-                  </div>
-                  <div className={styles.compareDivider} />
-                  <div className={styles.compareItem}>
-                    <span className={styles.compareLabel}>Improved alignment</span>
-                    <div className={styles.poseIcon}>🧘‍♂️</div>
+                  <img
+                    src={yogaBodyPlanes.src}
+                    alt="Yoga body planes diagram - Sagittal, Coronal and Transverse planes"
+                    className={styles.diagramImage}
+                  />
+                  <div className={styles.diagramLabelsRow}>
+                    <div className={styles.diagramLabel}>Sagittal plane</div>
+                    <div className={styles.diagramLabel}>Coronal plane</div>
+                    <div className={styles.diagramLabel}>Transverse plane</div>
                   </div>
                 </div>
+
+               
+
               </div>
             </div>
             <div className={styles.planesInfoBlock}>
@@ -146,16 +148,16 @@ export const AYMFullPage: React.FC = () => {
             or <strong className={styles.highlight}>Advanced Yoga Teacher Training with Alignment in Rishikesh.</strong>
           </p>
 
-          {/* Group yoga photo placeholder */}
+          {/* Group yoga photo — Local Image */}
           <div className={styles.groupPhotoBlock}>
             <div className={styles.groupPhotoBanner}>
+              <img
+                src={yogaoutdoor.src}
+                alt="Outdoor Yoga Practice by the Ganges, Rishikesh"
+                className={styles.groupPhotoImg}
+              />
               <div className={styles.groupPhotoOverlay}>
                 <span className={styles.groupPhotoText}>🌊 Outdoor Yoga Practice by the Ganges, Rishikesh</span>
-              </div>
-              <div className={styles.groupYogaVisual}>
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <span key={i} className={styles.yogiIcon}>🧘</span>
-                ))}
               </div>
             </div>
           </div>

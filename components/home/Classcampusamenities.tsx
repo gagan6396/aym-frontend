@@ -4,6 +4,13 @@ import React, { useEffect, useRef } from 'react';
 import styles from '../../assets/style/Home/Classcampusamenities.module.css';
 import rightsectionimage from '../../assets/images/aym-class-size.webp';
 
+// ── Local Campus Images — apni images yahan import karo ──
+import campus1 from '../../assets/images/aym-yoga-campus.webp';
+
+
+// ── Local Amenity Images ──
+import amenity1 from '../../assets/images/shared-room.webp';
+
 const amenities = [
   'Accommodation ( Private / Shared / Dormitory )',
   'Spacious yoga hall',
@@ -12,29 +19,19 @@ const amenities = [
   'Hot / Cold water 24x7',
 ];
 
+// ✅ Ab URLs nahi — local imported images use ho rahi hain
 const campusImages = [
-  'https://images.unsplash.com/photo-1599447292180-45fd84092ef4?w=500&q=80',  // yoga group outdoor
-  'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=500&q=80',  // meditation pose
-  'https://images.unsplash.com/photo-1588286840104-8957b019727f?w=500&q=80',  // yoga class
-  'https://images.unsplash.com/photo-1545389336-cf090694435e?w=500&q=80',     // yoga studio
-  'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=500&q=80',  // yoga practice
-  'https://images.unsplash.com/photo-1593811167562-9cef47bfc4d7?w=500&q=80',  // nature/meditation
+  campus1.src,
+  
 ];
 
 const amenityImages = [
-  'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=900&q=90',
-  'https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=600&q=85',
-  'https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?w=600&q=85',
+  amenity1.src,
+  
 ];
 
-const fallbackImages = [
-  'https://images.unsplash.com/photo-1545389336-cf090694435e?w=400&q=80',
-  'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=80',
-  'https://images.unsplash.com/photo-1593811167562-9cef47bfc4d7?w=400&q=80',
-  'https://images.unsplash.com/photo-1599447292180-45fd84092ef4?w=400&q=80',
-  'https://images.unsplash.com/photo-1588286840104-8957b019727f?w=400&q=80',
-  'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&q=80',
-];
+// ✅ fallbackImages ki zaroorat hi nahi — local images kabhi fail nahi hongi
+// onError handlers bhi hata diye hain
 
 export const ClassCampusAmenities: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -87,7 +84,6 @@ export const ClassCampusAmenities: React.FC = () => {
 
             <div className={styles.classImgWrap}>
               <div className={styles.classImgFrame}>
-                {/* ✅ FIXED: rightsectionimage.src — webp static import ke liye */}
                 <img
                   src={rightsectionimage.src}
                   alt="AYM Yoga Class Group"
@@ -128,27 +124,19 @@ export const ClassCampusAmenities: React.FC = () => {
               <div className={styles.titleBar} />
             </div>
 
-            {/* Campus mosaic */}
-            <div className={styles.campusGrid}>
-              <div className={styles.campusCenterCard}>
-                <p className={styles.celebrating}>CELEBRATING</p>
-                <p className={styles.theLife}>the life</p>
-                <p className={styles.withText}>WITH</p>
-                <p className={styles.schoolName}>AYM YOGA SCHOOL</p>
-              </div>
+            {/* Campus mosaic — local images, no onError needed */}
+           
+             
               {campusImages.map((src, i) => (
                 <div key={i} className={styles.campusThumb}>
                   <img
                     src={src}
                     alt={`Campus ${i + 1}`}
                     className={styles.campusThumbImg}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = fallbackImages[i];
-                    }}
                   />
                 </div>
               ))}
-            </div>
+          
 
             <p className={styles.blockPara}>
               Spread across an expansive{' '}
@@ -203,13 +191,13 @@ export const ClassCampusAmenities: React.FC = () => {
             </ul>
           </div>
 
-          {/* Right — image mosaic */}
+          {/* Right — image mosaic — local images, no onError needed */}
           <div
             className={`${styles.amenitiesRight} ${styles.reveal}`}
             style={{ '--d': '0.12s' } as React.CSSProperties}
           >
             <div className={styles.amenityMosaic}>
-              <div className={styles.mosaicMain}>
+             
                 <img
                   src={amenityImages[0]}
                   alt="Furnished Room"
@@ -218,18 +206,8 @@ export const ClassCampusAmenities: React.FC = () => {
                 <div className={styles.mosaicMainOverlay}>
                   <span className={styles.mosaicTag}>Furnished Rooms</span>
                 </div>
-              </div>
-              <div className={styles.mosaicSide}>
-                {amenityImages.slice(1).map((src, i) => (
-                  <div key={i} className={styles.mosaicSmall}>
-                    <img
-                      src={src}
-                      alt={`Amenity ${i + 1}`}
-                      className={styles.mosaicImg}
-                    />
-                  </div>
-                ))}
-              </div>
+             
+              
             </div>
           </div>
 

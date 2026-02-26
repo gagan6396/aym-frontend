@@ -12,7 +12,7 @@
   --saffron-light:  #f5b800;
   --parchment:      #fdf6ec;
   --parchment-mid:  #f5ead6;
-  --cream-white:    #fffdf8;
+  --cream-white:    #ffffff;
   --earth:          #3d1d00;
   --earth-mid:      #5c2d00;
   --earth-light:    #7a5c2e;
@@ -86,7 +86,7 @@
 
 .authenticSection {
   position: relative;
-  background: var(--parchment);
+  background-image: url('../../images/bannerbackground2.png');
   overflow: hidden;
 }
 
