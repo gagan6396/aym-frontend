@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from '../../assets/style/Footer.module.css';
-import logo from '../../assets/icons/aym-yoga-school-logo.png';
+import logo from '../../assets/images/aym-yoga-school-logo-white.png';
 
 const quickLinks = [
   { label: 'Online Yoga Course', href: '/online-yoga-course' },
@@ -128,14 +128,11 @@ export const Footer = () => {
             <Image
               src={logo}
               alt="AYM Yoga School"
-              width={90}
-              height={45}
+              width={250}
+              height={250}
               className={styles.footerLogo}
             />
-            <div className={styles.centerBrand}>
-              <span className={styles.brandName}>AYM Yoga School</span>
-              <span className={styles.brandTagline}>॥ योगः कर्मसु कौशलम् ॥</span>
-            </div>
+            
           </div>
 
           <nav className={styles.quickLinks} aria-label="Footer quick links">
