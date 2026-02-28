@@ -1,6 +1,7 @@
 /* ── Header shell ── */
 .header {
   width: 100%;
+  background-color: #3d2900; /* ← INSTANT fallback — same dark brown as brand, renders before image loads */
   background-image: url('../icons/Artboard.png');
   background-size: cover;
   background-position: center;
@@ -131,7 +132,6 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  /* Hidden by default */
   opacity: 0;
   visibility: hidden;
   transform: translateY(-8px);

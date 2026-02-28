@@ -21,8 +21,8 @@ export const navLinks: NavLink[] = [
     label: "Home",
     href: "/",
     children: [
-      { label: "Affiliation", href: "/affiliation" },
-      { label: "About AYM", href: "/about" },
+      { label: "Affiliation", href: "/Accreditationsection" },
+      { label: "About AYM", href: "Aboutuaym" },
       { label: "Yoga Rules", href: "/yoga-rules" },
       { label: "Our Teachers", href: "/our-teachers" },
     ],

@@ -6,7 +6,8 @@
 /* ── Footer shell ── */
 .footer {
   background: linear-gradient(160deg, #7a3f00 0%, #5c2d00 60%, #3d1d00 100%);
-  color: #f0d9b5;
+  background-image: url('../images/footerbackground.png');
+  color: #000000;
   font-family: 'Georgia', 'Times New Roman', serif;
   width: 100%;
 }
@@ -50,7 +51,7 @@
   font-family: 'Georgia', serif;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #000000;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: 1.1rem;
@@ -86,21 +87,23 @@
   font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: rgba(240, 217, 181, 0.55);
+  color: rgba(0, 0, 0, 0.55);
   margin-bottom: 1px;
+  font-weight: 600;
 }
 
 .contactValue {
   display: block;
   font-size: 0.82rem;
-  color: #f0d9b5;
+  color: #000000;
   text-decoration: none;
   line-height: 1.5;
   transition: color 0.18s ease;
+  font-weight: 600;
 }
 
 .contactValue:hover {
-  color: #f5b800;
+  color: #000000;
 }
 
 /* ── Center logo block ── */
@@ -112,8 +115,9 @@
 
 .footerLogo {
   object-fit: contain;
-  filter: brightness(0) invert(1) opacity(0.88);
+ 
   flex-shrink: 0;
+  
 }
 
 .centerBrand {
@@ -127,14 +131,14 @@
   font-family: 'Georgia', serif;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #fff;
+  color: #000000;
   letter-spacing: 0.04em;
   line-height: 1.2;
 }
 
 .brandTagline {
   font-size: 0.7rem;
-  color: rgba(240, 217, 181, 0.6);
+  color: rgba(0, 0, 0, 0.6);
   font-style: italic;
   letter-spacing: 0.04em;
 }
@@ -151,19 +155,20 @@
 
 .quickLink {
   font-size: 0.78rem;
-  color: #f0d9b5;
+  color: #000000;
   text-decoration: none;
   white-space: nowrap;
   transition: color 0.18s ease;
   padding: 0 0.1rem;
+  font-weight: 600;
 }
 
 .quickLink:hover {
-  color: #f5b800;
+  color: #000000;
 }
 
 .linkDivider {
-  color: rgba(240, 217, 181, 0.35);
+  color: rgba(0, 0, 0, 0.35);
   font-size: 0.75rem;
   padding: 0 0.35rem;
   user-select: none;
@@ -173,12 +178,13 @@
 .aboutText {
   font-size: 0.8rem;
   line-height: 1.75;
-  color: rgba(240, 217, 181, 0.82);
+  color: rgba(0, 0, 0, 0.82);
   margin-bottom: 0.85rem;
+  
 }
 
 .aboutText strong {
-  color: #f0d9b5;
+  color: #000000;
   font-weight: 600;
 }
 
@@ -192,7 +198,7 @@
 
 .badge {
   font-size: 0.72rem;
-  color: rgba(240, 217, 181, 0.7);
+  color: rgba(0, 0, 0, 0.7);
   letter-spacing: 0.04em;
 }
 
@@ -212,7 +218,7 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #f0d9b5;
+  color: #000000;
   text-decoration: none;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease,
     border-color 0.2s ease;
@@ -221,7 +227,7 @@
 .socialBtn:hover {
   background: #e07b00;
   border-color: #e07b00;
-  color: #fff;
+  color: #000000;
   transform: translateY(-3px);
 }
 
@@ -235,7 +241,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.65rem;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(0, 0, 0, 0.524);
 }
 
 .bottomLinks {
@@ -249,9 +255,10 @@
 
 .bottomLink {
   font-size: 0.75rem;
-  color: rgba(240, 217, 181, 0.65);
+  color: rgb(255, 255, 255);
   text-decoration: none;
   white-space: nowrap;
+  font-weight: 700;
   padding: 0 0.1rem;
   transition: color 0.18s ease;
 }
@@ -261,7 +268,7 @@
 }
 
 .bottomDivider {
-  color: rgba(240, 217, 181, 0.25);
+  color: rgba(255, 255, 255, 0.84);
   font-size: 0.7rem;
   padding: 0 0.4rem;
   user-select: none;
@@ -269,9 +276,10 @@
 
 .copyright {
   font-size: 0.75rem;
-  color: rgba(240, 217, 181, 0.45);
+  color: rgb(245, 245, 245);
   letter-spacing: 0.06em;
   text-align: center;
+  font-weight: 600;
 }
 
 /* ================================================================

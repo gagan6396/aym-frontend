@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import styles from "../../assets/style/Footer.module.css";
-import logo from "../../assets/images/aym-yoga-school-logo-white.png";
+import logo from "../../assets/icons/aym-yoga-school-logo.png";
 
 const quickLinks = [
   { label: "Online Yoga Course", href: "/online-yoga-course" },
