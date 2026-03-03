@@ -149,7 +149,7 @@
 .coursesSection {
   position: relative;
   background: var(--parchment);
-  background-image: url("../../images/banner1.png");
+  background-image: url("../../images/background6.png");
   overflow: hidden;
 }
 
@@ -543,7 +543,7 @@
 .teachersSection {
   position: relative;
   background: var(--parchment);
-  background-image: url("../../images/1905x1715banner2.png");
+  background-image: url("../../images/banner8.png");
   overflow: hidden;
 }
 
@@ -888,6 +888,16 @@
     max-width: 100px;
   }
 }
+
+@media (max-width: 767px) {
+  .teachersSection {
+    background-image: url('../../images/responsivebackground/Phonebanner1.png') !important;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+}
+
 
 /* ════════════════════════════════════════════════
    RESPONSIVE — Mobile (≤600px)
