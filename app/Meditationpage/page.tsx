@@ -1,6 +1,6 @@
 // MeditationPage.tsx
 import React from "react";
-import styles from "./MeditationPage.module.css";
+import styles from "@/assets/style/Meditationpage/Meditationpage.module.css";
 
 /* ─── Types ─── */
 interface PricingRow {
