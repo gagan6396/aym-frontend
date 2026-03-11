@@ -1,0 +1,836 @@
+/* ══════════════════════════════════════════
+   AYM YOGA HOME — VINTAGE MANDALA THEME
+   CSS Module
+══════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+
+/* ── Variables ── */
+.page {
+  --orange: #d95e00;
+  --orange-dark: #a84400;
+  --orange-light: #f07820;
+  --orange-pale: #fff3eb;
+  --cream: #fdf8f2;
+  --parchment: #f5ede0;
+  --brown: #5c2d0a;
+  --text: #2a1200;
+  --text-muted: #7a5a3a;
+  --border: rgba(196, 90, 0, 0.18);
+  --shadow: 0 8px 40px rgba(196, 90, 0, 0.12);
+  --shadow-hover: 0 16px 60px rgba(196, 90, 0, 0.2);
+
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  background: var(--cream);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ══════════════════════════════════════════
+   SECTION LAYOUT
+══════════════════════════════════════════ */
+
+.section {
+  position: relative;
+  padding: 5rem 2rem;
+  overflow: hidden;
+}
+
+.section + .section {
+  border-top: 1px solid var(--border);
+}
+
+/* ── Background Mandalas ── */
+.bgMandalaLeft,
+.bgMandalaRight,
+.bgMandalaCenter {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  animation: mandalaRotate 60s linear infinite;
+}
+
+.bgMandalaLeft {
+  width: 480px;
+  height: 480px;
+  left: -180px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.bgMandalaRight {
+  width: 480px;
+  height: 480px;
+  right: -180px;
+  top: 50%;
+  transform: translateY(-50%);
+  animation-direction: reverse;
+}
+
+.bgMandalaCenter {
+  width: 600px;
+  height: 600px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.4;
+}
+
+@keyframes mandalaRotate {
+  from { transform: translateY(-50%) rotate(0deg); }
+  to   { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* ══════════════════════════════════════════
+   SECTION HEADER
+══════════════════════════════════════════ */
+
+.sectionHeader {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+
+.sectionTitle {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 700;
+  color: var(--text);
+  margin: 0.4rem 0 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.accent {
+  color: var(--orange);
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-underline-offset: 6px;
+}
+
+.titleUnderline {
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--orange), transparent);
+  margin: 0 auto;
+}
+
+.omSymbol {
+  font-size: 1.8rem;
+  color: var(--orange);
+  opacity: 0.7;
+  margin-bottom: 0.2rem;
+  display: block;
+  animation: omPulse 4s ease-in-out infinite;
+}
+
+@keyframes omPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 0.9; transform: scale(1.08); }
+}
+
+/* ══════════════════════════════════════════
+   DIVIDER
+══════════════════════════════════════════ */
+
+.divider {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin: 3rem auto 0;
+  max-width: 600px;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--orange-dark), transparent);
+  opacity: 0.45;
+}
+
+.dividerChakra {
+  width: 36px;
+  height: 36px;
+  animation: mandalaRotate 20s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════
+   COURSES SECTION
+══════════════════════════════════════════ */
+
+.coursesGrid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.courseCard {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem 1.5rem 1.8rem;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+.courseCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, var(--orange-pale) 0%, #fff 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: 12px;
+}
+
+.courseCard:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+
+.courseCard:hover::before {
+  opacity: 1;
+}
+
+.cardChakraBg {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  right: -50px;
+  bottom: -50px;
+  opacity: 0.05;
+  pointer-events: none;
+  animation: mandalaRotate 40s linear infinite;
+}
+
+.badgeWrap,
+.noBadgeSpacer {
+  position: relative;
+  z-index: 1;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1.2rem;
+}
+
+.noBadgeSpacer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.noBadgeChakra {
+  width: 80px;
+  height: 80px;
+  animation: mandalaRotate 25s linear infinite;
+}
+
+.rysBadge {
+  width: 100px;
+  height: 100px;
+}
+
+.courseTitle {
+  position: relative;
+  z-index: 1;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--orange);
+  margin: 0 0 0.6rem;
+}
+
+.courseDesc {
+  position: relative;
+  z-index: 1;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 1.4rem;
+}
+
+/* ══════════════════════════════════════════
+   BUTTON
+══════════════════════════════════════════ */
+
+.btn {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  background: var(--orange);
+  color: #fff;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 0.6rem 1.6rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 16px rgba(217, 94, 0, 0.3);
+}
+
+.btn:hover {
+  background: var(--orange-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(217, 94, 0, 0.4);
+}
+
+.btnFull {
+  width: 100%;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════
+   ABOUT SECTION
+══════════════════════════════════════════ */
+
+.aboutGrid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.aboutImageWrap {
+  position: relative;
+}
+
+.aboutImageFrame {
+  border: 3px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(196, 90, 0, 0.18);
+}
+
+.aboutRealImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s ease;
+}
+
+.aboutImageFrame:hover .aboutRealImg {
+  transform: scale(1.04);
+}
+
+.aboutImgOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 40%,
+    rgba(90, 30, 0, 0.45) 100%
+  );
+  pointer-events: none;
+  border-radius: 14px;
+}
+
+.aboutMandalaCorner {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  bottom: -40px;
+  right: -40px;
+  animation: mandalaRotate 50s linear infinite;
+  z-index: 2;
+}
+
+.aboutContent {
+  position: relative;
+}
+
+.aboutChakraDecor {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  top: -20px;
+  right: -10px;
+  animation: mandalaRotate 35s linear infinite reverse;
+  opacity: 0.25;
+}
+
+.aboutSubTitle {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+  font-weight: 700;
+  color: var(--orange);
+  margin-bottom: 1.2rem;
+  line-height: 1.3;
+}
+
+.bodyText {
+  font-size: 1.05rem;
+  line-height: 1.85;
+  color: var(--text-muted);
+  margin-bottom: 1.2rem;
+}
+
+/* ══════════════════════════════════════════
+   COURSE FEE SECTION
+══════════════════════════════════════════ */
+
+.feeSection {
+  background: linear-gradient(180deg, var(--cream) 0%, var(--parchment) 50%, var(--cream) 100%);
+}
+
+.feeGrid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.feeCard {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.feeCard:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-hover);
+}
+
+.feeCardCenter {
+  border-color: var(--orange);
+  border-width: 2px;
+  transform: scale(1.03);
+  box-shadow: var(--shadow);
+}
+
+.feeCardCenter:hover {
+  transform: scale(1.03) translateY(-8px);
+}
+
+.feeChakraBg {
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  right: -70px;
+  bottom: -70px;
+  opacity: 0.05;
+  animation: mandalaRotate 45s linear infinite;
+  pointer-events: none;
+}
+
+.feeCardInner {
+  position: relative;
+  z-index: 1;
+  padding: 2rem 1.8rem;
+  text-align: center;
+}
+
+.feeHours {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--orange);
+  margin-bottom: 0.8rem;
+}
+
+.feePrice {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.1rem;
+  margin-bottom: 1.5rem;
+  color: var(--orange);
+}
+
+.feeDollar {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: 'Playfair Display', serif;
+}
+
+.feePriceNum {
+  font-size: 3.2rem;
+  font-weight: 900;
+  font-family: 'Playfair Display', serif;
+  line-height: 1;
+}
+
+.feeMo {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.feeList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.8rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 0;
+}
+
+.feeItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  border-bottom: 1px dashed rgba(196, 90, 0, 0.1);
+}
+
+.feeItem:last-child {
+  border-bottom: none;
+}
+
+.feeDot {
+  color: var(--orange);
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════
+   CONTACT SECTION
+══════════════════════════════════════════ */
+
+.contactWrap {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 4rem;
+  align-items: center;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.contactDecorLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.contactImgWrap {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(196, 90, 0, 0.18);
+  border: 3px solid var(--border);
+}
+
+.contactRealImg {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transition: transform 0.6s ease;
+}
+
+.contactImgWrap:hover .contactRealImg {
+  transform: scale(1.04);
+}
+
+.contactImgOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 30%,
+    rgba(90, 30, 0, 0.5) 100%
+  );
+  pointer-events: none;
+}
+
+.contactImgMandala {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  bottom: -20px;
+  right: -20px;
+  animation: mandalaRotate 40s linear infinite;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.contactQuote {
+  text-align: center;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--orange-pale);
+}
+
+.contactQuote p {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--brown);
+  line-height: 1.7;
+  margin: 0 0 0.6rem;
+}
+
+.contactQuote span {
+  font-size: 0.85rem;
+  color: var(--orange);
+  letter-spacing: 0.05em;
+}
+
+.contactCard {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.contactChakraTop {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  top: -30px;
+  right: -30px;
+  opacity: 0.08;
+  animation: mandalaRotate 30s linear infinite;
+}
+
+.contactCardTitle {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--orange);
+  text-align: center;
+  margin-bottom: 1.8rem;
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.formInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--cream);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.formInput::placeholder {
+  color: #bda080;
+}
+
+.formInput:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(217, 94, 0, 0.08);
+  background: #fff;
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* ══════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════ */
+
+.footer {
+  position: relative;
+  background: linear-gradient(180deg, var(--parchment), var(--orange-pale));
+  border-top: 1px solid var(--border);
+  padding: 3rem 2rem 2rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+.footerMandala {
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  animation: mandalaRotate 70s linear infinite;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.footerSocials {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.socialIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--orange);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.socialIcon:hover {
+  background: var(--orange-dark);
+  transform: translateY(-3px);
+}
+
+.footerText {
+  position: relative;
+  z-index: 1;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.footerBrand {
+  display: inline-block;
+  background: var(--brown);
+  color: #fff;
+  padding: 0.1rem 0.6rem;
+  border-radius: 3px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .coursesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .feeGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .feeCard:last-child {
+    grid-column: 1 / -1;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .feeCardCenter {
+    transform: scale(1);
+  }
+
+  .aboutGrid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .aboutImageFrame {
+    aspect-ratio: 16 / 9;
+  }
+
+  .contactWrap {
+    grid-template-columns: 1fr;
+  }
+
+  .contactDecorLeft {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .contactMandala {
+    width: 160px;
+    height: 160px;
+  }
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding: 3.5rem 1.2rem;
+  }
+
+  .coursesGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .feeGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .feeCard:last-child {
+    grid-column: auto;
+    max-width: 100%;
+  }
+
+  .bgMandalaLeft,
+  .bgMandalaRight {
+    width: 280px;
+    height: 280px;
+    left: -140px;
+  }
+
+  .bgMandalaRight {
+    left: auto;
+    right: -140px;
+  }
+
+  .contactDecorLeft {
+    display: none;
+  }
+
+  .contactWrap {
+    grid-template-columns: 1fr;
+  }
+
+  .contactCard {
+    padding: 2rem 1.2rem;
+  }
+
+  .feePriceNum {
+    font-size: 2.4rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .coursesGrid {
+    grid-template-columns: 1fr;
+  }
+}
