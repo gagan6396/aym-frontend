@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
+import Link from "next/link";
 import styles from "@/assets/style/world-wide/Worldwidepage.module.css";
 
 /* ─── All worldwide locations ─── */
@@ -222,6 +223,7 @@ export default function WorldwidePage() {
                     yourself with the love you deserve.
                   </p>
                   <div className={styles.heroBtns}>
+                    {/* Same-page anchor — plain <a> is correct here */}
                     <a href="#locations" className={styles.btnPrimary}>
                       Explore Locations
                     </a>
@@ -469,7 +471,8 @@ export default function WorldwidePage() {
                       </span>
                     </div>
                     <h3 className={styles.locationName}>{loc.name}</h3>
-                    <a
+                    {/* ✅ Next.js Link — no page reload */}
+                    <Link
                       href={loc.href}
                       className={styles.readMoreBtn}
                       aria-label={`Read more about ${loc.name}`}
@@ -487,7 +490,7 @@ export default function WorldwidePage() {
                         </svg>
                       </span>
                       <span className={styles.readMoreText}>Read more</span>
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -510,12 +513,12 @@ export default function WorldwidePage() {
               Join thousands of students who have transformed their lives at AYM
               Yoga School — teaching yoga worldwide since 2001
             </p>
-            <div
-              className={`d-flex flex-wrap justify-content-center gap-3 mt-3`}
-            >
-              <a href="/apply" className={styles.btnPrimary}>
+            <div className="d-flex flex-wrap justify-content-center gap-3 mt-3">
+              {/* ✅ Next.js Link for internal routes */}
+              <Link href="/apply" className={styles.btnPrimary}>
                 Apply Now
-              </a>
+              </Link>
+              {/* ✅ mailto — plain <a> is correct here */}
               <a
                 href="mailto:aymyogaschool@gmail.com"
                 className={styles.btnGhost}
