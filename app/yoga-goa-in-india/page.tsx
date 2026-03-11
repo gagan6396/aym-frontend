@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useRef, useState } from "react";
 import styles from "@/assets/style/yoga-goa-in-india/Goayogapage.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ─── Images (Unsplash / Google) ─── */
 const IMG = {
@@ -600,6 +601,9 @@ export default function GoaYogaPage() {
           </div>
         </div>
       </section>
+
+      <HowToReach/>
+
 
       {/* ════════ MODAL ════════ */}
       {modal && (

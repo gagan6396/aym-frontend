@@ -2,11 +2,18 @@
 
 import React, { useState } from "react";
 import styles from "@/assets/style/500-hour-yoga-teacher-training-india/Yogattc500.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ─────────────────────────────────────────
    INLINE YOUTUBE PLAYER
 ───────────────────────────────────────── */
-const YouTubeEmbed = ({ videoId, title }: { videoId: string; title: string }) => {
+const YouTubeEmbed = ({
+  videoId,
+  title,
+}: {
+  videoId: string;
+  title: string;
+}) => {
   const [playing, setPlaying] = useState(false);
   return (
     <div className={styles.videoWrapper}>
@@ -32,7 +39,13 @@ const YouTubeEmbed = ({ videoId, title }: { videoId: string; title: string }) =>
           />
           <span className={styles.playBtn}>
             <svg viewBox="0 0 68 48" width="58" height="42">
-              <rect width="68" height="48" rx="10" fill="#e07b00" opacity="0.93" />
+              <rect
+                width="68"
+                height="48"
+                rx="10"
+                fill="#e07b00"
+                opacity="0.93"
+              />
               <polygon points="26,13 53,24 26,35" fill="#fff" />
             </svg>
           </span>
@@ -66,21 +79,40 @@ const Carousel = ({ images, alt }: { images: string[]; alt: string }) => {
 
   const prev = () => setIdx((i) => (i - 1 + len) % len);
   const next = () => setIdx((i) => (i + 1) % len);
-  const visible = Array.from({ length: visibleCount }, (_, o) => images[(idx + o) % len]);
+  const visible = Array.from(
+    { length: visibleCount },
+    (_, o) => images[(idx + o) % len],
+  );
 
   return (
     <div className={styles.carousel}>
-      <button className={`${styles.carBtn} ${styles.carBtnL}`} onClick={prev} aria-label="Previous">
+      <button
+        className={`${styles.carBtn} ${styles.carBtnL}`}
+        onClick={prev}
+        aria-label="Previous"
+      >
         ‹
       </button>
-      <div className={styles.carTrack} style={{ gridTemplateColumns: `repeat(${visibleCount}, 1fr)` }}>
+      <div
+        className={styles.carTrack}
+        style={{ gridTemplateColumns: `repeat(${visibleCount}, 1fr)` }}
+      >
         {visible.map((src, i) => (
           <div key={i} className={styles.carSlide}>
-            <img src={src} alt={`${alt} ${i + 1}`} className={styles.carImg} loading="lazy" />
+            <img
+              src={src}
+              alt={`${alt} ${i + 1}`}
+              className={styles.carImg}
+              loading="lazy"
+            />
           </div>
         ))}
       </div>
-      <button className={`${styles.carBtn} ${styles.carBtnR}`} onClick={next} aria-label="Next">
+      <button
+        className={`${styles.carBtn} ${styles.carBtnR}`}
+        onClick={next}
+        aria-label="Next"
+      >
         ›
       </button>
     </div>
@@ -129,18 +161,66 @@ const foodImgs = [
    COURSE SCHEDULE TABLE DATA
 ───────────────────────────────────────── */
 const schedule = [
-  { course: "500 Hour Yoga Teacher Training in Rishikesh", date: "05th Jan – 28th Feb 2026", fee: "1649 $" },
-  { course: "500 Hour Yoga Teacher Training in Rishikesh", date: "03rd Feb – 28th Mar 2026", fee: "1649 $" },
-  { course: "500 Hour Yoga Teacher Training in Rishikesh", date: "03rd Mar – 28th Apr 2026", fee: "1649 $" },
-  { course: "500 Hour Yoga Teacher Training in India",     date: "03rd Apr – 28th May 2026", fee: "1649 $" },
-  { course: "500 Hour Yoga Teacher Training in India",     date: "03rd May – 28th Jun 2026", fee: "1649 $" },
-  { course: "500 Hour Yoga Teacher Training in India",     date: "03rd Jun – 28th Jul 2026",  fee: "1649 $" },
-  { course: "500 Hour Yoga TTC in Rishikesh",              date: "03rd Jul – 28th Aug 2026",  fee: "1649 $" },
-  { course: "500 Hour Yoga TTC in India",                  date: "03rd Aug – 28th Sep 2026",  fee: "1649 $" },
-  { course: "500 Hour Yoga Course in Rishikesh",           date: "03rd Sep – 28th Oct 2026",  fee: "1649 $" },
-  { course: "500 Hour Yoga Course in Rishikesh",           date: "03rd Oct – 28th Nov 2026",  fee: "1649 $" },
-  { course: "500 Hour Yoga TTC in Rishikesh",              date: "03rd Nov – 28th Dec 2026",  fee: "1649 $" },
-  { course: "500 Hour Yoga TTC School in India",           date: "03rd Dec – 28th Jan 2027",  fee: "1649 $" },
+  {
+    course: "500 Hour Yoga Teacher Training in Rishikesh",
+    date: "05th Jan – 28th Feb 2026",
+    fee: "1649 $",
+  },
+  {
+    course: "500 Hour Yoga Teacher Training in Rishikesh",
+    date: "03rd Feb – 28th Mar 2026",
+    fee: "1649 $",
+  },
+  {
+    course: "500 Hour Yoga Teacher Training in Rishikesh",
+    date: "03rd Mar – 28th Apr 2026",
+    fee: "1649 $",
+  },
+  {
+    course: "500 Hour Yoga Teacher Training in India",
+    date: "03rd Apr – 28th May 2026",
+    fee: "1649 $",
+  },
+  {
+    course: "500 Hour Yoga Teacher Training in India",
+    date: "03rd May – 28th Jun 2026",
+    fee: "1649 $",
+  },
+  {
+    course: "500 Hour Yoga Teacher Training in India",
+    date: "03rd Jun – 28th Jul 2026",
+    fee: "1649 $",
+  },
+  {
+    course: "500 Hour Yoga TTC in Rishikesh",
+    date: "03rd Jul – 28th Aug 2026",
+    fee: "1649 $",
+  },
+  {
+    course: "500 Hour Yoga TTC in India",
+    date: "03rd Aug – 28th Sep 2026",
+    fee: "1649 $",
+  },
+  {
+    course: "500 Hour Yoga Course in Rishikesh",
+    date: "03rd Sep – 28th Oct 2026",
+    fee: "1649 $",
+  },
+  {
+    course: "500 Hour Yoga Course in Rishikesh",
+    date: "03rd Oct – 28th Nov 2026",
+    fee: "1649 $",
+  },
+  {
+    course: "500 Hour Yoga TTC in Rishikesh",
+    date: "03rd Nov – 28th Dec 2026",
+    fee: "1649 $",
+  },
+  {
+    course: "500 Hour Yoga TTC School in India",
+    date: "03rd Dec – 28th Jan 2027",
+    fee: "1649 $",
+  },
 ];
 
 /* ─────────────────────────────────────────
@@ -184,9 +264,9 @@ export default function YogaTTC500() {
   return (
     <div className={styles.page}>
       {/* Decorative mandala BG elements */}
-      <div className={styles.mandalaTopLeft}     aria-hidden="true" />
+      <div className={styles.mandalaTopLeft} aria-hidden="true" />
       <div className={styles.mandalaBottomRight} aria-hidden="true" />
-      <div className={styles.chakraGlow}         aria-hidden="true" />
+      <div className={styles.chakraGlow} aria-hidden="true" />
 
       {/* ══════════════════════════════════════
           HERO + INTRO TEXT
@@ -203,8 +283,12 @@ export default function YogaTTC500() {
           <div className={styles.heroBannerOverlay}>
             <p className={styles.heroOverlaySmall}>TIME TO</p>
             <p className={styles.heroOverlayScript}>Yoga</p>
-            <a href="#dates" className={styles.heroBookBtn}>BOOK NOW</a>
-            <p className={styles.heroOverlayUrl}>WWW.INDIANYOGAASSOCIATION.COM</p>
+            <a href="#dates" className={styles.heroBookBtn}>
+              BOOK NOW
+            </a>
+            <p className={styles.heroOverlayUrl}>
+              WWW.INDIANYOGAASSOCIATION.COM
+            </p>
           </div>
         </div>
 
@@ -217,42 +301,53 @@ export default function YogaTTC500() {
 
           <div className={styles.bodyText}>
             <p>
-              Welcome to our transformative 500 hour yoga teacher training course in Rishikesh,
-              where ancient wisdom meets modern teaching methodologies. Join our esteemed 500 hour
-              yoga teacher training program, registered with Yoga Alliance USA and recognized
-              globally. This comprehensive course is designed to deepen your practice and enhance
-              your flexibility while refining your teaching skills. Graduates will gain the
-              confidence necessary to lead their classes.
+              Welcome to our transformative 500 hour yoga teacher training
+              course in Rishikesh, where ancient wisdom meets modern teaching
+              methodologies. Join our esteemed 500 hour yoga teacher training
+              program, registered with Yoga Alliance USA and recognized
+              globally. This comprehensive course is designed to deepen your
+              practice and enhance your flexibility while refining your teaching
+              skills. Graduates will gain the confidence necessary to lead their
+              classes.
             </p>
             <p>
-              Over eight weeks, you will cultivate your yoga knowledge at an advanced level and
-              develop your unique teaching style. Our program is offered in Rishikesh, India, every
-              month, providing an enriching environment for your yoga journey. Elevate your practice
+              Over eight weeks, you will cultivate your yoga knowledge at an
+              advanced level and develop your unique teaching style. Our program
+              is offered in Rishikesh, India, every month, providing an
+              enriching environment for your yoga journey. Elevate your practice
               and teaching abilities with us.
             </p>
             <p>
-              AYM, our 500-hour yoga training course, is a meticulously structured and rigorous
-              program that spans two months. This comprehensive course offers in-depth knowledge of
-              yoga asanas, ranging from fundamental to advanced levels. Participants will engage in
-              a diverse curriculum that includes classes on Meditation, Pranayama, and various
-              styles of Asana such as Hatha Yoga, Ashtanga Yoga, and Multi-style Yoga. Additionally,
-              the course covers Yoga Philosophy, Yoga Therapy, and Human Anatomy, ensuring a
-              well-rounded education. Upon successfully completing the 500 hour Teacher Training
-              Course in Rishikesh, students will receive a certificate accredited by{" "}
-              <a href="#" className={styles.inlineLink}>Yoga Alliance, USA</a>. Transform your
-              practice and teaching capabilities with this transformative journey.
+              AYM, our 500-hour yoga training course, is a meticulously
+              structured and rigorous program that spans two months. This
+              comprehensive course offers in-depth knowledge of yoga asanas,
+              ranging from fundamental to advanced levels. Participants will
+              engage in a diverse curriculum that includes classes on
+              Meditation, Pranayama, and various styles of Asana such as Hatha
+              Yoga, Ashtanga Yoga, and Multi-style Yoga. Additionally, the
+              course covers Yoga Philosophy, Yoga Therapy, and Human Anatomy,
+              ensuring a well-rounded education. Upon successfully completing
+              the 500 hour Teacher Training Course in Rishikesh, students will
+              receive a certificate accredited by{" "}
+              <a href="#" className={styles.inlineLink}>
+                Yoga Alliance, USA
+              </a>
+              . Transform your practice and teaching capabilities with this
+              transformative journey.
             </p>
             <p>
-              If you are seeking an advanced 500 hour Yoga Teacher Training Course (TTC) in
-              Rishikesh that offers comprehensive knowledge across a variety of yoga styles, look
-              no further. Our 500 hour course is ideal for individuals who wish to complete both
-              beginner and advanced-level yoga teacher training simultaneously.
+              If you are seeking an advanced 500 hour Yoga Teacher Training
+              Course (TTC) in Rishikesh that offers comprehensive knowledge
+              across a variety of yoga styles, look no further. Our 500 hour
+              course is ideal for individuals who wish to complete both beginner
+              and advanced-level yoga teacher training simultaneously.
             </p>
             <p>
-              At AYM Yoga School, recognized as one of the best 500 hour yoga teacher training
-              institutions in Rishikesh, we are dedicated to enhancing your teaching skills and
-              effectiveness. Join us for a transformative experience that will deepen your practice
-              and elevate your teaching capabilities.
+              At AYM Yoga School, recognized as one of the best 500 hour yoga
+              teacher training institutions in Rishikesh, we are dedicated to
+              enhancing your teaching skills and effectiveness. Join us for a
+              transformative experience that will deepen your practice and
+              elevate your teaching capabilities.
             </p>
           </div>
         </div>
@@ -265,51 +360,59 @@ export default function YogaTTC500() {
         <div className="container px-3 px-md-4">
           <div className={styles.block}>
             <h2 className={styles.blockTitle}>
-              What makes AYM School's Yoga Teachers Training Courses stand apart from the rest?
+              What makes AYM School's Yoga Teachers Training Courses stand apart
+              from the rest?
             </h2>
             <div className={styles.blockUnderline} />
             <div className={styles.bodyText}>
               <p>
-                Our school was established in 2005, and since then, thousands of yogis worldwide
-                have marked their sacred yogic journeys through our Yoga TTC courses in India.
+                Our school was established in 2005, and since then, thousands of
+                yogis worldwide have marked their sacred yogic journeys through
+                our Yoga TTC courses in India.
               </p>
               <p>
-                This rich experience of over 17 years deep rooted in values, the guidance of our
-                eminent founder - Yogi Mahesh Chetan Ji, the dedication of our well-qualified yoga
-                teachers, and the fantastic feedback of our alums make us the best yoga teacher
+                This rich experience of over 17 years deep rooted in values, the
+                guidance of our eminent founder - Yogi Mahesh Chetan Ji, the
+                dedication of our well-qualified yoga teachers, and the
+                fantastic feedback of our alums make us the best yoga teacher
                 training school in Rishikesh, India.
               </p>
             </div>
 
             <h2 className={styles.blockTitle} style={{ marginTop: "2rem" }}>
-              What do I gain from the 500 Hour Yoga Teacher Training Course in Rishikesh?
+              What do I gain from the 500 Hour Yoga Teacher Training Course in
+              Rishikesh?
             </h2>
             <div className={styles.blockUnderline} />
             <div className={styles.bodyText}>
               <p>
-                This 500 hours of yoga TTC not only gives you the credibility to begin your classes
-                as an advanced-level yoga teacher, but it also equips you with in-depth knowledge
-                and confidence. You can be assured that you are receiving the highest quality of
-                yoga education and training.
+                This 500 hours of yoga TTC not only gives you the credibility to
+                begin your classes as an advanced-level yoga teacher, but it
+                also equips you with in-depth knowledge and confidence. You can
+                be assured that you are receiving the highest quality of yoga
+                education and training.
               </p>
               <p>
-                Not only that, but you'll also get the lifetime experience of immersing yourself in
-                the rich cultural and spiritual heritage of Rishikesh, India. (Rishikesh is the
-                land of yogis and spirituality.) Once you start your stay in the city, you can feel
-                the spiritual vibes of this place for yourself, a truly unique and enriching
-                experience.
+                Not only that, but you'll also get the lifetime experience of
+                immersing yourself in the rich cultural and spiritual heritage
+                of Rishikesh, India. (Rishikesh is the land of yogis and
+                spirituality.) Once you start your stay in the city, you can
+                feel the spiritual vibes of this place for yourself, a truly
+                unique and enriching experience.
               </p>
               <p>
-                Your asana practices are bound to improve each day of the training sessions. This
-                course deepens your understanding of the human body's anatomy, physiology, and
-                kinesiology. This further helps you develop an effective yoga therapy sequence
-                according to the requirements.
+                Your asana practices are bound to improve each day of the
+                training sessions. This course deepens your understanding of the
+                human body's anatomy, physiology, and kinesiology. This further
+                helps you develop an effective yoga therapy sequence according
+                to the requirements.
               </p>
               <p>
-                Practising asanas with a group of yoga aspirants like you from diverse backgrounds
-                is an experience that will broaden your vision. Our teachers always focus on
-                bringing the best out of you. The feedback from our ex-students across the globe
-                confirms the same.
+                Practising asanas with a group of yoga aspirants like you from
+                diverse backgrounds is an experience that will broaden your
+                vision. Our teachers always focus on bringing the best out of
+                you. The feedback from our ex-students across the globe confirms
+                the same.
               </p>
             </div>
 
@@ -350,12 +453,22 @@ export default function YogaTTC500() {
               </thead>
               <tbody>
                 {schedule.map((row, i) => (
-                  <tr key={i} className={i % 2 === 0 ? styles.trEven : styles.trOdd}>
+                  <tr
+                    key={i}
+                    className={i % 2 === 0 ? styles.trEven : styles.trOdd}
+                  >
                     <td className={styles.tdCourse}>{row.course}</td>
-                    <td className={styles.tdDate} style={{ whiteSpace: "nowrap" }}>{row.date}</td>
+                    <td
+                      className={styles.tdDate}
+                      style={{ whiteSpace: "nowrap" }}
+                    >
+                      {row.date}
+                    </td>
                     <td className={styles.tdFee}>{row.fee}</td>
                     <td className={styles.tdApply}>
-                      <a href="#" className={styles.applyLink}>Apply Now</a>
+                      <a href="#" className={styles.applyLink}>
+                        Apply Now
+                      </a>
                     </td>
                   </tr>
                 ))}
@@ -365,14 +478,16 @@ export default function YogaTTC500() {
 
           <div className={styles.tableNote}>
             <p>
-              <strong>Note:</strong> Course Fee: 1649 USD (Including: Dormitory Stay and Food) |
-              For the upgrade you accommodation send us{" "}
-              <a href="#" className={styles.inlineLink}>E-mail</a>. Available accommodation
-              Categories: Shared, Private and Luxury.
+              <strong>Note:</strong> Course Fee: 1649 USD (Including: Dormitory
+              Stay and Food) | For the upgrade you accommodation send us{" "}
+              <a href="#" className={styles.inlineLink}>
+                E-mail
+              </a>
+              . Available accommodation Categories: Shared, Private and Luxury.
             </p>
             <p>
-              Airport pick up from Delhi airport to Yoga school Rishikesh will cost 90 USD and
-              Round Trip 150 USD.
+              Airport pick up from Delhi airport to Yoga school Rishikesh will
+              cost 90 USD and Round Trip 150 USD.
             </p>
           </div>
 
@@ -393,7 +508,9 @@ export default function YogaTTC500() {
 
           {/* Indian Student Fee */}
           <div className={styles.indianFeeBlock}>
-            <h3 className={styles.indianFeeTitle}>500 Hour Course Fee for Indian Students</h3>
+            <h3 className={styles.indianFeeTitle}>
+              500 Hour Course Fee for Indian Students
+            </h3>
             <div className={styles.sectionUnderlineCentered} />
 
             {/* Bootstrap grid for fee chips */}
@@ -413,30 +530,37 @@ export default function YogaTTC500() {
 
           {/* Credibility */}
           <div className={styles.block} style={{ marginTop: "2.5rem" }}>
-            <h2 className={styles.blockTitleCentered}>What is The Credibility of This Course?</h2>
+            <h2 className={styles.blockTitleCentered}>
+              What is The Credibility of This Course?
+            </h2>
             <div className={styles.blockUnderlineCentered} />
             <div className={styles.bodyText}>
               <p>
-                Well, that's a good question. Once you have completed this course from our yoga
-                school, you are eligible to register with the Yoga Certification Board (YCB) of the
-                Ministry of Ayush - Government of India, as well as with international yoga
+                Well, that's a good question. Once you have completed this
+                course from our yoga school, you are eligible to register with
+                the Yoga Certification Board (YCB) of the Ministry of Ayush -
+                Government of India, as well as with international yoga
                 authorities like <strong>Yoga Alliance, USA</strong>.
               </p>
               <p>
-                Yes, our courses are recognized at national as well as international levels. Upon
-                completing this course, you get the conviction to design and conduct yoga classes as
-                a well-qualified teacher.
+                Yes, our courses are recognized at national as well as
+                international levels. Upon completing this course, you get the
+                conviction to design and conduct yoga classes as a
+                well-qualified teacher.
               </p>
             </div>
 
-            <h2 className={styles.blockTitleCentered} style={{ marginTop: "1.8rem" }}>
+            <h2
+              className={styles.blockTitleCentered}
+              style={{ marginTop: "1.8rem" }}
+            >
               How Long is The Duration of The Course?
             </h2>
             <div className={styles.blockUnderlineCentered} />
             <div className={styles.bodyText}>
               <p>
-                This is a two-month-long course (It takes a total of eight weeks of stay in
-                Rishikesh to complete this program.)
+                This is a two-month-long course (It takes a total of eight weeks
+                of stay in Rishikesh to complete this program.)
               </p>
               <p>
                 The 500 hours yoga TTC is designed as a blended program of our{" "}
@@ -465,13 +589,14 @@ export default function YogaTTC500() {
 
             <div className={styles.bodyText}>
               <p>
-                Since this is a merged program of 200 hour of yoga TTC and 300 hour of yoga TTC
-                courses, the curriculum is vast and advanced. The practice sessions are deep and
-                intensive, which is beneficial for you to perfect your existing yoga practice.
+                Since this is a merged program of 200 hour of yoga TTC and 300
+                hour of yoga TTC courses, the curriculum is vast and advanced.
+                The practice sessions are deep and intensive, which is
+                beneficial for you to perfect your existing yoga practice.
               </p>
               <p>
-                The entire course is covered in 14 modules. These sections give you a good
-                understanding of the following concepts:
+                The entire course is covered in 14 modules. These sections give
+                you a good understanding of the following concepts:
               </p>
             </div>
 
@@ -507,7 +632,8 @@ export default function YogaTTC500() {
                 },
               ].map((s, i) => (
                 <div key={i} className={styles.syllabusItem}>
-                  <span className={styles.syllabusLabel}>{s.label}</span> {s.text}
+                  <span className={styles.syllabusLabel}>{s.label}</span>{" "}
+                  {s.text}
                 </div>
               ))}
             </div>
@@ -517,26 +643,34 @@ export default function YogaTTC500() {
           <div className="row g-4 mt-2 align-items-start">
             <div className="col-12 col-md-6">
               <div className={styles.blockSmall}>
-                <h3 className={styles.blockSmallTitle}>What are the Eligibility Criteria?</h3>
+                <h3 className={styles.blockSmallTitle}>
+                  What are the Eligibility Criteria?
+                </h3>
                 <div className={styles.blockSmallLine} />
                 <p className={styles.bodyPara}>
-                  A dedicated mindset to learn yoga is required to join this course. If you are
-                  looking for a one-time course to learn the basics of yoga to the advanced level,
-                  then this course is for you.
+                  A dedicated mindset to learn yoga is required to join this
+                  course. If you are looking for a one-time course to learn the
+                  basics of yoga to the advanced level, then this course is for
+                  you.
                 </p>
               </div>
 
-              <div className={styles.blockSmall} style={{ marginTop: "1.5rem" }}>
+              <div
+                className={styles.blockSmall}
+                style={{ marginTop: "1.5rem" }}
+              >
                 <h3 className={styles.blockSmallTitle}>
                   Is there an Evaluation Process for the Course?
                 </h3>
                 <div className={styles.blockSmallLine} />
                 <p className={styles.bodyPara}>
-                  At the end of each module, a <strong>written exam</strong> needs to be given
-                  (mostly open book exams). This helps you to retain the knowledge.
+                  At the end of each module, a <strong>written exam</strong>{" "}
+                  needs to be given (mostly open book exams). This helps you to
+                  retain the knowledge.
                 </p>
                 <p className={styles.bodyPara}>
-                  There are practice exams that are conducted during the yoga alignment classes.
+                  There are practice exams that are conducted during the yoga
+                  alignment classes.
                 </p>
               </div>
             </div>
@@ -582,9 +716,10 @@ export default function YogaTTC500() {
                 ))}
               </ol>
               <p className={styles.inclNote}>
-                <strong>Note:</strong> All items in the above included list are part of the course
-                package. And incase you opt out any of these items, we will not be initiating a
-                refund for that particular item.
+                <strong>Note:</strong> All items in the above included list are
+                part of the course package. And incase you opt out any of these
+                items, we will not be initiating a refund for that particular
+                item.
               </p>
             </div>
 
@@ -610,37 +745,44 @@ export default function YogaTTC500() {
           {/* Fact from Fiction box */}
           <div className={styles.fictionBox}>
             <h3 className={styles.fictionTitle}>
-              500 Hour Yoga Teacher Training in Rishikesh, India: Separating Fact from Fiction
+              500 Hour Yoga Teacher Training in Rishikesh, India: Separating
+              Fact from Fiction
             </h3>
             <div className={styles.fictionUnderline} />
             <div className={styles.bodyText}>
               <p>
-                Where 500 hrs yoga training, Search Blooms and Blossoms - AYM School of Yoga,
-                Rishikesh - If you are seeking such a journey: One that unites deep spiritual
-                knowledge, the right ambience, and like-minded people with truly inspired mentors,
-                then Rishikesh, AYM Yoga School is the optimal doorway to give wings to your dream.
-                Nestled in the foothills of the Himalaya, cradled by the sacred Ganga, imbued with
-                the true spirit of Yoga, AYM (India Yoga Association) reverberates with the
-                vibration of ancient wisdom while nurturing modern seekers and aspirants.
+                Where 500 hrs yoga training, Search Blooms and Blossoms - AYM
+                School of Yoga, Rishikesh - If you are seeking such a journey:
+                One that unites deep spiritual knowledge, the right ambience,
+                and like-minded people with truly inspired mentors, then
+                Rishikesh, AYM Yoga School is the optimal doorway to give wings
+                to your dream. Nestled in the foothills of the Himalaya, cradled
+                by the sacred Ganga, imbued with the true spirit of Yoga, AYM
+                (India Yoga Association) reverberates with the vibration of
+                ancient wisdom while nurturing modern seekers and aspirants.
               </p>
               <p>
-                The courses offered blend ancient with contemporary - Hatha, Ashtanga, Vinyasa, Yin
-                and Yang Yoga, along with the deep study of anatomy, philosophy, pranayama, mudras,
-                meditation and mantra chanting. Learners immerse themselves in timeless texts like
-                the Patanjali Yoga Sutras, the Bhagavad Gita, and the Upanishads, and explore their
-                deep-seated queries not only in books but also in lived experiences.
+                The courses offered blend ancient with contemporary - Hatha,
+                Ashtanga, Vinyasa, Yin and Yang Yoga, along with the deep study
+                of anatomy, philosophy, pranayama, mudras, meditation and mantra
+                chanting. Learners immerse themselves in timeless texts like the
+                Patanjali Yoga Sutras, the Bhagavad Gita, and the Upanishads,
+                and explore their deep-seated queries not only in books but also
+                in lived experiences.
               </p>
               <p>
-                You are what you eat. Food, which is fuel for the body, is next-level - wholesome,
-                sumptuous, and Sattvic, even variegated as per your physical needs, saltless,
-                spiceless, vegan or vegetarian, partaken in a warm and welcoming environment.
+                You are what you eat. Food, which is fuel for the body, is
+                next-level - wholesome, sumptuous, and Sattvic, even variegated
+                as per your physical needs, saltless, spiceless, vegan or
+                vegetarian, partaken in a warm and welcoming environment.
               </p>
               <p>
-                The graduation ceremony, when the participants receive their certificates, seems
-                more like a consecration - a renewed vigour and promise to live and carry the light
-                of Yogic living into the world. AYM Yoga School, Rishikesh, is an ideal sojourn
-                where every journey begins and ends in sacred fire. " Asto maa sad gamaya, Tamso
-                maa jyotir gamaya".
+                The graduation ceremony, when the participants receive their
+                certificates, seems more like a consecration - a renewed vigour
+                and promise to live and carry the light of Yogic living into the
+                world. AYM Yoga School, Rishikesh, is an ideal sojourn where
+                every journey begins and ends in sacred fire. " Asto maa sad
+                gamaya, Tamso maa jyotir gamaya".
               </p>
             </div>
           </div>
@@ -698,21 +840,25 @@ export default function YogaTTC500() {
                 </h3>
                 <div className={styles.infoBlockLine} />
                 <p className={styles.bodyPara}>
-                  You can reserve your spot by paying an advance booking fee of 215 USD. However,
-                  for any reason, if you couldn't join on the given date, a refund cannot be issued,
-                  but you will be allowed to utilize the amount for booking another yoga TTC from
-                  AYM School within one year.
+                  You can reserve your spot by paying an advance booking fee of
+                  215 USD. However, for any reason, if you couldn't join on the
+                  given date, a refund cannot be issued, but you will be allowed
+                  to utilize the amount for booking another yoga TTC from AYM
+                  School within one year.
                 </p>
               </div>
             </div>
             <div className="col-12 col-md-6">
               <div className={styles.infoBlock}>
-                <h3 className={styles.infoBlockTitle}>How to Apply for the Course?</h3>
+                <h3 className={styles.infoBlockTitle}>
+                  How to Apply for the Course?
+                </h3>
                 <div className={styles.infoBlockLine} />
                 <p className={styles.bodyPara}>
-                  Fill out the online application form, and once you get our approval you could
-                  transfer the initial advance payment fee (either through Paypal or through bank
-                  transfer) to reserve your seat. You will get an email acknowledgment once we
+                  Fill out the online application form, and once you get our
+                  approval you could transfer the initial advance payment fee
+                  (either through Paypal or through bank transfer) to reserve
+                  your seat. You will get an email acknowledgment once we
                   receive the advance fee.
                 </p>
               </div>
@@ -723,6 +869,7 @@ export default function YogaTTC500() {
           <OmDiv />
         </div>
       </section>
+      <HowToReach />
     </div>
   );
 }

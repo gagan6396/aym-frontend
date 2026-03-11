@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import styles from "@/assets/style/our-teachers/Teachers.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 // ── Unsplash placeholder images ──────────────────────────────────
 const teacher1 =
@@ -401,6 +402,7 @@ const TeacherCard: React.FC<{ teacher: (typeof TEACHERS)[0]; idx: number }> = ({
 // ── Main Component ────────────────────────────────────────────────
 const Teachers: React.FC = () => {
   return (
+    <>
     <div className={styles.page}>
       {/* ── TOP BORDER ── */}
       <div className={styles.topBorder} />
@@ -527,6 +529,10 @@ const Teachers: React.FC = () => {
       {/* ── BOTTOM BORDER ── */}
       <div className={styles.topBorder} />
     </div>
+
+    <HowToReach/>
+
+    </>
   );
 };
 

@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useState } from "react";
 import styles from "@/assets/style/yoga-ayurveda-teacher-training-rishikesh/Ayurvedapage.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ─── Images ─── */
 const IMG = {
@@ -522,6 +523,7 @@ export default function AyurvedaPage() {
           <p className={styles.footerTag}>5000 Years of Ancient Wisdom · Yoga Alliance Certified · AYM Est. 2001</p>
         </div>
       </footer>
+      <HowToReach/>
     </div>
   );
 }

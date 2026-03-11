@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useRef, useState } from "react";
 import styles from "@/assets/style/yoga-volunteer/Postyttcpage.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ── Inline SVG Mandala ── */
 const MandalaIcon = ({ size = 80, opacity = 0.18 }: { size?: number; opacity?: number }) => (
@@ -288,6 +289,7 @@ export default function PostYTTCPage() {
       </section>
 
       <div className={styles.bottomBorder} />
+      <HowToReach/>
     </div>
   );
 }

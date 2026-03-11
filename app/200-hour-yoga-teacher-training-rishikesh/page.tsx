@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import styles from "@/assets/style/200-hour-yoga-teacher-training-rishikesh/Twohundredhouryoga.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ══════════════════════════════════════════════════
    MANDALA SVG — 7-layer concentric chakra wheel
@@ -968,12 +969,9 @@ export default function TwoHundredHourYoga() {
         </div>
       </section>
 
+     
       <BorderStrip/>
-      <div className={styles.footerStamp}>
-        <MandalaSVG size={120} opacity={0.35}/>
-        <p className={styles.footerStampText}>AYM Yoga School · Rishikesh, India</p>
-      </div>
-      <BorderStrip/>
+      <HowToReach/>
     </div>
   );
 }

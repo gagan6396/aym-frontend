@@ -9,6 +9,7 @@ import yogacetificate from "@/assets/images/Minstry-Of-Ayush,-Government-of-Indi
 import RYS200 from "@/assets/images/RYS-200.jpg";
 import RYS300 from "@/assets/images/RYS-300.jpg";
 import yogalogo from "@/assets/images/logo.jpg";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ── Data ── */
 interface YogaCert {
@@ -42,6 +43,7 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
 
 const AccreditationSection: React.FC = () => {
   return (
+    <>
     <section className={styles.section}>
       {/* PART 1 */}
       <div className={styles.container}>
@@ -181,7 +183,11 @@ const AccreditationSection: React.FC = () => {
           </p>
         </div>
       </div>
+      
     </section>
+    <HowToReach/>
+    </>
+
   );
 };
 

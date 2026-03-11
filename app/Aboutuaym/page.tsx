@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import styles from "@/assets/style/Aboutaym/Aboutus.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 // ── DATA ─────────────────────────────────────────────────────────
 const objectives = [
@@ -210,7 +211,7 @@ const AboutUs: React.FC = () => {
 
         </div>
       </section>
-
+<HowToReach/>
     </main>
   );
 };

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import styles from "@/assets/style/gallery/Gallerypage.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ─────────────────────────────────────────────────────────
    IMAGE MAP — Unsplash free URLs grouped by section
@@ -239,7 +240,7 @@ export default function GalleryPage() {
 
   /* Flatten all images for "All" tab */
   const allImages = SECTIONS.flatMap((s) =>
-    s.images.map((img) => ({ ...img, section: s.heading }))
+    s.images.map((img) => ({ ...img, section: s.heading })),
   );
 
   /* Close modal on Escape, navigate with arrow keys */
@@ -249,14 +250,25 @@ export default function GalleryPage() {
       if (e.key === "Escape") setModal(null);
       if (e.key === "ArrowRight") {
         const next = (modal.idx + 1) % modal.allImgs.length;
-        setModal({ ...modal, idx: next, src: modal.allImgs[next].src, label: modal.allImgs[next].label });
+        setModal({
+          ...modal,
+          idx: next,
+          src: modal.allImgs[next].src,
+          label: modal.allImgs[next].label,
+        });
       }
       if (e.key === "ArrowLeft") {
-        const prev = (modal.idx - 1 + modal.allImgs.length) % modal.allImgs.length;
-        setModal({ ...modal, idx: prev, src: modal.allImgs[prev].src, label: modal.allImgs[prev].label });
+        const prev =
+          (modal.idx - 1 + modal.allImgs.length) % modal.allImgs.length;
+        setModal({
+          ...modal,
+          idx: prev,
+          src: modal.allImgs[prev].src,
+          label: modal.allImgs[prev].label,
+        });
       }
     },
-    [modal]
+    [modal],
   );
 
   useEffect(() => {
@@ -267,24 +279,23 @@ export default function GalleryPage() {
   /* Lock body scroll when modal open */
   useEffect(() => {
     document.body.style.overflow = modal ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [modal]);
 
   const openModal = (
     src: string,
     label: string,
     allImgs: { src: string; label: string }[],
-    idx: number
+    idx: number,
   ) => setModal({ src, label, allImgs, idx });
 
   const visibleSections =
-    activeTab === "all"
-      ? SECTIONS
-      : SECTIONS.filter((s) => s.id === activeTab);
+    activeTab === "all" ? SECTIONS : SECTIONS.filter((s) => s.id === activeTab);
 
   return (
     <div className={styles.page}>
-
       {/* ══════════════════════════════════
           PAGE HEADER
       ══════════════════════════════════ */}
@@ -295,10 +306,11 @@ export default function GalleryPage() {
           </h1>
           <div className={styles.titleRule} />
           <p className={styles.headerPara}>
-            Explore the vibrant life at AYM Yoga School in Rishikesh through our photo
-            gallery—featuring yoga classes, serene accommodation, nutritious meals, and scenic
-            surroundings. Get a glimpse into our authentic yogic lifestyle, peaceful location, and
-            student experiences in every frame.
+            Explore the vibrant life at AYM Yoga School in Rishikesh through our
+            photo gallery—featuring yoga classes, serene accommodation,
+            nutritious meals, and scenic surroundings. Get a glimpse into our
+            authentic yogic lifestyle, peaceful location, and student
+            experiences in every frame.
           </p>
         </div>
       </section>
@@ -345,9 +357,15 @@ export default function GalleryPage() {
                     <div
                       key={i}
                       className={styles.imgCard}
-                      onClick={() => openModal(img.src, img.label, sec.images, i)}
+                      onClick={() =>
+                        openModal(img.src, img.label, sec.images, i)
+                      }
                     >
-                      <img src={img.src} alt={img.label} className={styles.cardImg} />
+                      <img
+                        src={img.src}
+                        alt={img.label}
+                        className={styles.cardImg}
+                      />
                       <span className={styles.imgLabel}>
                         <span className={styles.labelPin}>📍</span>
                         <span>{img.label}</span>
@@ -368,9 +386,12 @@ export default function GalleryPage() {
       {modal && (
         <div className={styles.modalBackdrop} onClick={() => setModal(null)}>
           <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-
             {/* Close button */}
-            <button className={styles.modalClose} onClick={() => setModal(null)} aria-label="Close">
+            <button
+              className={styles.modalClose}
+              onClick={() => setModal(null)}
+              aria-label="Close"
+            >
               ✕
             </button>
 
@@ -378,8 +399,14 @@ export default function GalleryPage() {
             <button
               className={`${styles.modalArrow} ${styles.modalPrev}`}
               onClick={() => {
-                const prev = (modal.idx - 1 + modal.allImgs.length) % modal.allImgs.length;
-                setModal({ ...modal, idx: prev, src: modal.allImgs[prev].src, label: modal.allImgs[prev].label });
+                const prev =
+                  (modal.idx - 1 + modal.allImgs.length) % modal.allImgs.length;
+                setModal({
+                  ...modal,
+                  idx: prev,
+                  src: modal.allImgs[prev].src,
+                  label: modal.allImgs[prev].label,
+                });
               }}
               aria-label="Previous"
             >
@@ -388,7 +415,11 @@ export default function GalleryPage() {
 
             {/* Image */}
             <div className={styles.modalImgWrap}>
-              <img src={modal.src} alt={modal.label} className={styles.modalImg} />
+              <img
+                src={modal.src}
+                alt={modal.label}
+                className={styles.modalImg}
+              />
             </div>
 
             {/* Next arrow */}
@@ -396,7 +427,12 @@ export default function GalleryPage() {
               className={`${styles.modalArrow} ${styles.modalNext}`}
               onClick={() => {
                 const next = (modal.idx + 1) % modal.allImgs.length;
-                setModal({ ...modal, idx: next, src: modal.allImgs[next].src, label: modal.allImgs[next].label });
+                setModal({
+                  ...modal,
+                  idx: next,
+                  src: modal.allImgs[next].src,
+                  label: modal.allImgs[next].label,
+                });
               }}
               aria-label="Next"
             >
@@ -417,9 +453,20 @@ export default function GalleryPage() {
                 <div
                   key={i}
                   className={`${styles.thumb} ${i === modal.idx ? styles.thumbActive : ""}`}
-                  onClick={() => setModal({ ...modal, idx: i, src: img.src, label: img.label })}
+                  onClick={() =>
+                    setModal({
+                      ...modal,
+                      idx: i,
+                      src: img.src,
+                      label: img.label,
+                    })
+                  }
                 >
-                  <img src={img.src} alt={img.label} className={styles.thumbImg} />
+                  <img
+                    src={img.src}
+                    alt={img.label}
+                    className={styles.thumbImg}
+                  />
                 </div>
               ))}
             </div>
@@ -427,7 +474,7 @@ export default function GalleryPage() {
         </div>
       )}
 
-      <div className={styles.bottomBorder} />
+      <HowToReach />
     </div>
   );
 }

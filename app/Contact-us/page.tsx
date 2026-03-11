@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import styles from "../../assets/style/Contact-us/ContactPage.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 const ContactPage: React.FC = () => {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -203,6 +204,7 @@ const ContactPage: React.FC = () => {
           Govt. of India
         </p>
       </div>
+      <HowToReach />
     </div>
   );
 };

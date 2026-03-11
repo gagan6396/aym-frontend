@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import styles from "@/assets/style/Yoga-retreat/Yogaretreatpage.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ─────────────────────────────────────────
    Real Unsplash image URLs (free to use)
@@ -403,7 +404,7 @@ export default function YogaRetreatPage() {
 
         </div>
       </section>
-
+<HowToReach/>
       {/* BOTTOM BORDER */}
       <div className={styles.bottomBorder} />
 

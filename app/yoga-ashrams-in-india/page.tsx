@@ -4,6 +4,7 @@ import Image from "next/image";
 import styles from "@/assets/style/yoga-ashrams-in-india/Yogaashrams.module.css";
 import yogaashramimg1 from "@/assets/images/yoga-ashram-in-india.jpg";
 import yogaashramimg2 from "@/assets/images/yoga-ashram-in-rishikesh.jpg";
+import HowToReach from "@/components/home/Howtoreach";
 
 // ---- Om Symbol SVG ----
 const OmSVG: React.FC = () => (
@@ -221,7 +222,7 @@ const YogaAshrams: React.FC = () => {
           </ul>
         </div>
       </section>
-
+<HowToReach/>
     </div>
   );
 };

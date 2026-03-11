@@ -3,6 +3,7 @@ import React from "react";
 import styles from "@/assets/style/yoga-meditation-workshop/Meditationpage.module.css";
 import Image from "next/image";
 import bannerImage from "@/assets/images/meditation.jpg";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ─── Types ─── */
 interface PricingRow {
@@ -28,6 +29,7 @@ const pricingData: PricingRow[] = [
 /* ─── Component ─── */
 const MeditationPage: React.FC = () => {
   return (
+    <>
     <main className={styles.page}>
 
       {/* ── Hero Title ── */}
@@ -184,6 +186,8 @@ const MeditationPage: React.FC = () => {
       </section>
 
     </main>
+    <HowToReach/>
+    </>
   );
 };
 

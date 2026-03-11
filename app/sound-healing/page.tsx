@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import styles from "@/assets/style/sound-healing/Soundhealingpage.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ─────────────────────────────────────────────────
    Unsplash image URLs — free, embeddable
@@ -367,7 +368,7 @@ export default function SoundHealingPage() {
 
       {/* BOTTOM BORDER */}
       <div className={styles.bottomBorder} />
-
+<HowToReach/>
     </div>
   );
 }

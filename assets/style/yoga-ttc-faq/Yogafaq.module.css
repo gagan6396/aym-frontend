@@ -390,15 +390,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ====================================================
-   FOOTER MANDALA
-==================================================== */
-.footerMandala {
-  display: flex;
-  justify-content: center;
-  padding: 32px 0 48px;
-  opacity: 0.55;
-}
 
 /* ====================================================
    RESPONSIVE — all Bootstrap breakpoints

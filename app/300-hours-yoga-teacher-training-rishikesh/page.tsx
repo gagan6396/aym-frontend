@@ -2,11 +2,18 @@
 
 import React, { useState } from "react";
 import styles from "@/assets/style/300-hours-yoga-teacher-training-rishikesh/Yogattc300.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ─────────────────────────────────────────
    YOUTUBE EMBED
 ───────────────────────────────────────── */
-const YouTubeEmbed = ({ videoId, title }: { videoId: string; title: string }) => {
+const YouTubeEmbed = ({
+  videoId,
+  title,
+}: {
+  videoId: string;
+  title: string;
+}) => {
   const [playing, setPlaying] = useState(false);
   return (
     <div className={styles.videoWrapper}>
@@ -19,11 +26,26 @@ const YouTubeEmbed = ({ videoId, title }: { videoId: string; title: string }) =>
           allowFullScreen
         />
       ) : (
-        <button className={styles.videoThumb} onClick={() => setPlaying(true)} aria-label={`Play: ${title}`}>
-          <img src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`} alt={title} className={styles.thumbImg} loading="lazy" />
+        <button
+          className={styles.videoThumb}
+          onClick={() => setPlaying(true)}
+          aria-label={`Play: ${title}`}
+        >
+          <img
+            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+            alt={title}
+            className={styles.thumbImg}
+            loading="lazy"
+          />
           <span className={styles.playBtn}>
             <svg viewBox="0 0 68 48" width="58" height="42">
-              <rect width="68" height="48" rx="10" fill="#e07b00" opacity="0.93" />
+              <rect
+                width="68"
+                height="48"
+                rx="10"
+                fill="#e07b00"
+                opacity="0.93"
+              />
               <polygon points="26,13 53,24 26,35" fill="#fff" />
             </svg>
           </span>
@@ -40,18 +62,37 @@ const Carousel = ({ images, alt }: { images: string[]; alt: string }) => {
   const [idx, setIdx] = useState(0);
   const prev = () => setIdx((i) => (i - 1 + images.length) % images.length);
   const next = () => setIdx((i) => (i + 1) % images.length);
-  const visible = [0, 1, 2, 3].map((offset) => images[(idx + offset) % images.length]);
+  const visible = [0, 1, 2, 3].map(
+    (offset) => images[(idx + offset) % images.length],
+  );
   return (
     <div className={styles.carousel}>
-      <button className={`${styles.carouselBtn} ${styles.carouselBtnLeft}`} onClick={prev} aria-label="Previous">‹</button>
+      <button
+        className={`${styles.carouselBtn} ${styles.carouselBtnLeft}`}
+        onClick={prev}
+        aria-label="Previous"
+      >
+        ‹
+      </button>
       <div className={styles.carouselTrack}>
         {visible.map((src, i) => (
           <div key={i} className={styles.carouselSlide}>
-            <img src={src} alt={`${alt} ${i + 1}`} className={styles.carouselImg} loading="lazy" />
+            <img
+              src={src}
+              alt={`${alt} ${i + 1}`}
+              className={styles.carouselImg}
+              loading="lazy"
+            />
           </div>
         ))}
       </div>
-      <button className={`${styles.carouselBtn} ${styles.carouselBtnRight}`} onClick={next} aria-label="Next">›</button>
+      <button
+        className={`${styles.carouselBtn} ${styles.carouselBtnRight}`}
+        onClick={next}
+        aria-label="Next"
+      >
+        ›
+      </button>
     </div>
   );
 };
@@ -59,7 +100,13 @@ const Carousel = ({ images, alt }: { images: string[]; alt: string }) => {
 /* ─────────────────────────────────────────
    FAQ ACCORDION ITEM
 ───────────────────────────────────────── */
-const FaqItem = ({ question, answer }: { question: string; answer: string }) => {
+const FaqItem = ({
+  question,
+  answer,
+}: {
+  question: string;
+  answer: string;
+}) => {
   const [open, setOpen] = useState(false);
   return (
     <div className={`${styles.faqItem} ${open ? styles.faqItemOpen : ""}`}>
@@ -67,7 +114,11 @@ const FaqItem = ({ question, answer }: { question: string; answer: string }) => 
         <span className={styles.faqIcon}>›</span>
         {question}
       </button>
-      {open && <div className={styles.faqA}><p>{answer}</p></div>}
+      {open && (
+        <div className={styles.faqA}>
+          <p>{answer}</p>
+        </div>
+      )}
     </div>
   );
 };
@@ -252,8 +303,10 @@ const heroImages = [
   "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&q=80",
   "https://images.unsplash.com/photo-1552196563-55cd4e45efb3?w=600&q=80",
 ];
-const diplomaImg = "https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?w=1000&q=80";
-const yogaGardenImg = "https://images.unsplash.com/photo-1588286840104-8957b019727f?w=1000&q=80";
+const diplomaImg =
+  "https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?w=1000&q=80";
+const yogaGardenImg =
+  "https://images.unsplash.com/photo-1588286840104-8957b019727f?w=1000&q=80";
 
 /* ─────────────────────────────────────────
    MAIN COMPONENT
@@ -276,28 +329,92 @@ export default function YogaTTC300() {
           {heroImages.map((src, i) => (
             <div key={i} className={styles.heroImgWrap}>
               {i === 0 && <span className={styles.heroLabel300}>300 hour</span>}
-              {i === 2 && <span className={styles.heroLabelScript}>Yoga Course</span>}
-              <img src={src} alt={`Yoga TTC ${i + 1}`} className={styles.heroImg} loading="lazy" />
+              {i === 2 && (
+                <span className={styles.heroLabelScript}>Yoga Course</span>
+              )}
+              <img
+                src={src}
+                alt={`Yoga TTC ${i + 1}`}
+                className={styles.heroImg}
+                loading="lazy"
+              />
             </div>
           ))}
         </div>
 
         <div className="container">
           <div className={styles.topBorderLine} />
-          <h1 className={styles.heroTitle}>300 Hour Yoga Teacher Training in Rishikesh India</h1>
-          <div className={styles.omDivider}><span className={styles.divLine}/><span className={styles.omGlyph}>ॐ</span><span className={styles.divLine}/></div>
-
-          <div className={styles.bodyText}>
-            <p>The <strong>300 hour yoga teacher training course in Rishikesh</strong> is suitable for those who want to become highly qualified, advanced yoga instructors and have either completed a <strong>200 hour course</strong> or have extensive experience in yoga practice. This course certainly enhances your flexibility through challenging asana practice and the development of higher consciousness through advanced pranayama and meditation. To become a master yoga teacher, a best 300 hour yoga teacher training in india at AYM, gradually brings mastery of all components of yoga, as continuous learning is a crucial technique for excellence.</p>
-            <p>This advanced yoga teacher training course covers advanced and modified yoga postures, the use of props like straps, blocks, and bolsters, as in Iyengar yoga, advanced methods of alignment and adjustments, and advanced sequencing of asana or advanced lesson planning.</p>
-            <p>After completing 200 hour yoga teacher training course, when you start advanced 300-hour yoga ttc in Rishikesh, you wish that someone would provide guidance, correct you, and help you reach a higher level. You may wish to learn advanced Anatomy and deeper philosophy. Our school has 25 years of research, and we are integrating all learning domains into our 300 hour teacher training program, which you have been dreaming of.</p>
+          <h1 className={styles.heroTitle}>
+            300 Hour Yoga Teacher Training in Rishikesh India
+          </h1>
+          <div className={styles.omDivider}>
+            <span className={styles.divLine} />
+            <span className={styles.omGlyph}>ॐ</span>
+            <span className={styles.divLine} />
           </div>
 
-          <h2 className={styles.sectionTitleOrange}>Top 300 Hour Yoga Teacher Training India</h2>
+          <div className={styles.bodyText}>
+            <p>
+              The{" "}
+              <strong>
+                300 hour yoga teacher training course in Rishikesh
+              </strong>{" "}
+              is suitable for those who want to become highly qualified,
+              advanced yoga instructors and have either completed a{" "}
+              <strong>200 hour course</strong> or have extensive experience in
+              yoga practice. This course certainly enhances your flexibility
+              through challenging asana practice and the development of higher
+              consciousness through advanced pranayama and meditation. To become
+              a master yoga teacher, a best 300 hour yoga teacher training in
+              india at AYM, gradually brings mastery of all components of yoga,
+              as continuous learning is a crucial technique for excellence.
+            </p>
+            <p>
+              This advanced yoga teacher training course covers advanced and
+              modified yoga postures, the use of props like straps, blocks, and
+              bolsters, as in Iyengar yoga, advanced methods of alignment and
+              adjustments, and advanced sequencing of asana or advanced lesson
+              planning.
+            </p>
+            <p>
+              After completing 200 hour yoga teacher training course, when you
+              start advanced 300-hour yoga ttc in Rishikesh, you wish that
+              someone would provide guidance, correct you, and help you reach a
+              higher level. You may wish to learn advanced Anatomy and deeper
+              philosophy. Our school has 25 years of research, and we are
+              integrating all learning domains into our 300 hour teacher
+              training program, which you have been dreaming of.
+            </p>
+          </div>
+
+          <h2 className={styles.sectionTitleOrange}>
+            Top 300 Hour Yoga Teacher Training India
+          </h2>
           <div className={styles.sectionUnderline} />
           <div className={styles.bodyText}>
-            <p>According to Yogi Chetan Mahesh, a nation's progress depends on its healthy individuals who run various industries or businesses. To make a nation healthy, a yoga teacher has a significant responsibility. At AYM yoga school, our vision is to train exceptional yoga teachers who can spread yoga worldwide and bring peace and happiness to the world. For this purpose, we have built the largest 300 hour yoga training center in the heart of Rishikesh Tapovan, spanning about 5000 sq ft. of land area with dedicated and properly equipped yoga studios.</p>
-            <p>AYM is one of the best 300 hour yoga teacher training schools in Rishikesh, India, offering a blend of traditional hatha yoga and modern, advanced multi-style yoga. All our courses are registered with the Yoga Alliance of the USA. This course is also beneficial if you wish to register as RYT 500 with the Yoga Alliance, since, at the end of the 300 hours yoga teacher training course in rishikesh india, you will have logged a collective 500 hours of training. Once you fulfil your 100 hour of teaching practice, you can apply for RYT 500 registration. It opens up an excellent opportunity to teach students globally.</p>
+            <p>
+              According to Yogi Chetan Mahesh, a nation's progress depends on
+              its healthy individuals who run various industries or businesses.
+              To make a nation healthy, a yoga teacher has a significant
+              responsibility. At AYM yoga school, our vision is to train
+              exceptional yoga teachers who can spread yoga worldwide and bring
+              peace and happiness to the world. For this purpose, we have built
+              the largest 300 hour yoga training center in the heart of
+              Rishikesh Tapovan, spanning about 5000 sq ft. of land area with
+              dedicated and properly equipped yoga studios.
+            </p>
+            <p>
+              AYM is one of the best 300 hour yoga teacher training schools in
+              Rishikesh, India, offering a blend of traditional hatha yoga and
+              modern, advanced multi-style yoga. All our courses are registered
+              with the Yoga Alliance of the USA. This course is also beneficial
+              if you wish to register as RYT 500 with the Yoga Alliance, since,
+              at the end of the 300 hours yoga teacher training course in
+              rishikesh india, you will have logged a collective 500 hours of
+              training. Once you fulfil your 100 hour of teaching practice, you
+              can apply for RYT 500 registration. It opens up an excellent
+              opportunity to teach students globally.
+            </p>
           </div>
         </div>
       </section>
@@ -307,21 +424,43 @@ export default function YogaTTC300() {
       ══════════════════════════════════════ */}
       <section className={`${styles.section} ${styles.sectionLight}`}>
         <div className="container">
-          <h2 className={styles.sectionTitleOrange}>Overview of 300 Hour Multi-Style Yoga Teacher Training in Rishikesh, India</h2>
+          <h2 className={styles.sectionTitleOrange}>
+            Overview of 300 Hour Multi-Style Yoga Teacher Training in Rishikesh,
+            India
+          </h2>
           <div className={styles.sectionUnderline} />
 
           <div className={styles.overviewList}>
-            <p><strong>Name of the certification:</strong> 300-hour yoga teacher training / Yoga wellness instructor (YWI).</p>
-            <p><strong>Course level:</strong> Level-II.</p>
-            <p><strong>Requirement/Eligibility:</strong> Physically fit and open for all, but it is suggested that the candidate should have passed the 10th standard / secondary school certificate from a recognized board or completed 200 Yoga teacher training course.</p>
-            <p><strong>Minimum age:</strong> No age limit.</p>
-            <p><strong>Credit points for certificate:</strong> 14 credits.</p>
-            <p><strong>Language:</strong> English, Hindi ( Seprate Groups ).</p>
+            <p>
+              <strong>Name of the certification:</strong> 300-hour yoga teacher
+              training / Yoga wellness instructor (YWI).
+            </p>
+            <p>
+              <strong>Course level:</strong> Level-II.
+            </p>
+            <p>
+              <strong>Requirement/Eligibility:</strong> Physically fit and open
+              for all, but it is suggested that the candidate should have passed
+              the 10th standard / secondary school certificate from a recognized
+              board or completed 200 Yoga teacher training course.
+            </p>
+            <p>
+              <strong>Minimum age:</strong> No age limit.
+            </p>
+            <p>
+              <strong>Credit points for certificate:</strong> 14 credits.
+            </p>
+            <p>
+              <strong>Language:</strong> English, Hindi ( Seprate Groups ).
+            </p>
           </div>
 
           <div className={styles.datesBox}>
             <h3 className={styles.datesTitle}>Upcoming Course Dates</h3>
-            <p className={styles.datesSubtitle}>Choose your preferred accommodation. Prices include tuition and meals.</p>
+            <p className={styles.datesSubtitle}>
+              Choose your preferred accommodation. Prices include tuition and
+              meals.
+            </p>
             <div className={styles.datesTable}>
               {courseDates.map((date, i) => (
                 <div key={i} className={styles.dateRow}>
@@ -337,9 +476,14 @@ export default function YogaTTC300() {
                 </div>
               ))}
             </div>
-            <p className={styles.datesNote}><strong>Note:</strong> A $100 USD early bird discount is available on all accommodation types if booked 60 days in advance.</p>
+            <p className={styles.datesNote}>
+              <strong>Note:</strong> A $100 USD early bird discount is available
+              on all accommodation types if booked 60 days in advance.
+            </p>
             <div className="text-center mt-3">
-              <a href="#" className={styles.btnPrimary}>Reserve Your Spot Now</a>
+              <a href="#" className={styles.btnPrimary}>
+                Reserve Your Spot Now
+              </a>
             </div>
           </div>
         </div>
@@ -352,7 +496,9 @@ export default function YogaTTC300() {
         <div className="container">
           <div className="row g-4">
             <div className="col-md-6">
-              <h3 className={styles.includedTitle}>Included in 300 Hour yoga ttc course in india</h3>
+              <h3 className={styles.includedTitle}>
+                Included in 300 Hour yoga ttc course in india
+              </h3>
               <div className={styles.sectionUnderlineLeft} />
               <ol className={styles.inclList}>
                 {[
@@ -375,7 +521,9 @@ export default function YogaTTC300() {
               </ol>
             </div>
             <div className="col-md-6">
-              <h3 className={styles.notIncludedTitle}>Not Included in 300 hour yoga ttc course in Rishikesh</h3>
+              <h3 className={styles.notIncludedTitle}>
+                Not Included in 300 hour yoga ttc course in Rishikesh
+              </h3>
               <div className={styles.sectionUnderlineLeft} />
               <ol className={styles.inclList}>
                 {[
@@ -401,9 +549,19 @@ export default function YogaTTC300() {
       ══════════════════════════════════════ */}
       <section className={`${styles.section} ${styles.sectionLight}`}>
         <div className="container">
-          <h2 className={styles.sectionTitleOrange}>Outline of syllabus — Yoga teacher training in India</h2>
+          <h2 className={styles.sectionTitleOrange}>
+            Outline of syllabus — Yoga teacher training in India
+          </h2>
           <div className={styles.sectionUnderline} />
-          <p className={styles.bodyPara}>Below is the summarized course syllabus of the 300-hour yoga instructor certification diploma (300 hrs YTTC). On the first day of training, students will get a handout with fine details of the syllabus and a brochure of teachers regarding their course. We designed the syllabus to provide the theoretical, practical, and experimental components of the 300-hour yoga course knowledge at AYM Rishikesh.</p>
+          <p className={styles.bodyPara}>
+            Below is the summarized course syllabus of the 300-hour yoga
+            instructor certification diploma (300 hrs YTTC). On the first day of
+            training, students will get a handout with fine details of the
+            syllabus and a brochure of teachers regarding their course. We
+            designed the syllabus to provide the theoretical, practical, and
+            experimental components of the 300-hour yoga course knowledge at AYM
+            Rishikesh.
+          </p>
 
           {/* Module tabs */}
           <div className={styles.moduleTabs}>
@@ -421,23 +579,39 @@ export default function YogaTTC300() {
           <div className={styles.moduleContent}>
             <h4 className={styles.moduleContentTitle}>{mod.title}</h4>
             <p className={styles.moduleContentText}>{mod.content}</p>
-            {mod.subTitle && <p className={styles.moduleSubTitle}><strong>{mod.subTitle}</strong></p>}
-            {mod.list && mod.list.length > 0 && (
-              mod.twoCol ? (
+            {mod.subTitle && (
+              <p className={styles.moduleSubTitle}>
+                <strong>{mod.subTitle}</strong>
+              </p>
+            )}
+            {mod.list &&
+              mod.list.length > 0 &&
+              (mod.twoCol ? (
                 <div className="row">
                   <div className="col-md-6">
-                    {mod.list.slice(0, 10).map((item, i) => <p key={i} className={styles.moduleListItem}>{item}</p>)}
+                    {mod.list.slice(0, 10).map((item, i) => (
+                      <p key={i} className={styles.moduleListItem}>
+                        {item}
+                      </p>
+                    ))}
                   </div>
                   <div className="col-md-6">
-                    {mod.list.slice(10).map((item, i) => <p key={i} className={styles.moduleListItem}>{item}</p>)}
+                    {mod.list.slice(10).map((item, i) => (
+                      <p key={i} className={styles.moduleListItem}>
+                        {item}
+                      </p>
+                    ))}
                   </div>
                 </div>
               ) : (
                 <div>
-                  {mod.list.map((item, i) => <p key={i} className={styles.moduleListItem}>{item}</p>)}
+                  {mod.list.map((item, i) => (
+                    <p key={i} className={styles.moduleListItem}>
+                      {item}
+                    </p>
+                  ))}
                 </div>
-              )
-            )}
+              ))}
           </div>
         </div>
       </section>
@@ -447,27 +621,68 @@ export default function YogaTTC300() {
       ══════════════════════════════════════ */}
       <section className={styles.section}>
         <div className="container">
-          <h2 className={styles.sectionTitleOrange}>Evolution and certification</h2>
+          <h2 className={styles.sectionTitleOrange}>
+            Evolution and certification
+          </h2>
           <div className={styles.sectionUnderline} />
 
-          <p className={styles.bodyPara}>The primary purpose of an examination is to prepare students to become good teachers, rather than merely assigning a grade. There will be a practical and theoretical exam to obtain certification for a 300-hour Yoga TTC in Rishikesh India.</p>
+          <p className={styles.bodyPara}>
+            The primary purpose of an examination is to prepare students to
+            become good teachers, rather than merely assigning a grade. There
+            will be a practical and theoretical exam to obtain certification for
+            a 300-hour Yoga TTC in Rishikesh India.
+          </p>
 
-          <h3 className={styles.subHeading}>Mark Distribution: 300 hour yoga teacher training course in india at AYM Yoga School</h3>
+          <h3 className={styles.subHeading}>
+            Mark Distribution: 300 hour yoga teacher training course in india at
+            AYM Yoga School
+          </h3>
           <div className={styles.bodyText}>
-            <p><strong>Total Marks of 300 hour yoga ttc examination</strong> : 200 Marks (Theory: 60 + Practical: 140).</p>
-            <p><strong>In theory examination</strong> there will be an objective multiple-choice questions paper. It covers all classes that have lectures, and the total marks for it are 60. Theory examination will be from all lecture classes taught in 300 hour yoga certification in the school.</p>
-            <p><strong>Practical examination</strong> has total marks of 140, and a student has to demonstrate practical skills acquired during 300 hour yoga classes in Rishikesh. The examiner may ask to demonstrate sun salutation, asanas, pranayama, meditation, and teaching practice.</p>
+            <p>
+              <strong>Total Marks of 300 hour yoga ttc examination</strong> :
+              200 Marks (Theory: 60 + Practical: 140).
+            </p>
+            <p>
+              <strong>In theory examination</strong> there will be an objective
+              multiple-choice questions paper. It covers all classes that have
+              lectures, and the total marks for it are 60. Theory examination
+              will be from all lecture classes taught in 300 hour yoga
+              certification in the school.
+            </p>
+            <p>
+              <strong>Practical examination</strong> has total marks of 140, and
+              a student has to demonstrate practical skills acquired during 300
+              hour yoga classes in Rishikesh. The examiner may ask to
+              demonstrate sun salutation, asanas, pranayama, meditation, and
+              teaching practice.
+            </p>
           </div>
 
-          <p className={styles.bodyPara}>It's further marks distribution is as:</p>
+          <p className={styles.bodyPara}>
+            It's further marks distribution is as:
+          </p>
           <ol className={styles.inclList}>
-            <li>Demonstration Skills of Sunsalutation, Asana, Pranayama, Mudra, Meditation: 80 Marks.</li>
-            <li>Teaching Skills: Lesson planning, Class control, Giving instruction, Alignment and Adjustments - 40 Marks.</li>
-            <li>Application of knowledge: It covers behavior and discipline during ttc classes - 10 Marks.</li>
-            <li>Field Experience: It covers practical experience of Karma yoga, Bhakti yoga and contentment - 10 Marks.</li>
+            <li>
+              Demonstration Skills of Sunsalutation, Asana, Pranayama, Mudra,
+              Meditation: 80 Marks.
+            </li>
+            <li>
+              Teaching Skills: Lesson planning, Class control, Giving
+              instruction, Alignment and Adjustments - 40 Marks.
+            </li>
+            <li>
+              Application of knowledge: It covers behavior and discipline during
+              ttc classes - 10 Marks.
+            </li>
+            <li>
+              Field Experience: It covers practical experience of Karma yoga,
+              Bhakti yoga and contentment - 10 Marks.
+            </li>
           </ol>
 
-          <h3 className={styles.subHeading} style={{ marginTop: "2rem" }}>Scope &amp; Career Opportunities</h3>
+          <h3 className={styles.subHeading} style={{ marginTop: "2rem" }}>
+            Scope &amp; Career Opportunities
+          </h3>
           <div className="row g-3 mt-1">
             {[
               "Yoga Instructor at the health clubs",
@@ -490,22 +705,30 @@ export default function YogaTTC300() {
           <div className="row g-4 mt-3">
             <div className="col-md-6">
               <div className={styles.feeCardLight}>
-                <h4 className={styles.feeCardTitle}>300 Hour Yoga Teacher Training Online</h4>
+                <h4 className={styles.feeCardTitle}>
+                  300 Hour Yoga Teacher Training Online
+                </h4>
                 <p>Online Course Fee: 25,000 INR</p>
                 <p>Weekly Online Course Fee: 25,000 INR</p>
                 <p>Recorded TTC Course Fee: 18,000 INR</p>
                 <p>Certification: Yoga Alliance, USA.</p>
-                <a href="#" className={styles.btnOutlineWhite}>Read More</a>
+                <a href="#" className={styles.btnOutlineWhite}>
+                  Read More
+                </a>
               </div>
             </div>
             <div className="col-md-6">
               <div className={styles.feeCardDark}>
-                <h4 className={styles.feeCardTitle}>300 Hour Yoga Teacher Training Course</h4>
+                <h4 className={styles.feeCardTitle}>
+                  300 Hour Yoga Teacher Training Course
+                </h4>
                 <p>Offline Fee: 25,000 INR - Dorm Shared (Indian Students)</p>
                 <p>Offline Fee: 30,000 INR - Twin Shared (Indian Students)</p>
                 <p>Offline Fee: 49,999 INR - Private (Indian Students)</p>
                 <p>Certification: Yoga Alliance, USA.</p>
-                <a href="#" className={styles.btnOutlineWhite}>Read More</a>
+                <a href="#" className={styles.btnOutlineWhite}>
+                  Read More
+                </a>
               </div>
             </div>
           </div>
@@ -517,7 +740,9 @@ export default function YogaTTC300() {
       ══════════════════════════════════════ */}
       <section className={`${styles.section} ${styles.sectionLight}`}>
         <div className="container">
-          <h2 className={styles.sectionTitleOrange}>300 Hour Yoga Teacher Training in India</h2>
+          <h2 className={styles.sectionTitleOrange}>
+            300 Hour Yoga Teacher Training in India
+          </h2>
           <div className={styles.sectionUnderline} />
 
           <div className={styles.faqWrap}>
@@ -539,7 +764,12 @@ export default function YogaTTC300() {
           <div className={styles.sectionUnderlineCentered} />
           <Carousel images={accomImages} alt="Accommodation" />
 
-          <h3 className={styles.subHeadingCentered} style={{ marginTop: "3rem" }}>Food</h3>
+          <h3
+            className={styles.subHeadingCentered}
+            style={{ marginTop: "3rem" }}
+          >
+            Food
+          </h3>
           <div className={styles.sectionUnderlineCentered} />
           <Carousel images={foodImages} alt="Food" />
         </div>
@@ -550,7 +780,9 @@ export default function YogaTTC300() {
       ══════════════════════════════════════ */}
       <section className={styles.section}>
         <div className="container">
-          <h2 className={styles.sectionTitleCentered}>LUXURY ROOM &amp; FEATURES</h2>
+          <h2 className={styles.sectionTitleCentered}>
+            LUXURY ROOM &amp; FEATURES
+          </h2>
           <div className={styles.sectionUnderlineCentered} />
 
           <div className="row align-items-start g-4">
@@ -578,7 +810,12 @@ export default function YogaTTC300() {
               <div className="row g-2">
                 {luxuryImages.map((src, i) => (
                   <div key={i} className={i === 2 ? "col-12" : "col-6"}>
-                    <img src={src} alt={`Luxury room ${i + 1}`} className={styles.luxuryImg} loading="lazy" />
+                    <img
+                      src={src}
+                      alt={`Luxury room ${i + 1}`}
+                      className={styles.luxuryImg}
+                      loading="lazy"
+                    />
                   </div>
                 ))}
               </div>
@@ -601,7 +838,9 @@ export default function YogaTTC300() {
       ══════════════════════════════════════ */}
       <section className={`${styles.section} ${styles.sectionLight}`}>
         <div className="container">
-          <h2 className={styles.sectionTitleOrange}>300 Hour Yoga Teacher Training in Rishikesh — Features</h2>
+          <h2 className={styles.sectionTitleOrange}>
+            300 Hour Yoga Teacher Training in Rishikesh — Features
+          </h2>
           <div className={styles.sectionUnderline} />
 
           <ol className={styles.featuresList}>
@@ -614,7 +853,9 @@ export default function YogaTTC300() {
               "AYM yoga school/ashram is in a calm and friendly atmosphere surrounded by mountains not far from the city.",
               "The rejuvenating environment of yoga school will help you transform your mind and body. It gives you the experience of a sacred ashram lifestyle that has been proven to be beneficial for health and stress-free, happy living.",
             ].map((f, i) => (
-              <li key={i}><strong>{i + 1}:</strong> {f}</li>
+              <li key={i}>
+                <strong>{i + 1}:</strong> {f}
+              </li>
             ))}
           </ol>
 
@@ -629,7 +870,10 @@ export default function YogaTTC300() {
                   ["10:00 AM", "Brunch"],
                   ["11:00 AM", "Karma Yoga"],
                   ["12:00 PM", "Teaching Methodology"],
-                  ["01:00 PM", "Self Study / Ayurveda (If you choose Ayurveda Course)"],
+                  [
+                    "01:00 PM",
+                    "Self Study / Ayurveda (If you choose Ayurveda Course)",
+                  ],
                   ["02:00 PM", "Refreshment"],
                   ["03:00 PM", "Lecture On Anatomy"],
                   ["04:15 PM", "Yoga Therapy & Philosophy"],
@@ -653,7 +897,12 @@ export default function YogaTTC300() {
                   "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=500&q=80",
                 ].map((src, i) => (
                   <div key={i} className={i === 0 ? "col-12" : "col-6"}>
-                    <img src={src} alt={`Schedule ${i + 1}`} className={styles.scheduleImg} loading="lazy" />
+                    <img
+                      src={src}
+                      alt={`Schedule ${i + 1}`}
+                      className={styles.scheduleImg}
+                      loading="lazy"
+                    />
                   </div>
                 ))}
               </div>
@@ -667,9 +916,16 @@ export default function YogaTTC300() {
       ══════════════════════════════════════ */}
       <section className={styles.section}>
         <div className="container">
-          <h2 className={styles.sectionTitleOrange}>Learning Outcomes of 300 Hour yoga teacher training course in Rishikesh</h2>
+          <h2 className={styles.sectionTitleOrange}>
+            Learning Outcomes of 300 Hour yoga teacher training course in
+            Rishikesh
+          </h2>
           <div className={styles.sectionUnderline} />
-          <p className={styles.bodyPara}>On pursuing successful completion of 300 yoga teacher training course at AYM Rishikesh, participants will be able to attain following.</p>
+          <p className={styles.bodyPara}>
+            On pursuing successful completion of 300 yoga teacher training
+            course at AYM Rishikesh, participants will be able to attain
+            following.
+          </p>
 
           <ol className={styles.outcomesList}>
             {[
@@ -689,19 +945,47 @@ export default function YogaTTC300() {
               "Our team prioritizes the fine-tuning of meditation and pranayama practice.",
               "To acknowledge the roots of yogic lineages and how yogic sciences emerged in the modern era and use this knowledge to remodel themselves.",
             ].map((item, i) => (
-              <li key={i}><strong>{i + 1}:</strong> {item}</li>
+              <li key={i}>
+                <strong>{i + 1}:</strong> {item}
+              </li>
             ))}
           </ol>
 
-          <h2 className={styles.sectionTitleOrange} style={{ marginTop: "2.5rem" }}>300 Hour Yoga Teacher Training in Rishikesh</h2>
+          <h2
+            className={styles.sectionTitleOrange}
+            style={{ marginTop: "2.5rem" }}
+          >
+            300 Hour Yoga Teacher Training in Rishikesh
+          </h2>
           <div className={styles.sectionUnderline} />
           <h3 className={styles.sectionTitleOrangeSmall}>Eligibility</h3>
           <div className={styles.sectionUnderline} />
-          <p className={styles.bodyPara}>300 Hour yoga teacher certification is for individuals having a high degree of motivation and enthusiasm to complete the course after finishing the 200 Hour yoga course from any school. Individuals having any past experience with yoga can enroll themselves. We will assess your eligibility after you send us your application form. After going through it we will send you an email where you can proceed to Book your spot after successful deposition of 200 USD.</p>
+          <p className={styles.bodyPara}>
+            300 Hour yoga teacher certification is for individuals having a high
+            degree of motivation and enthusiasm to complete the course after
+            finishing the 200 Hour yoga course from any school. Individuals
+            having any past experience with yoga can enroll themselves. We will
+            assess your eligibility after you send us your application form.
+            After going through it we will send you an email where you can
+            proceed to Book your spot after successful deposition of 200 USD.
+          </p>
 
-          <h2 className={styles.sectionTitleOrange} style={{ marginTop: "2.5rem" }}>Evaluation and Certification — 300 Hour Yoga Teacher Training in India</h2>
+          <h2
+            className={styles.sectionTitleOrange}
+            style={{ marginTop: "2.5rem" }}
+          >
+            Evaluation and Certification — 300 Hour Yoga Teacher Training in
+            India
+          </h2>
           <div className={styles.sectionUnderline} />
-          <p className={styles.bodyPara}>To accomplish a training certificate of 300 Hour yoga teacher training course students need to attend a four week course that includes eight modules. If any student had previously completed the module we will assess the student's capability. Assessment will be based on written assignment and practical evaluation. After you will get certification from Yoga Alliance USA.</p>
+          <p className={styles.bodyPara}>
+            To accomplish a training certificate of 300 Hour yoga teacher
+            training course students need to attend a four week course that
+            includes eight modules. If any student had previously completed the
+            module we will assess the student's capability. Assessment will be
+            based on written assignment and practical evaluation. After you will
+            get certification from Yoga Alliance USA.
+          </p>
         </div>
       </section>
 
@@ -710,13 +994,27 @@ export default function YogaTTC300() {
       ══════════════════════════════════════ */}
       <section className={`${styles.section} ${styles.sectionLight}`}>
         <div className="container">
-          <h2 className={styles.sectionTitleOrange}>Yoga ethics — Codes of conduct during 300 Hour Yoga TTC in Rishikesh at AYM</h2>
+          <h2 className={styles.sectionTitleOrange}>
+            Yoga ethics — Codes of conduct during 300 Hour Yoga TTC in Rishikesh
+            at AYM
+          </h2>
           <div className={styles.sectionUnderline} />
 
           <div className={styles.bodyText}>
-            <p>Yoga is a spiritual discipline that combines physical, mental and spiritual elements; to make us cognitive.</p>
-            <p className={styles.quoteText}>"The very heart of yoga is abhyasa means constant practice with steady effort in the direction you want to go. "</p>
-            <p>According to yoga gurus, to actualize the naturalistic power of yoga one must have to follow proper yoga ethics and discipline or we can say Yama and Niyamas. Here are some guidelines we marked for our students to follow at our yoga school.</p>
+            <p>
+              Yoga is a spiritual discipline that combines physical, mental and
+              spiritual elements; to make us cognitive.
+            </p>
+            <p className={styles.quoteText}>
+              "The very heart of yoga is abhyasa means constant practice with
+              steady effort in the direction you want to go. "
+            </p>
+            <p>
+              According to yoga gurus, to actualize the naturalistic power of
+              yoga one must have to follow proper yoga ethics and discipline or
+              we can say Yama and Niyamas. Here are some guidelines we marked
+              for our students to follow at our yoga school.
+            </p>
           </div>
 
           {[
@@ -749,10 +1047,18 @@ export default function YogaTTC300() {
       <section className={styles.section}>
         <div className="container">
           <div className={styles.misconceptionsBox}>
-            <h2 className={styles.sectionTitleOrange}>Misconceptions about 300 hour yoga teacher training Rishikesh India</h2>
+            <h2 className={styles.sectionTitleOrange}>
+              Misconceptions about 300 hour yoga teacher training Rishikesh
+              India
+            </h2>
             <div className={styles.sectionUnderline} />
 
-            <p className={styles.bodyPara}><strong>Shake your myths:</strong> The 300-hour yoga teacher training is often seen as merely an advanced step for certified instructors, yet numerous misconceptions surround this transformative journey.</p>
+            <p className={styles.bodyPara}>
+              <strong>Shake your myths:</strong> The 300-hour yoga teacher
+              training is often seen as merely an advanced step for certified
+              instructors, yet numerous misconceptions surround this
+              transformative journey.
+            </p>
 
             <ol className={styles.miscList}>
               {[
@@ -780,8 +1086,13 @@ export default function YogaTTC300() {
       ══════════════════════════════════════ */}
       <section className={`${styles.section} ${styles.sectionGray}`}>
         <div className="container">
-          <h2 className={styles.sectionTitleDark}>Student Reviews &amp; Success Stories</h2>
-          <p className={styles.sectionSubDark}>Authentic stories of transformation from students who began just like you.</p>
+          <h2 className={styles.sectionTitleDark}>
+            Student Reviews &amp; Success Stories
+          </h2>
+          <p className={styles.sectionSubDark}>
+            Authentic stories of transformation from students who began just
+            like you.
+          </p>
 
           <div className="row g-4 mt-2">
             {[
@@ -811,7 +1122,11 @@ export default function YogaTTC300() {
                 <div className={styles.reviewCard}>
                   <div className={styles.reviewHeader}>
                     {r.avatar ? (
-                      <img src={r.avatar} alt={r.name} className={styles.reviewAvatar} />
+                      <img
+                        src={r.avatar}
+                        alt={r.name}
+                        className={styles.reviewAvatar}
+                      />
                     ) : (
                       <div className={styles.reviewInitial}>{r.initial}</div>
                     )}
@@ -832,15 +1147,23 @@ export default function YogaTTC300() {
 
           <div className="row g-4 mt-3">
             <div className="col-md-6">
-              <YouTubeEmbed videoId="pXU4_SXdNdY" title="300 Hour Yoga TTC Review by Alex..." />
+              <YouTubeEmbed
+                videoId="pXU4_SXdNdY"
+                title="300 Hour Yoga TTC Review by Alex..."
+              />
             </div>
             <div className="col-md-6">
-              <YouTubeEmbed videoId="VqvYnBNr2Jg" title="Students Experiences / Yoga / Yog..." />
+              <YouTubeEmbed
+                videoId="VqvYnBNr2Jg"
+                title="Students Experiences / Yoga / Yog..."
+              />
             </div>
           </div>
 
           <div className="text-center mt-4">
-            <a href="#" className={styles.btnPrimary}>Read More Reviews</a>
+            <a href="#" className={styles.btnPrimary}>
+              Read More Reviews
+            </a>
           </div>
         </div>
       </section>
@@ -851,6 +1174,8 @@ export default function YogaTTC300() {
         <span className={styles.omGlyph}>ॐ</span>
         <span className={styles.divLine} />
       </div>
+
+      <HowToReach />
     </div>
   );
 }

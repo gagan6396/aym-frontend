@@ -2,6 +2,7 @@
 
 import React from "react";
 import styles from "@/assets/style/yoga-teacher-training-in-rishikesh/Bestyogaschool.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ─────────────────────────────────────────
    INLINE SVG MANDALA
@@ -130,10 +131,17 @@ const CourseCard = ({
   imgAlt,
   reverse = false,
 }: CourseCardProps) => (
-  <div className={`${styles.courseCard} ${reverse ? styles.courseCardRev : ""}`}>
+  <div
+    className={`${styles.courseCard} ${reverse ? styles.courseCardRev : ""}`}
+  >
     {/* Image side */}
     <div className={styles.courseImgWrap}>
-      <img src={imgSrc} alt={imgAlt} className={styles.courseImg} loading="lazy" />
+      <img
+        src={imgSrc}
+        alt={imgAlt}
+        className={styles.courseImg}
+        loading="lazy"
+      />
       <div className={styles.courseImgOverlay} />
     </div>
 
@@ -147,7 +155,8 @@ const CourseCard = ({
           <strong className={styles.metaLabel}>Duration:</strong> {duration}
         </p>
         <p className={styles.metaRow}>
-          <strong className={styles.metaLabel}>Certificate:</strong> {certificate}
+          <strong className={styles.metaLabel}>Certificate:</strong>{" "}
+          {certificate}
         </p>
       </div>
       <div className={styles.courseBtns}>
@@ -168,7 +177,6 @@ const CourseCard = ({
 export default function BestYogaSchool() {
   return (
     <div className={styles.page}>
-
       {/* ── Fixed Mandala Decorations ── */}
       <div className={styles.mandalaTL} aria-hidden="true">
         <MandalaSVG size={400} c1="#e07b00" c2="#d4a017" sw={0.44} />
@@ -189,7 +197,6 @@ export default function BestYogaSchool() {
       ══════════════════════════════════════ */}
       <section className={`${styles.section} ${styles.sectionLight}`}>
         <div className="container px-3 px-md-4">
-
           {/* Title */}
           <h1 className={styles.heroTitle}>
             Best Yoga Teacher Training Rishikesh – Best Yoga School Rishikesh
@@ -198,21 +205,24 @@ export default function BestYogaSchool() {
 
           {/* Body text */}
           <p className={styles.bodyPara}>
-            <strong>Best Yoga Teacher Training in Rishikesh</strong> is written on every school
-            website's wall. The world capital of yoga, lush green forests surround Rishikesh, the
-            Holy River mother Ganga, and thousands of spiritual ashrams for learning the best yoga
-            in the world. It is also a highly recommended and famous destination for{" "}
-            <strong>the best yoga teacher training in rishikesh</strong>. Rishikesh is known as a
-            spiritual energy spot. It attracts millions of devotees worldwide, seeking an inner
-            spiritual journey through yoga.
+            <strong>Best Yoga Teacher Training in Rishikesh</strong> is written
+            on every school website's wall. The world capital of yoga, lush
+            green forests surround Rishikesh, the Holy River mother Ganga, and
+            thousands of spiritual ashrams for learning the best yoga in the
+            world. It is also a highly recommended and famous destination for{" "}
+            <strong>the best yoga teacher training in rishikesh</strong>.
+            Rishikesh is known as a spiritual energy spot. It attracts millions
+            of devotees worldwide, seeking an inner spiritual journey through
+            yoga.
           </p>
           <p className={styles.bodyPara}>
-            The Association for Yoga and Meditation - the best yoga school in Rishikesh (AYM Yoga
-            School in Rishikesh) is registered with the Yoga Alliance USA and situated in this
-            beautiful lap of green mountains. Our primary objective is to train the best yoga
-            teachers through the best yoga master, using the best modern technology to understand
-            the ancient science of yoga. Our syllabus is designed to give the students complete
-            exposure to yogic techniques in{" "}
+            The Association for Yoga and Meditation - the best yoga school in
+            Rishikesh (AYM Yoga School in Rishikesh) is registered with the Yoga
+            Alliance USA and situated in this beautiful lap of green mountains.
+            Our primary objective is to train the best yoga teachers through the
+            best yoga master, using the best modern technology to understand the
+            ancient science of yoga. Our syllabus is designed to give the
+            students complete exposure to yogic techniques in{" "}
             <a href="#" className={styles.inlineLink}>
               200 hour residential yoga teacher training in rishikesh
             </a>
@@ -222,14 +232,17 @@ export default function BestYogaSchool() {
             </a>{" "}
             and{" "}
             <a href="#" className={styles.inlineLink}>
-              500 hours residential yoga teacher teaching certifications in Rishikesh India
+              500 hours residential yoga teacher teaching certifications in
+              Rishikesh India
             </a>
             .
           </p>
 
           {/* ── Accreditations ── */}
           <div className={styles.accrSection}>
-            <h2 className={styles.accrTitle}>Our Accreditations – AYM Yoga School</h2>
+            <h2 className={styles.accrTitle}>
+              Our Accreditations – AYM Yoga School
+            </h2>
             <div className={styles.accrUnderline} />
 
             <div className={styles.certGrid}>
@@ -258,39 +271,46 @@ export default function BestYogaSchool() {
 
           {/* Additional body text */}
           <p className={styles.bodyPara}>
-            At AYM, we conduct the best yoga course in Rishikesh as we are dedicated to giving
-            enough time for simulated teaching practice, which turns you into the best yoga teacher.
-            It allows the trainees to gain the necessary experience to become the world's best yoga
-            instructors. We focus a lot of energy on teaching the postures (Asanas) safely and
-            securely. The anatomy and physiology of the human body are studied during the yoga
-            course in Rishikesh. Studying anatomy provides insight into how yoga affects the human
-            body. During yoga teacher training, we focus on adjusting students (correcting
-            postures). It is a famous saying, "Practice makes perfect", so we allow our students to
-            practice as much as possible. Our teacher Trainers use props such as ropes, blocks,
-            blankets, boosters, tables, and chairs to decrease the chances of injury.
+            At AYM, we conduct the best yoga course in Rishikesh as we are
+            dedicated to giving enough time for simulated teaching practice,
+            which turns you into the best yoga teacher. It allows the trainees
+            to gain the necessary experience to become the world's best yoga
+            instructors. We focus a lot of energy on teaching the postures
+            (Asanas) safely and securely. The anatomy and physiology of the
+            human body are studied during the yoga course in Rishikesh. Studying
+            anatomy provides insight into how yoga affects the human body.
+            During yoga teacher training, we focus on adjusting students
+            (correcting postures). It is a famous saying, "Practice makes
+            perfect", so we allow our students to practice as much as possible.
+            Our teacher Trainers use props such as ropes, blocks, blankets,
+            boosters, tables, and chairs to decrease the chances of injury.
           </p>
           <p className={styles.bodyPara}>
-            Thousands of sadhus, seers, yogis, and spiritual practitioners have meditated in
-            Rishikesh for thousands of years, turning it into a unique destination for yoga. Some
-            claim that one can feel Rishikesh's spiritual energy upon arrival. Tourists are welcomed
-            here with happy smiles and warm hearts. Everyone here is glad to share the science of
-            happiness they have learned through yoga. The natural setting and the spiritual
-            environment make it the best place for yoga and spirituality worldwide.
+            Thousands of sadhus, seers, yogis, and spiritual practitioners have
+            meditated in Rishikesh for thousands of years, turning it into a
+            unique destination for yoga. Some claim that one can feel
+            Rishikesh's spiritual energy upon arrival. Tourists are welcomed
+            here with happy smiles and warm hearts. Everyone here is glad to
+            share the science of happiness they have learned through yoga. The
+            natural setting and the spiritual environment make it the best place
+            for yoga and spirituality worldwide.
           </p>
           <p className={styles.bodyPara}>
             Rishikesh has many yoga schools that offer{" "}
             <a href="#" className={styles.inlineLink}>
               best yoga teacher training for beginner in rishikesh
             </a>{" "}
-            Still, AYM Yoga ttc in rishikesh is outstanding with its high standard of teaching and
-            largest campus. The <strong>best yoga teacher training course in rishikesh</strong> is
-            hard to find as many new yoga schools are coming daily. As with anything, when yoga
-            continues to gain popularity worldwide, some are starting to skew its true essence by
-            turning it into a business. There is a handful of that teaching yoga without proper
-            experience or training. This is detrimental to the art and can result in student
-            injuries. So, if you want a school to get the{" "}
-            <strong>best yoga training in rishikesh</strong>, we urge you to research before
-            signing up.
+            Still, AYM Yoga ttc in rishikesh is outstanding with its high
+            standard of teaching and largest campus. The{" "}
+            <strong>best yoga teacher training course in rishikesh</strong> is
+            hard to find as many new yoga schools are coming daily. As with
+            anything, when yoga continues to gain popularity worldwide, some are
+            starting to skew its true essence by turning it into a business.
+            There is a handful of that teaching yoga without proper experience
+            or training. This is detrimental to the art and can result in
+            student injuries. So, if you want a school to get the{" "}
+            <strong>best yoga training in rishikesh</strong>, we urge you to
+            research before signing up.
           </p>
         </div>
       </section>
@@ -300,8 +320,9 @@ export default function BestYogaSchool() {
       ══════════════════════════════════════ */}
       <section className={`${styles.section} ${styles.sectionWarm}`}>
         <div className="container px-3 px-md-4">
-
-          <h2 className={styles.sectionTitleCenter}>Our Yoga Teacher Training Courses</h2>
+          <h2 className={styles.sectionTitleCenter}>
+            Our Yoga Teacher Training Courses
+          </h2>
           <OmDivider />
 
           {/* 200 Hour — image LEFT, text RIGHT */}
@@ -347,7 +368,6 @@ export default function BestYogaSchool() {
       ══════════════════════════════════════ */}
       <section className={`${styles.section} ${styles.sectionDeep}`}>
         <div className="container px-3 px-md-4">
-
           <h2 className={styles.sectionTitleCenter}>Specialty Courses</h2>
           <OmDivider />
 
@@ -376,7 +396,7 @@ export default function BestYogaSchool() {
           />
         </div>
       </section>
-
+      <HowToReach />
     </div>
   );
 }

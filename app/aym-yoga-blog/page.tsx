@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import styles from "@/assets/style/aym-yoga-blog/Blogpage.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 export interface Blog {
   id: string;
@@ -323,6 +324,7 @@ export default function BlogPage({ blogs, recentPosts }: BlogPageProps) {
           </div>
         </aside>
       </div>
+      <HowToReach/>
     </div>
   );
 }

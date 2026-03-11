@@ -7,6 +7,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import styles from "@/assets/style/Rulespage/Rulespage.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 // ─── Chakra Lotus SVG (background decorative) ────────────────────
 const ChakraLotus: React.FC<{
@@ -232,7 +233,7 @@ const RulesPage: React.FC = () => {
           </div>{/* /body */}
         </div>{/* /contentBox */}
       </div>
-
+<HowToReach/>
       {/* ════ BOTTOM BORDER ════ */}
       <div className={styles.bottomBorder}/>
 

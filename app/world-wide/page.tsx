@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import styles from "@/assets/style/world-wide/Worldwidepage.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ─── All worldwide locations ─── */
 const locations = [
@@ -536,6 +537,7 @@ export default function WorldwidePage() {
           </div>
         </div>
       </section>
+      <HowToReach />
     </div>
   );
 }

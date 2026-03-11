@@ -2,18 +2,27 @@
 
 import React, { useState } from "react";
 import styles from "@/assets/style/testimonials/Testimonialssection.module.css";
+import HowToReach from "@/components/home/Howtoreach";
 
 /* ─────────────────────────────────────────
    STAR RATING
 ───────────────────────────────────────── */
-const StarRating = ({ score, total = 5 }: { score: number; total?: number }) => (
+const StarRating = ({
+  score,
+  total = 5,
+}: {
+  score: number;
+  total?: number;
+}) => (
   <div className={styles.stars} aria-label={`${score} out of ${total} stars`}>
     {Array.from({ length: total }).map((_, i) => {
       const fill = Math.min(Math.max(score - i, 0), 1);
       return (
         <span key={i} className={styles.starWrap}>
           <span className={styles.starEmpty}>★</span>
-          <span className={styles.starFill} style={{ width: `${fill * 100}%` }}>★</span>
+          <span className={styles.starFill} style={{ width: `${fill * 100}%` }}>
+            ★
+          </span>
         </span>
       );
     })}
@@ -23,7 +32,13 @@ const StarRating = ({ score, total = 5 }: { score: number; total?: number }) => 
 /* ─────────────────────────────────────────
    YOUTUBE EMBED — plays inline on click
 ───────────────────────────────────────── */
-const YouTubeEmbed = ({ videoId, title }: { videoId: string; title: string }) => {
+const YouTubeEmbed = ({
+  videoId,
+  title,
+}: {
+  videoId: string;
+  title: string;
+}) => {
   const [playing, setPlaying] = useState(false);
   return (
     <div className={styles.videoWrapper}>
@@ -49,7 +64,13 @@ const YouTubeEmbed = ({ videoId, title }: { videoId: string; title: string }) =>
           />
           <span className={styles.playBtnWrap}>
             <svg viewBox="0 0 68 48" width="58" height="42">
-              <rect width="68" height="48" rx="10" fill="#e07b00" opacity="0.93" />
+              <rect
+                width="68"
+                height="48"
+                rx="10"
+                fill="#e07b00"
+                opacity="0.93"
+              />
               <polygon points="26,13 53,24 26,35" fill="#fff" />
             </svg>
           </span>
@@ -74,7 +95,13 @@ const OmDivider = () => (
 /* ─────────────────────────────────────────
    REUSABLE: Block Title with chakra icon
 ───────────────────────────────────────── */
-const BlockTitle = ({ title, chakra = "❋" }: { title: string; chakra?: string }) => (
+const BlockTitle = ({
+  title,
+  chakra = "❋",
+}: {
+  title: string;
+  chakra?: string;
+}) => (
   <>
     <div className={styles.chakraIcon}>{chakra}</div>
     <h2 className={styles.blockTitle}>{title}</h2>
@@ -102,23 +129,37 @@ interface ReviewProps {
   author: string;
   program: string;
 }
-const ReviewBlock = ({ categoryTitle, categoryDesc, text, author, program }: ReviewProps) => (
+const ReviewBlock = ({
+  categoryTitle,
+  categoryDesc,
+  text,
+  author,
+  program,
+}: ReviewProps) => (
   <div className={styles.reviewEntry}>
     {(categoryTitle || categoryDesc) && (
       <div className={styles.reviewMeta}>
-        {categoryTitle && <p className={styles.reviewCatTitle}><strong>{categoryTitle}</strong></p>}
+        {categoryTitle && (
+          <p className={styles.reviewCatTitle}>
+            <strong>{categoryTitle}</strong>
+          </p>
+        )}
         {categoryDesc && <p className={styles.reviewCatDesc}>{categoryDesc}</p>}
       </div>
     )}
     <blockquote className={styles.reviewQuote}>
       <span className={styles.openQuoteMark}>"</span>
       {text.split("\n\n").map((para, i) => (
-        <p key={i} className={styles.reviewPara}>{para}</p>
+        <p key={i} className={styles.reviewPara}>
+          {para}
+        </p>
       ))}
     </blockquote>
     <div className={styles.reviewFooter}>
       <div className={styles.reviewAuthorBlock}>
-        <span className={styles.reviewAuthorLine}>Written by: <em>{author}</em></span>
+        <span className={styles.reviewAuthorLine}>
+          Written by: <em>{author}</em>
+        </span>
         <span className={styles.reviewProgramLine}>{program}</span>
       </div>
     </div>
@@ -132,20 +173,21 @@ export default function TestimonialsSection() {
   return (
     <section className={styles.section}>
       {/* Decorative mandala BG */}
-      <div className={styles.mandalaTopLeft}    aria-hidden="true" />
+      <div className={styles.mandalaTopLeft} aria-hidden="true" />
       <div className={styles.mandalaBottomRight} aria-hidden="true" />
-      <div className={styles.chakraGlow}         aria-hidden="true" />
+      <div className={styles.chakraGlow} aria-hidden="true" />
 
       <div className={styles.topBorder} />
 
       <div className={styles.container}>
-
         {/* ══════════════════════════════════════
             PAGE HEADER
         ══════════════════════════════════════ */}
         <header className={styles.pageHeader}>
           <p className={styles.superTitle}>Sacred Stories of Transformation</p>
-          <h1 className={styles.mainTitle}>Yoga Teacher Training — Testimonials</h1>
+          <h1 className={styles.mainTitle}>
+            Yoga Teacher Training — Testimonials
+          </h1>
           <OmDivider />
         </header>
 
@@ -160,7 +202,9 @@ export default function TestimonialsSection() {
               <h3 className={styles.ratingPlatform}>Facebook Reviews 👍</h3>
               <div className={styles.ratingUnderline} />
               <p className={styles.ratingScore}>4.8/5</p>
-              <p className={styles.ratingCount}>Based on the opinion of 90 people</p>
+              <p className={styles.ratingCount}>
+                Based on the opinion of 90 people
+              </p>
               <StarRating score={4.8} />
               <a
                 href="https://www.facebook.com/AYMYogaSchool"
@@ -195,7 +239,10 @@ export default function TestimonialsSection() {
             IMAGE 2 — Video About AYM
         ══════════════════════════════════════ */}
         <div className={styles.block}>
-          <BlockTitle title="Yoga Teacher Training - Video About AYM" chakra="☀" />
+          <BlockTitle
+            title="Yoga Teacher Training - Video About AYM"
+            chakra="☀"
+          />
           <div className={styles.singleVideoWrap}>
             <YouTubeEmbed
               videoId="6EjZPpDGMhg"
@@ -208,12 +255,27 @@ export default function TestimonialsSection() {
             IMAGE 2–3 — Video Testimonials (4 videos)
         ══════════════════════════════════════ */}
         <div className={styles.block}>
-          <BlockTitle title="Yoga Teacher Training - Video Testimonials" chakra="🕉️" />
+          <BlockTitle
+            title="Yoga Teacher Training - Video Testimonials"
+            chakra="🕉️"
+          />
           <div className={styles.videoGrid2}>
-            <YouTubeEmbed videoId="k5BPMRmOK3E" title="200 Hour Yoga Teacher Training Course Review by Jessica from England" />
-            <YouTubeEmbed videoId="kOPvvbgLPrc" title="Student Testimonial of AYM Yoga Teacher Training School in India : Zois …" />
-            <YouTubeEmbed videoId="pXU4_SXdNdY" title="Yoga Testimonials: Hear What Alexander Shapiro are Saying About AYM …" />
-            <YouTubeEmbed videoId="VqvYnBNr2Jg" title="Students Experiences / Yoga / Yogini / Feedback / Review / Rishikesh / …" />
+            <YouTubeEmbed
+              videoId="k5BPMRmOK3E"
+              title="200 Hour Yoga Teacher Training Course Review by Jessica from England"
+            />
+            <YouTubeEmbed
+              videoId="kOPvvbgLPrc"
+              title="Student Testimonial of AYM Yoga Teacher Training School in India : Zois …"
+            />
+            <YouTubeEmbed
+              videoId="pXU4_SXdNdY"
+              title="Yoga Testimonials: Hear What Alexander Shapiro are Saying About AYM …"
+            />
+            <YouTubeEmbed
+              videoId="VqvYnBNr2Jg"
+              title="Students Experiences / Yoga / Yogini / Feedback / Review / Rishikesh / …"
+            />
           </div>
         </div>
 
@@ -246,12 +308,23 @@ Hari ॐ`}
         <div className={styles.block}>
           <VideoHeading title="Yoga Teacher Training India - Videos Testimonials" />
           <div className={styles.videoGrid2}>
-            <YouTubeEmbed videoId="DmC6sNn8FtA" title="AYM Yoga School Students Testimonial - RYS 200" />
-            <YouTubeEmbed videoId="ZmvKhQeEbmI" title="Yoga teachers message on graduation day at AYM Yoga School" />
+            <YouTubeEmbed
+              videoId="DmC6sNn8FtA"
+              title="AYM Yoga School Students Testimonial - RYS 200"
+            />
+            <YouTubeEmbed
+              videoId="ZmvKhQeEbmI"
+              title="Yoga teachers message on graduation day at AYM Yoga School"
+            />
           </div>
           <div className={styles.videoBlockMeta}>
-            <p className={styles.videoMetaTitle}>Yoga School - AYM Yoga School</p>
-            <p className={styles.videoMetaDesc}>200-hour yoga teacher training in india registered with yoga allinace, USA at AYM Yoga School.</p>
+            <p className={styles.videoMetaTitle}>
+              Yoga School - AYM Yoga School
+            </p>
+            <p className={styles.videoMetaDesc}>
+              200-hour yoga teacher training in india registered with yoga
+              allinace, USA at AYM Yoga School.
+            </p>
           </div>
         </div>
 
@@ -289,10 +362,38 @@ Studying at AYM was a life-changing experience – the support of the students, 
           <BlockTitle title="Student Success Stories" chakra="✦" />
           <div className={styles.successGrid}>
             {[
-              { name: "Christina", course: "200 Hour", link: "Stories and Experience", by: "By Christina",  avatar: "https://i.pravatar.cc/80?img=47", orange: true  },
-              { name: "Hannah",    course: "200 Hour", link: "Stories and Experience", by: "By Hannah",     avatar: "https://i.pravatar.cc/80?img=48", orange: false },
-              { name: "Naomi",     course: "200 Hour", link: "Stories and Experience", by: "By Naomi",      avatar: "https://i.pravatar.cc/80?img=49", orange: true  },
-              { name: "XO Laura",  course: "108 YTT Tips", link: "Yogi Chetan - 108 YTT Tips", by: "By xo Laura", avatar: "https://i.pravatar.cc/80?img=50", orange: true },
+              {
+                name: "Christina",
+                course: "200 Hour",
+                link: "Stories and Experience",
+                by: "By Christina",
+                avatar: "https://i.pravatar.cc/80?img=47",
+                orange: true,
+              },
+              {
+                name: "Hannah",
+                course: "200 Hour",
+                link: "Stories and Experience",
+                by: "By Hannah",
+                avatar: "https://i.pravatar.cc/80?img=48",
+                orange: false,
+              },
+              {
+                name: "Naomi",
+                course: "200 Hour",
+                link: "Stories and Experience",
+                by: "By Naomi",
+                avatar: "https://i.pravatar.cc/80?img=49",
+                orange: true,
+              },
+              {
+                name: "XO Laura",
+                course: "108 YTT Tips",
+                link: "Yogi Chetan - 108 YTT Tips",
+                by: "By xo Laura",
+                avatar: "https://i.pravatar.cc/80?img=50",
+                orange: true,
+              },
             ].map((s, i) => (
               <div
                 key={i}
@@ -300,14 +401,26 @@ Studying at AYM was a life-changing experience – the support of the students, 
                 style={{ borderColor: i % 2 === 0 ? "#e07b00" : "#4caf50" }}
               >
                 <div className={styles.avatarRing}>
-                  <img src={s.avatar} alt={s.name} className={styles.avatar} loading="lazy" />
+                  <img
+                    src={s.avatar}
+                    alt={s.name}
+                    className={styles.avatar}
+                    loading="lazy"
+                  />
                 </div>
                 <p className={styles.successInfo}>Name: {s.name}</p>
                 <p className={styles.successInfo}>Course: {s.course}</p>
-                <a href="#" className={s.orange ? styles.successLinkOrange : styles.successLinkGray}>
+                <a
+                  href="#"
+                  className={
+                    s.orange ? styles.successLinkOrange : styles.successLinkGray
+                  }
+                >
                   {s.link}
                 </a>
-                <p className={styles.successBy}><strong>{s.by}</strong></p>
+                <p className={styles.successBy}>
+                  <strong>{s.by}</strong>
+                </p>
               </div>
             ))}
           </div>
@@ -319,12 +432,21 @@ Studying at AYM was a life-changing experience – the support of the students, 
         <div className={styles.block}>
           <VideoHeading title="Yoga Teacher Training India - Videos Testimonials" />
           <div className={styles.videoGrid2}>
-            <YouTubeEmbed videoId="kOPvvbgLPrc" title="200 Hour (Beginners) Yoga TTC Student Review - Jasminj From Holland …" />
-            <YouTubeEmbed videoId="pXU4_SXdNdY" title="300 Hour Yoga TTC Review by Alexandria from USA - AYM Yoga School" />
+            <YouTubeEmbed
+              videoId="kOPvvbgLPrc"
+              title="200 Hour (Beginners) Yoga TTC Student Review - Jasminj From Holland …"
+            />
+            <YouTubeEmbed
+              videoId="pXU4_SXdNdY"
+              title="300 Hour Yoga TTC Review by Alexandria from USA - AYM Yoga School"
+            />
           </div>
           <div className={styles.videoBlockMeta}>
             <p className={styles.videoMetaTitle}>Yoga Teacher Training India</p>
-            <p className={styles.videoMetaDesc}>500-hour yoga teacher training in india registered with yoga allinace, USA at AYM Yoga School.</p>
+            <p className={styles.videoMetaDesc}>
+              500-hour yoga teacher training in india registered with yoga
+              allinace, USA at AYM Yoga School.
+            </p>
           </div>
           <ReviewBlock
             text={`I am Bryan from California, USA. I am currently taking the 500 hour Yoga Teacher Training at AYM Yoga School, and an overall I am very happy with the course. The Pranayama and Meditation class in the morning is refreshing, relaxing and a great start of the day. The Ashtanga Vinyasa can be difficult at times, but if you listen to your body and dont overstretch, with daily practice you will soon find yourself becoming substantially stronger and more flexible. The lectures are informative and tie everything together, giving a deeper meaning in the practice. AYM teachers yoga from a traditional, hostile, perspective, so please be aware that you will be learning the whole package, not just asana. Asana is one of many sleeping stress to self-relaxation. The Hatha class is perfect for developing awareness of the correct and aligns others. The food is good, but you are always welcome to eat out at of any restaurants. The facilities are likewise good, and the location is beautiful and great for fostering a Meditation state of mind. There is a degree of freedom in the course, so you will get out of it what you put into it. If you just want to deeper in your practice, that is fine, and if you want to develop a firm teaching formation, the course leave nothing leaking.`}
@@ -339,7 +461,10 @@ Studying at AYM was a life-changing experience – the support of the students, 
         <div className={styles.block}>
           <div className={styles.videoBlockMeta}>
             <p className={styles.videoMetaTitle}>Yoga Teacher Training India</p>
-            <p className={styles.videoMetaDesc}>500-hour yoga teacher training in india registered with yoga allinace, USA at AYM Yoga School.</p>
+            <p className={styles.videoMetaDesc}>
+              500-hour yoga teacher training in india registered with yoga
+              allinace, USA at AYM Yoga School.
+            </p>
           </div>
           <ReviewBlock
             text={`Didier Van Riet - France - 37 years I'm doing my 500 hrs teacher training in AYM and you're going to find below my overview after 2 months. I came first for the 200hrs in 15th January. The facilities at the ashram are clean, nice and confortable. The Yoga hall is very large and full of light. It's a very good place to practice yoga. All course are very interesting, we started with Pranayama/Meditation just to start slowly, then Asthanga yoga to help you to wake up. The lecture helps you to understand what you learn during the yoga practice and all the Yoga philosophie. Mahesh is an incredible teacher, he knows how to teach you Yoga Asana and the phylosophie, you don't see the time going when you are in his course. That's why I decided to stay 1month more to follow the 300hrs. This new month just give me the opportunity to go further in my Yoga practice, follow Yoga Therapy class and Ayurvedic introduction. During January the weather was a little cold at the beginning and then cloudy and sunny… some day cold and some day warm… So, don't forget to take some warm cloths. The school wasn't completly finished when I arrived… time to time the noise was too much but now the school is almost finished and the noise decrease a lot and you can enjoy the view of the mountain and the Jungle. I recommend very strongly to come in AYM ashram, the teaching is very good and the location is just amazing. I'm probably come back as I can.
@@ -356,12 +481,21 @@ Thank you Mahesh.`}
         <div className={styles.block}>
           <VideoHeading title="Yoga Teacher Training Review - Videos Testimonials" />
           <div className={styles.videoGrid2}>
-            <YouTubeEmbed videoId="VqvYnBNr2Jg" title="It's a hard and emotional time, students last day at the yoga School" />
-            <YouTubeEmbed videoId="k5BPMRmOK3E" title="Yoga TT Course Testimonial - June 2019, Rishikesh" />
+            <YouTubeEmbed
+              videoId="VqvYnBNr2Jg"
+              title="It's a hard and emotional time, students last day at the yoga School"
+            />
+            <YouTubeEmbed
+              videoId="k5BPMRmOK3E"
+              title="Yoga TT Course Testimonial - June 2019, Rishikesh"
+            />
           </div>
           <div className={styles.videoBlockMeta}>
             <p className={styles.videoMetaTitle}>Yoga Teacher Training India</p>
-            <p className={styles.videoMetaDesc}>200-hour yoga teacher training in india registered with yoga allinace, USA at AYM Yoga School.</p>
+            <p className={styles.videoMetaDesc}>
+              200-hour yoga teacher training in india registered with yoga
+              allinace, USA at AYM Yoga School.
+            </p>
           </div>
           <ReviewBlock
             text={`I'm Eana from Singapore and I started the 200 hours Yoga Teacher's Course in February. I must say I was taken by surprise by the weather here, a case of not checking the weather before coming to Rishikesh. The cold was not something I expected here. The ride from the Delhi International Airport was way too long for me too. I wanted to leave the next day. But I met some nice people on the first day. In addition, Mahesh, who is our head teacher, proved to be a very nice and accommodating person. I decided to stay on and I am glad I did. The people attending the course are a great bunch and everything here has a nice and homely feel to it. Mahesh is a great teacher, very patient and detailed in his Asanas teaching. He taught us many ways of correcting and improving ourselves. His lectures are interesting, and often peppered with personal anecdotes. I realized I didn't know the true meaning of yoga until I have attended the course here. This trip here has a profound impact on me. I am really going to need to examine my lifestyle and make the necessary changes. The accommodation is better than I expected. I have a good sized, single room with large windows and a balcony to sit out to take in the spectacular view. I have loved my stay here so much that I decided to sign up for the 300 hours course as well. So, I'LL BE BACK!!`}
@@ -376,9 +510,14 @@ Thank you Mahesh.`}
         <div className={styles.block}>
           <div className={styles.metaRowTwoCols}>
             <p className={styles.videoMetaTitle}>Yoga Teacher Training India</p>
-            <p className={styles.videoMetaTitleRight}>Yoga Teacher Training India</p>
+            <p className={styles.videoMetaTitleRight}>
+              Yoga Teacher Training India
+            </p>
           </div>
-          <p className={styles.videoMetaDescFull}>300-hour yoga teacher training in india registered with yoga allinace, USA at AYM Yoga School.</p>
+          <p className={styles.videoMetaDescFull}>
+            300-hour yoga teacher training in india registered with yoga
+            allinace, USA at AYM Yoga School.
+          </p>
 
           <ReviewBlock
             text={`Namaste...I am Siddharth Kothiyal I did yoga teachers training at Association of yoga and meditation Rishikesh Uttrakhand I had an amazing experience of yoga and spirituality at the school it helped me understanding the subject of yoga more deeply in terms of philosophy as well as science and way of living our teachers yogi Chetan Mahesh who shared his divine knowledge of yoga on asana meditation and as well as philosophy is a precious treasure for my life time yoga practice I am very thankful to our yoga ashtanga teacher Mr Sachin and miss Rajkumari who taught us various aspects of meditation vedic chanting and devotion and prepared us for asana and teaching us techniques of cleaning body which helped me to reach deeper levels of meditation and yogic practice . The beautiful location of ashram and hygienic food helped us to maintain good health special personal attention towards the students of the staff is very appreciable I am very thankful to my teachers and the entire staff of association of yoga and meditation ...THANKING YOU FOR YOUR EFFORTS IN GIVING US THIS DIVINE KNOWLEDGE HARI OM.`}
@@ -387,16 +526,22 @@ Thank you Mahesh.`}
           />
 
           <div className={styles.videoGrid2} style={{ marginTop: "2rem" }}>
-            <YouTubeEmbed videoId="Ei_WwSSHyfw" title="SURYA NAMASKAR (B), YOGA POSES, YOGA IN RISHIKESH," />
-            <YouTubeEmbed videoId="2MJGg-dUKh0" title="YOGA TEACHER TRAINING IN INDIA, SURYA NAMASKAR (A)" />
+            <YouTubeEmbed
+              videoId="Ei_WwSSHyfw"
+              title="SURYA NAMASKAR (B), YOGA POSES, YOGA IN RISHIKESH,"
+            />
+            <YouTubeEmbed
+              videoId="2MJGg-dUKh0"
+              title="YOGA TEACHER TRAINING IN INDIA, SURYA NAMASKAR (A)"
+            />
           </div>
         </div>
 
         {/* FOOTER OM */}
         <OmDivider />
-
       </div>
       <div className={styles.bottomBorder} />
+      <HowToReach />
     </section>
   );
 }

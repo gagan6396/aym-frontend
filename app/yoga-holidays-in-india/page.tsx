@@ -4,6 +4,7 @@ import Image from "next/image";
 import styles from "@/assets/style/yoga-holidays-in-india/Yogaholidays.module.css";
 import image1 from "@/assets/images/Laxman-Jhula--rishikesh.jpg"
 import image2 from "@/assets/images/Yoga-Camp-in-Rishikesh.jpg"
+import HowToReach from "@/components/home/Howtoreach";
 
 // ===================== MAIN COMPONENT =====================
 const YogaHolidays: React.FC = () => {
@@ -263,6 +264,8 @@ const YogaHolidays: React.FC = () => {
         </p>
 
       </section>
+
+      <HowToReach/>
     </div>
   );
 };
