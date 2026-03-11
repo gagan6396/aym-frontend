@@ -1,6 +1,6 @@
 "use client"
-import React, { useState } from "react";
-import styles from "@/assets/style/world-wide/yoga-teacher-training-in-new-zealand/Newzealandpage.module.css";
+import React from "react";
+import styles from "@/assets/style/world-wide/yoga-teacher-training-in-vietnam/Vietnampage.module.css";
 
 /* ─── SVG Decorations ─── */
 const Mandala: React.FC<{ className?: string }> = ({ className }) => (
@@ -68,88 +68,8 @@ const Chakra: React.FC<{ className?: string; color?: string }> = ({ className, c
   </svg>
 );
 
-/* Yoga word-cloud silhouette */
-const YogaSilhouette: React.FC<{ className?: string }> = ({ className }) => {
-  const words = [
-    "MEDITATION","WELLNESS","TRANQUILITY","SPIRITUALITY","VITALITY","HEALTH",
-    "RELAXATION","PEACE","HARMONY","BLISS","SOUL","NAMASTE","ASANA","PRANAYAMA",
-    "CHAKRA","GURU","MANTRA","ANANDA","CONCENTRATION","BODY","AYURVEDA",
-    "FITNESS","BEAUTY","CALM","EXERCISE","SPIRIT","AHIMSA","SOULVIT","BALANCE",
-    "MINDFULNESS","GRATITUDE","STRENGTH","FLEXIBILITY","HEALING","ENERGY",
-    "BREATH","FOCUS","SERENITY","CLARITY","WISDOM","COMPASSION","JOY",
-    "NOURISH","FLOW","CENTERING","AWAKEN","UNITY","YOGA","MEDITATION",
-    "WELLNESS","TRANQUILITY","SPIRITUALITY","VITALITY","HEALTH","RELAXATION",
-    "PEACE","HARMONY","BLISS","SOUL","NAMASTE","ASANA","PRANAYAMA","CHAKRA",
-    "GURU","MANTRA","ANANDA","CONCENTRATION","BODY","AYURVEDA","FITNESS",
-    "BEAUTY","CALM","EXERCISE","SPIRIT","AHIMSA","BALANCE","MINDFULNESS",
-    "GRATITUDE","STRENGTH","FLEXIBILITY","HEALING","ENERGY","BREATH","FOCUS",
-    "SERENITY","CLARITY","WISDOM","YOGA","MEDITATION","WELLNESS","TRANQUILITY",
-  ];
-
-  const lines: { text: string; x: number; y: number; size: number; rotate: number }[] = [];
-  let wordIdx = 0;
-  const lineH = 18;
-  for (let row = 0; row < 34; row++) {
-    let x = (row % 2 === 0) ? 4 : -10;
-    const y = 14 + row * lineH;
-    while (x < 620) {
-      const w = words[wordIdx % words.length];
-      const size = 7 + ((wordIdx * 3) % 7);
-      const rot = (wordIdx % 5 === 0) ? 90 : (wordIdx % 7 === 0) ? -90 : 0;
-      lines.push({ text: w, x, y, size, rotate: rot });
-      x += w.length * size * 0.56 + 4;
-      wordIdx++;
-    }
-  }
-
-  return (
-    <svg className={className} viewBox="0 0 620 580" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <clipPath id="yogaClipNZ">
-          <ellipse cx="310" cy="88" rx="58" ry="66"/>
-          <rect x="290" y="148" width="40" height="26" rx="10"/>
-          <ellipse cx="310" cy="255" rx="88" ry="108"/>
-          <ellipse cx="196" cy="228" rx="66" ry="26" transform="rotate(-12 196 228)"/>
-          <ellipse cx="116" cy="282" rx="58" ry="22" transform="rotate(-28 116 282)"/>
-          <ellipse cx="66" cy="330" rx="36" ry="22" transform="rotate(-38 66 330)"/>
-          <ellipse cx="424" cy="228" rx="66" ry="26" transform="rotate(12 424 228)"/>
-          <ellipse cx="504" cy="282" rx="58" ry="22" transform="rotate(28 504 282)"/>
-          <ellipse cx="554" cy="330" rx="36" ry="22" transform="rotate(38 554 330)"/>
-          <ellipse cx="210" cy="420" rx="125" ry="58" transform="rotate(-10 210 420)"/>
-          <ellipse cx="410" cy="420" rx="125" ry="58" transform="rotate(10 410 420)"/>
-          <ellipse cx="118" cy="390" rx="52" ry="36" transform="rotate(-20 118 390)"/>
-          <ellipse cx="502" cy="390" rx="52" ry="36" transform="rotate(20 502 390)"/>
-          <ellipse cx="310" cy="502" rx="160" ry="46"/>
-        </clipPath>
-      </defs>
-      <g clipPath="url(#yogaClipNZ)">
-        {lines.map((l, i) => (
-          <text
-            key={i}
-            x={l.x}
-            y={l.y}
-            fontSize={l.size}
-            fontFamily="'Arial Black', 'Arial', sans-serif"
-            fontWeight="900"
-            fill="#111111"
-            opacity={0.6 + (i % 5) * 0.07}
-            transform={l.rotate !== 0 ? `rotate(${l.rotate} ${l.x} ${l.y})` : undefined}
-            letterSpacing="0.02em"
-          >
-            {l.text}
-          </text>
-        ))}
-      </g>
-    </svg>
-  );
-};
-
 /* ─── Main Component ─── */
 const NewZealandPage: React.FC = () => {
-  const [form, setForm] = useState({ name:"", email:"", phone:"", message:"" });
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement|HTMLTextAreaElement>) =>
-    setForm(p=>({...p,[e.target.name]:e.target.value}));
-
   return (
     <div className={styles.pageWrapper}>
 
@@ -158,21 +78,27 @@ const NewZealandPage: React.FC = () => {
         <Mandala className={styles.heroBgMandalaL}/>
         <Mandala className={styles.heroBgMandalaR}/>
         <div className={styles.heroContent}>
+          {/* ── Plain image on the left (Germany style) ── */}
           <div className={styles.heroSilhouetteSide}>
-            <YogaSilhouette className={styles.heroSilhouette}/>
+            <img
+              src="/images/yoga-teacher-training-new-zealand.jpg"
+              alt="Yoga Teacher Training In New Zealand"
+              className={styles.heroSilhouette}
+              style={{ borderRadius: "8px", objectFit: "cover" }}
+            />
           </div>
           <div className={styles.heroText}>
             <h1 className={styles.heroTitle}>
               Yoga Teacher Training In{" "}
               <span className={styles.heroTitleAccent}>New Zealand</span>
             </h1>
-            <a href="#courses" className={styles.heroBtn}>Read More</a>
+            <a href="#content" className={styles.heroBtn}>Read More</a>
           </div>
         </div>
       </section>
 
       {/* ━━━━ CONTENT SECTION ━━━━ */}
-      <section className={styles.contentSection}>
+      <section className={styles.contentSection} id="content">
         <Mandala className={styles.contentBgMandala}/>
         <div className={styles.container}>
 
@@ -180,11 +106,12 @@ const NewZealandPage: React.FC = () => {
 
           <h2 className={styles.sectionTitle}>Yoga Teacher Training In NewZealand</h2>
 
-          <div className={styles.dietaryList}>
-            <div className={styles.dietaryItem}>
-              <div className={styles.dietaryItemHeader}>
-                <Chakra className={styles.dietaryChakra} color="#e07b00"/>
-                <h4 className={styles.dietaryTitle}>Enroll In Premium Yoga Teacher Training Center Today</h4>
+          {/* ── Card: Enroll In Premium ── */}
+          <div className={styles.cardList}>
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <Chakra className={styles.cardChakra} color="#e07b00"/>
+                <h4 className={styles.cardTitle}>Enroll In Premium Yoga Teacher Training Center Today</h4>
               </div>
               <p className={styles.bodyText}>Each Person Lives In The Era Of Self-Care And Self-Discovery, Where They Have A Distinctive Approach. Among All The Options Available In The World That Help Raise Self-Love, Yoga Is Particularly One Where People Find Their Soul And Mind Unwinding. The Yoga Retreat Is For Everyone. We At The Association For Yoga And Meditation Offer The Best Yoga Teacher Training Courses In New Zealand, Whose Advantage One Can Take To Spread Its Benefits With Others. We Have Existed For Over A Decade And Have Trained Thousands Of Individuals With Our Advanced 200 Hour Yoga Teacher Training Course At Our Yoga Centre In Rishikesh.</p>
             </div>
@@ -194,17 +121,15 @@ const NewZealandPage: React.FC = () => {
 
           {/* ── Dig Deeper ── */}
           <h3 className={styles.subTitle}>Dig Deeper To Understand All Aspects Of Yoga And Meditation</h3>
-
           <p className={styles.bodyText}>As One Of The Top 300-Hour Yoga Teacher Training Courses In New Zealand, We At The "Association For Yoga And Meditation" Would Assist You In Learning Every Minute Detail Of Yoga And Meditation That Exists. We Have Different Course Programs Available, Which You Can Choose From Depending On Your Preference. Through Our Registered Yoga Teacher Training Course In New Zealand, We Will Take You Back To The Roots Of Yoga From Where It Began And Then Help You Understand How It Has Evolved Over The Years And Where It Will Be In The Future. We Make Sure To Introduce You To Its Traditional And Modern Aspects. Our 300-Hour Yoga Teacher Training Course In New Zealand Includes Theoretical As Well As Practical Training Where Injury Avoidance Techniques And Unique Tricks Are Also Taught. The Yogis In Our YTT Centre In New Zealand Ensure To Offer One-On-One Attention To Every Student. You Can Expect To Resolve All Your Queries Related To Yoga And Get A Deeper Understanding Of How It Can Positively Impact Your Life.</p>
 
           <div className={styles.miniOm}><span className={styles.ornLm}/><span className={styles.omT}>❦</span><span className={styles.ornLm}/></div>
 
           {/* ── Mental Health ── */}
           <h3 className={styles.subTitle}>How Does Yoga Impacts One's Mental Health?</h3>
-
           <p className={styles.bodyText}>The 500 Hours Of Yoga Teacher Training Course In New Zealand Is Known To Bring The Soul, Mind And Body Together, Further Aiding In Relieving Physical Ailments Alongside Unneeded Emotional Tension. In Simple Words, The YTT In New Zealand That We Offer Helps One With Physical Ailments And Positively Impacts Mental Health. To Be Precise, Here Are A Few Ways You Can Expect Yoga To Assist You In Improving Your Mental Health Including:</p>
 
-          <div className={styles.dietaryList}>
+          <div className={styles.cardList}>
             {[
               {
                 title: "Improved Concentration:",
@@ -223,10 +148,10 @@ const NewZealandPage: React.FC = () => {
                 text: "Many People Worldwide Find It Difficult To Sleep For Some Reason Or Another. As You Enroll In Our Yoga Centre In Rishikesh For The 300 Hours Of Yoga Teacher Training Course, You Will Learn About The Poses Which Encourage Sound Sleep. Besides Just Getting Better Sleep Quality, You Will Be Able To Know The Ways You Can Relax And Contribute To Your Overall Health."
               },
             ].map((item, i) => (
-              <div key={i} className={styles.dietaryItem}>
-                <div className={styles.dietaryItemHeader}>
-                  <Chakra className={styles.dietaryChakra} color="#e07b00"/>
-                  <h4 className={styles.dietaryTitle}>{item.title}</h4>
+              <div key={i} className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <Chakra className={styles.cardChakra} color="#e07b00"/>
+                  <h4 className={styles.cardTitle}>{item.title}</h4>
                 </div>
                 <p className={styles.bodyText}>{item.text}</p>
               </div>
@@ -237,21 +162,17 @@ const NewZealandPage: React.FC = () => {
 
           {/* ── Join Us ── */}
           <h3 className={styles.subTitle}>Join Us To Become A Professional Yoga Instructor At AYM</h3>
-
           <p className={styles.bodyText}>At The Association For Yoga And Meditation, We Offer Licensed Yoga Teacher Therapy Training Courses In New Zealand That Will Aid In Developing Your Yoga Practice As A Teacher. Our Training Courses Are Updated And Are Designed To Brush Up On Your Skills So That You Can Become An Instructor With A Distinctive Teaching Style. Under The Direction Of Knowledgeable Instructors, You Will Be Guided And Taught About Every Detailed Aspect. The Best Part About Choosing Our 200 Hour, 300 Hour And 500 Hours Yoga Teacher Training Course In New Zealand Is That You Will Be A Part Of Weekend Excursions In Rishikesh, Assignments, Assessments And Others Before You Qualify For The International Yoga Certification. Not To Mention, This Certification Can Be Used Further To Start Your Yoga Teaching Journey In Any Institute Or Start Up Your Yoga Classes In Any Corner Of The World.</p>
 
           <div className={styles.miniOm}><span className={styles.ornLm}/><span className={styles.omT}>❦</span><span className={styles.ornLm}/></div>
 
           {/* ── Affordable Rates ── */}
           <h3 className={styles.subTitle}>Learn Yoga At The Association For Yoga And Meditation At Affordable Rates</h3>
-
           <p className={styles.bodyText}>Our Students Enrolling In A Yoga Teacher Training Course At Rishikesh Yoga Centre Must Know That We Are Reputed For Offering Top-Class Educational Services. We Have Been The First Choice Of Many Worldwide Because Our Students Know Our Expertise And The Excellent Caliber Of Training. We Aim To Offer 200 Hours Of Yoga Teacher Training Courses In New Zealand To Students In Cutting-Edge Classrooms Around The Serenity Of Rishikesh's Natural Beauty. We Ensure That You Are Surrounded By Positive Energy By Providing A Vibrant And Peaceful Environment. With All The Conveniences Equipped With Lodging, Free Internet, Hygienic Meals And More - Our Courses Leave Students With A Pleasant Experience. Once You Have Completed Our 500-Hour Yoga Teacher Training Course In New Zealand, We Will Reward You With An International Certificate That Is Globally Accepted And Recognized. By Choosing Us, You Create A Base Of Calmness And Quiet At An Affordable Cost.</p>
 
           <div className={styles.ornRow} style={{marginTop:"2rem"}}><span className={styles.ornL}/><span className={styles.ornSym}>❧</span><span className={styles.ornL}/></div>
         </div>
       </section>
-
-      
 
     </div>
   );
