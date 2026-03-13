@@ -141,8 +141,6 @@
   border-radius: 10px 10px 0 0;
 }
 
-.planesImageBlock {}
-.planesInfoBlock {}
 
 .planesImagePlaceholder {
   display: flex;
@@ -332,8 +330,9 @@
 ════════════════════════════════════════════════ */
 .campusSection {
   background: var(--parchment);
-  background-image: url("../../images/1905x2360banner.png");
+  background-image: url("../../images/1905X2360.svg");
   position: relative;
+  background-size: contain;
 }
 
 .campusSection::before {
@@ -468,12 +467,12 @@
 ════════════════════════════════════════════════ */
 .ctaSection {
   position: relative;
-  background-image: url('../../images/bannerbackground2.png');
+  background-image: url('../../images/1680x1260.webp');
 }
 
 
 .ctaContent {
-  background: linear-gradient(135deg, #ffead1 0%, #ffd5a2 40%, #ffb864 70%, #ffaa44 100%);
+  background: linear-gradient(135deg, #ffead1 0%, #efd1ad 40%, #e5b57c 70%, #ffbd6d 100%);
   position: relative;
   overflow: hidden;
   padding: clamp(3rem, 6vw, 5rem) clamp(1.5rem, 5vw, 4rem);

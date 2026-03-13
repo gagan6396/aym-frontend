@@ -149,7 +149,7 @@
 .coursesSection {
   position: relative;
   background: var(--parchment);
-  background-image: url("../../images/background6.png");
+  background-image: url("../../images/background6.webp");
   overflow: hidden;
 }
 
@@ -543,7 +543,7 @@
 .teachersSection {
   position: relative;
   background: var(--parchment);
-  background-image: url("../../images/banner8.png");
+  background-image: url("../../images/yogateacherbackground.webp");
   overflow: hidden;
 }
 
@@ -845,6 +845,17 @@
 /* ════════════════════════════════════════════════
    RESPONSIVE — Tablet landscape (≤1100px)
 ════════════════════════════════════════════════ */
+@media (max-width: 1850px) {
+  
+.teachersSection {
+  background-image: url("../../images/1850x1715.svg");
+  background-size: contain;
+}
+
+}
+
+
+
 @media (max-width: 1100px) {
   .coursesGrid {
     grid-template-columns: repeat(2, 1fr);
@@ -891,13 +902,9 @@
 
 @media (max-width: 767px) {
   .teachersSection {
-    background-image: url('../../images/responsivebackground/Phonebanner1.png') !important;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background-image: url('../../images/767x2423.svg') !important;
   }
 }
-
 
 /* ════════════════════════════════════════════════
    RESPONSIVE — Mobile (≤600px)

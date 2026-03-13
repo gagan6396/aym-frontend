@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import styles from "@/assets/style/Admin/dashboard/homebanner/Editbanner.module.css";
+import api from "@/lib/api";
 
 interface FormData {
   bannerName: string;
@@ -18,15 +19,6 @@ interface FormErrors {
   image?: string;
 }
 
-// ── Mock data — replace with real API call ──
-const mockBanners: Record<string, { bannerName: string; link: string; imageUrl: string }> = {
-  "1": { bannerName: "200HR Yoga Teacher Training",   link: "https://aymyoga.com/courses/200hr",      imageUrl: "" },
-  "2": { bannerName: "Yin Yoga Retreat – Rishikesh",  link: "https://aymyoga.com/retreats/yin",       imageUrl: "" },
-  "3": { bannerName: "Pranayama & Meditation Course", link: "https://aymyoga.com/courses/pranayama",  imageUrl: "" },
-  "4": { bannerName: "Ayurveda & Yoga Wellness",      link: "https://aymyoga.com/wellness",           imageUrl: "" },
-};
-
-// ── Breakpoint hook ──
 function useBreakpoint() {
   const [width, setWidth] = useState<number>(
     typeof window !== "undefined" ? window.innerWidth : 1024
@@ -40,36 +32,64 @@ function useBreakpoint() {
 }
 
 export default function EditBannerPage() {
-  const router   = useRouter();
-  const params   = useParams();
-  const id       = params?.id as string;
+  const router = useRouter();
+  const params = useParams();
+  const id     = params?.id as string;
   const { isMobile } = useBreakpoint();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef  = useRef<HTMLDivElement>(null);
 
-  const [isLoading,   setIsLoading]   = useState(true);
-  const [notFound,    setNotFound]    = useState(false);
-  const [form,        setForm]        = useState<FormData>({ bannerName: "", link: "", image: null, imagePreview: null });
-  const [originalData, setOriginalData] = useState({ bannerName: "", link: "" });
-  const [errors,      setErrors]      = useState<FormErrors>({});
-  const [isDragging,  setIsDragging]  = useState(false);
-  const [isSubmitting,setIsSubmitting]= useState(false);
-  const [submitted,   setSubmitted]   = useState(false);
-  const [hasChanges,  setHasChanges]  = useState(false);
+  const [isLoading,    setIsLoading]    = useState(true);
+  const [notFound,     setNotFound]     = useState(false);
+  const [form,         setForm]         = useState<FormData>({ bannerName: "", link: "", image: null, imagePreview: null });
+  const [originalData, setOriginalData] = useState({ bannerName: "", link: "", imagePreview: "" });
+  const [errors,       setErrors]       = useState<FormErrors>({});
+  const [isDragging,   setIsDragging]   = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted,    setSubmitted]    = useState(false);
+  const [hasChanges,   setHasChanges]   = useState(false);
 
-  // ── Fetch banner ──
+  // ── Fetch banner from real API ──
   useEffect(() => {
-    const fetch = async () => {
+    const fetchBanner = async () => {
       setIsLoading(true);
-      await new Promise(r => setTimeout(r, 800)); // replace with real API
-      const data = mockBanners[id];
-      if (!data) { setNotFound(true); setIsLoading(false); return; }
-      setForm({ bannerName: data.bannerName, link: data.link, image: null, imagePreview: data.imageUrl || null });
-      setOriginalData({ bannerName: data.bannerName, link: data.link });
-      setIsLoading(false);
+      try {
+        const res = await api.get(`/banners/${id}`);
+        if (res.data.success) {
+          const b = res.data.data;
+          const baseURL = process.env.NEXT_PUBLIC_API_URL;
+
+          // Build image preview URL
+          let imagePreview = "";
+          if (b.image) {
+            imagePreview = b.image.startsWith("http")
+              ? b.image
+              : `${baseURL}/uploads/${b.image}`;
+          }
+
+          setForm({
+            bannerName:   b.bannerName,
+            link:         b.link,
+            image:        null,
+            imagePreview: imagePreview || null,
+          });
+          setOriginalData({
+            bannerName:   b.bannerName,
+            link:         b.link,
+            imagePreview: imagePreview,
+          });
+        } else {
+          setNotFound(true);
+        }
+      } catch (error) {
+        setNotFound(true);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    if (id) fetch();
+
+    if (id) fetchBanner();
   }, [id]);
 
   // ── Track changes ──
@@ -84,9 +104,9 @@ export default function EditBannerPage() {
   // ── Validation ──
   const validate = (): boolean => {
     const e: FormErrors = {};
-    if (!form.bannerName.trim())               e.bannerName = "Banner name is required";
+    if (!form.bannerName.trim())                e.bannerName = "Banner name is required";
     else if (form.bannerName.trim().length < 3) e.bannerName = "Minimum 3 characters required";
-    if (!form.link.trim())                     e.link = "Link is required";
+    if (!form.link.trim())                      e.link = "Link is required";
     else if (!/^https?:\/\/.+/.test(form.link.trim())) e.link = "Enter a valid URL starting with https://";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -127,26 +147,46 @@ export default function EditBannerPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // ── Submit ──
+  // ── Submit — real API call ──
   const handleSubmit = async () => {
     if (!validate()) return;
     setIsSubmitting(true);
-    await new Promise(r => setTimeout(r, 1400)); // replace with real API
-    setIsSubmitting(false);
-    setSubmitted(true);
-    setTimeout(() => router.push("/admin/dashboard/homebanner"), 1500);
+
+    try {
+      // FormData use karo kyunki image bhi bhejni hai
+      const formData = new FormData();
+      formData.append("bannerName", form.bannerName);
+      formData.append("link", form.link);
+      if (form.image) {
+        formData.append("image", form.image);
+      }
+
+      await api.put(`/banners/update/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setSubmitted(true);
+      setTimeout(() => router.push("/admin/dashboard/homebanner"), 1500);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // ── Reset ──
   const handleReset = () => {
-    setForm({ bannerName: originalData.bannerName, link: originalData.link, image: null, imagePreview: null });
+    setForm({
+      bannerName:   originalData.bannerName,
+      link:         originalData.link,
+      image:        null,
+      imagePreview: originalData.imagePreview || null,
+    });
     setErrors({});
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // ════════════════════════════════════════════
-  // LOADING SKELETON
-  // ════════════════════════════════════════════
+  // ── Loading ──
   if (isLoading) {
     return (
       <div className={styles.page}>
@@ -173,9 +213,7 @@ export default function EditBannerPage() {
     );
   }
 
-  // ════════════════════════════════════════════
-  // NOT FOUND
-  // ════════════════════════════════════════════
+  // ── Not Found ──
   if (notFound) {
     return (
       <div className={styles.page}>
@@ -189,9 +227,7 @@ export default function EditBannerPage() {
     );
   }
 
-  // ════════════════════════════════════════════
-  // SUCCESS SCREEN
-  // ════════════════════════════════════════════
+  // ── Success ──
   if (submitted) {
     return (
       <div className={styles.successScreen}>
@@ -205,13 +241,10 @@ export default function EditBannerPage() {
     );
   }
 
-  // ════════════════════════════════════════════
-  // MAIN FORM
-  // ════════════════════════════════════════════
+  // ── Main Form ──
   return (
     <div className={styles.page}>
 
-      {/* ── Unsaved changes bar ── */}
       {hasChanges && (
         <div className={styles.unsavedBar}>
           <span className={styles.unsavedDot} />
@@ -220,14 +253,12 @@ export default function EditBannerPage() {
         </div>
       )}
 
-      {/* ── Breadcrumb ── */}
       <div className={styles.breadcrumb}>
-        <Link href=".." className={styles.breadcrumbLink}>Hero Banners</Link>
+        <Link href="/admin/dashboard/homebanner" className={styles.breadcrumbLink}>Hero Banners</Link>
         <span className={styles.breadcrumbSep}>›</span>
-        <span className={styles.breadcrumbCurrent}>Edit Banner #{id}</span>
+        <span className={styles.breadcrumbCurrent}>Edit Banner</span>
       </div>
 
-      {/* ── Page header ── */}
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Edit Banner</h1>
@@ -243,7 +274,6 @@ export default function EditBannerPage() {
         </div>
       </div>
 
-      {/* ── Ornament ── */}
       <div className={styles.ornament}>
         <span>❧</span>
         <div className={styles.ornamentLine} />
@@ -252,10 +282,9 @@ export default function EditBannerPage() {
         <span>❧</span>
       </div>
 
-      {/* ── Form Card ── */}
       <div className={styles.formCard}>
 
-        {/* Field 1 — Banner Name */}
+        {/* Banner Name */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>
             <span className={styles.labelIcon}>✦</span>
@@ -282,7 +311,7 @@ export default function EditBannerPage() {
           {errors.bannerName && <p className={styles.errorMsg}>⚠ {errors.bannerName}</p>}
         </div>
 
-        {/* Field 2 — Banner Image */}
+        {/* Banner Image */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>
             <span className={styles.labelIcon}>✦</span>
@@ -340,7 +369,7 @@ export default function EditBannerPage() {
           {errors.image && <p className={styles.errorMsg}>⚠ {errors.image}</p>}
         </div>
 
-        {/* Field 3 — Link */}
+        {/* Banner Link */}
         <div className={styles.fieldGroup}>
           <label className={styles.label}>
             <span className={styles.labelIcon}>✦</span>
@@ -364,12 +393,11 @@ export default function EditBannerPage() {
           {errors.link && <p className={styles.errorMsg}>⚠ {errors.link}</p>}
         </div>
 
-        {/* Divider */}
         <div className={styles.formDivider} />
 
-        {/* Form Actions */}
+        {/* Actions */}
         <div className={styles.formActions}>
-          <Link href=".." className={styles.cancelBtn}>← Cancel</Link>
+          <Link href="/admin/dashboard/homebanner" className={styles.cancelBtn}>← Cancel</Link>
           <button
             className={styles.resetBtn}
             onClick={handleReset}

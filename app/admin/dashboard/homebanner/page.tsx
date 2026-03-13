@@ -3,22 +3,17 @@
 import { useState, useRef, useEffect } from "react";
 import styles from "@/assets/style/Admin/dashboard/homebanner/Herobanner.module.css";
 import Link from "next/link";
+import api from "@/lib/api";
 
 interface Banner {
-  id: number;
+  id: string;
   title: string;
   subtitle: string;
   position: string;
   status: "Active" | "Inactive";
   order: number;
+  image?: string;
 }
-
-const initialBanners: Banner[] = [
-  { id: 1, title: "200HR Yoga Teacher Training", subtitle: "Transform your practice", position: "home", status: "Active", order: 1 },
-  { id: 2, title: "Yin Yoga Retreat – Rishikesh", subtitle: "Find stillness within", position: "home", status: "Active", order: 2 },
-  { id: 3, title: "Pranayama & Meditation Course", subtitle: "Breathe. Be. Become.", position: "home", status: "Active", order: 3 },
-  { id: 4, title: "Ayurveda & Yoga Wellness", subtitle: "Ancient wisdom, modern life", position: "home", status: "Inactive", order: 4 },
-];
 
 function useBreakpoint() {
   const [width, setWidth] = useState<number>(
@@ -39,8 +34,8 @@ function useBreakpoint() {
 }
 
 export default function HeroBannerPage() {
-  const [banners, setBanners] = useState<Banner[]>(initialBanners);
-  const [deleteModal, setDeleteModal] = useState<number | null>(null);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [deleteModal, setDeleteModal] = useState<string | null>(null);
   const [savedToast, setSavedToast] = useState(false);
   const { isMobile, isTablet, width } = useBreakpoint();
   const dragIndex = useRef<number | null>(null);
@@ -72,18 +67,94 @@ export default function HeroBannerPage() {
     [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
     setBanners(arr.map((b, idx) => ({ ...b, order: idx + 1 })));
   };
-  const toggleStatus = (id: number) =>
-    setBanners(banners.map(b => b.id === id ? { ...b, status: b.status === "Active" ? "Inactive" : "Active" } : b));
-  const handleDelete = () => {
-    setBanners(banners.filter(b => b.id !== deleteModal).map((b, i) => ({ ...b, order: i + 1 })));
-    setDeleteModal(null);
+
+  const toggleStatus = (id: string) =>
+    setBanners(banners.map(b =>
+      b.id === id ? { ...b, status: b.status === "Active" ? "Inactive" : "Active" } : b
+    ));
+
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/banners/delete/${deleteModal}`);
+      setBanners(
+        banners
+          .filter((b) => b.id !== deleteModal)
+          .map((b, i) => ({ ...b, order: i + 1 }))
+      );
+      setDeleteModal(null);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  /* ── Shared atoms ── */
-  const Preview = () => (
-    <div className={styles.previewBox}><span className={styles.previewOm}>ॐ</span></div>
-  );
+  const fetchBanners = async () => {
+    try {
+      const res = await api.get("/banners");
+      if (res.data.success) {
+        const formatted = res.data.data.map((b: any, index: number) => ({
+          id: b._id,
+          title: b.bannerName,
+          subtitle: "",
+          position: "home",
+          status: "Active",
+          order: index + 1,
+          image: b.image,
+        }));
+        setBanners(formatted);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
+  useEffect(() => {
+    fetchBanners();
+  }, []);
+
+  /* ── Preview ── */
+  const Preview = ({ image }: { image?: string }) => {
+    const baseURL = process.env.NEXT_PUBLIC_API_URL;
+
+    // Build the correct image URL
+    let imageUrl = "";
+    if (image) {
+      if (image.startsWith("http")) {
+        // Already a full URL (older records)
+        imageUrl = image;
+      } else {
+        // Just a filename (newer records) → build full URL
+        imageUrl = `${baseURL}/uploads/${image}`;
+      }
+    }
+
+    return (
+      <div className={styles.previewBox}>
+        {image ? (
+          <img
+            src={imageUrl}
+            className={styles.previewImage}
+            alt="Banner"
+            onError={(e) => {
+              // If image fails to load, show fallback Om symbol
+              const target = e.currentTarget as HTMLImageElement;
+              target.style.display = "none";
+              const parent = target.parentElement;
+              if (parent) {
+                const span = document.createElement("span");
+                span.className = styles.previewOm;
+                span.textContent = "ॐ";
+                parent.appendChild(span);
+              }
+            }}
+          />
+        ) : (
+          <span className={styles.previewOm}>ॐ</span>
+        )}
+      </div>
+    );
+  };
+
+  /* ── Status ── */
   const Status = ({ b }: { b: Banner }) => (
     <button
       className={`${styles.statusBadge} ${b.status === "Active" ? styles.statusActive : styles.statusInactive}`}
@@ -93,6 +164,7 @@ export default function HeroBannerPage() {
     </button>
   );
 
+  /* ── Arrows ── */
   const Arrows = ({ i }: { i: number }) => (
     <div className={styles.arrowGroup}>
       <button className={styles.arrowBtn} onClick={() => moveUp(i)} disabled={i === 0}>▲</button>
@@ -100,10 +172,10 @@ export default function HeroBannerPage() {
     </div>
   );
 
-  // ✅ Edit button is now a Link with relative path
+  /* ── Actions ── */
   const Actions = ({ b }: { b: Banner }) => (
     <div className={styles.actionBtns}>
-      <Link href={`${b.id}`} className={styles.editBtn}>
+      <Link href={`homebanner/${b.id}`} className={styles.editBtn}>
         <span>✎</span><span className={styles.btnLabel}> Edit</span>
       </Link>
       <button className={styles.deleteBtn} onClick={() => setDeleteModal(b.id)}>
@@ -130,7 +202,7 @@ export default function HeroBannerPage() {
               <span className={styles.orderBadge}>{b.order}</span>
               <Arrows i={i} />
             </div>
-            <Preview />
+            <Preview image={b.image} />
             <div className={styles.cardBody}>
               <p className={styles.bannerTitle}>{b.title}</p>
               <p className={styles.bannerSubtitle}>{b.subtitle}</p>
@@ -162,16 +234,20 @@ export default function HeroBannerPage() {
         </thead>
         <tbody>
           {banners.map((b, i) => (
-            <tr key={b.id} className={styles.row}
-              draggable onDragStart={() => handleDragStart(i)}
+            <tr
+              key={b.id}
+              className={styles.row}
+              draggable
+              onDragStart={() => handleDragStart(i)}
               onDragEnter={() => handleDragEnter(i)}
-              onDragEnd={handleDragEnd} onDragOver={(e) => e.preventDefault()}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => e.preventDefault()}
             >
               <td className={styles.tdOrder}>
                 <span className={styles.orderBadge}>{b.order}</span>
                 <Arrows i={i} />
               </td>
-              <td><Preview /></td>
+              <td><Preview image={b.image} /></td>
               <td>
                 <p className={styles.bannerTitle}>{b.title}</p>
                 <p className={styles.bannerSubtitle}>{b.subtitle}</p>
@@ -185,7 +261,7 @@ export default function HeroBannerPage() {
     </div>
   );
 
-  /* ── Small Desktop (768–1023px) + Full Desktop (1024px+) ── */
+  /* ── Desktop (768px+) ── */
   const DesktopTable = () => (
     <div className={styles.tableWrap}>
       <table className={styles.table}>
@@ -202,10 +278,14 @@ export default function HeroBannerPage() {
         </thead>
         <tbody>
           {banners.map((b, i) => (
-            <tr key={b.id} className={styles.row}
-              draggable onDragStart={() => handleDragStart(i)}
+            <tr
+              key={b.id}
+              className={styles.row}
+              draggable
+              onDragStart={() => handleDragStart(i)}
               onDragEnter={() => handleDragEnter(i)}
-              onDragEnd={handleDragEnd} onDragOver={(e) => e.preventDefault()}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => e.preventDefault()}
             >
               <td className={styles.tdCenter}>
                 <span className={styles.orderBadge}>{b.order}</span>
@@ -216,7 +296,7 @@ export default function HeroBannerPage() {
                   <Arrows i={i} />
                 </div>
               </td>
-              <td><Preview /></td>
+              <td><Preview image={b.image} /></td>
               <td>
                 <p className={styles.bannerTitle}>{b.title}</p>
                 <p className={styles.bannerSubtitle}>{b.subtitle}</p>
@@ -250,7 +330,6 @@ export default function HeroBannerPage() {
               : "Drag rows to reorder · click status to toggle"}
           </p>
         </div>
-        {/* ✅ Relative path "add-new" */}
         <Link href="/admin/dashboard/homebanner/add-new" className={styles.addBtn}>
           <span className={styles.addPlus}>+</span>
           <span className={styles.addLabel}>Add Banner</span>

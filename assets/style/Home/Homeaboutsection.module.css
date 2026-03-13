@@ -9,7 +9,10 @@
 /* ── Section shell ── */
 .section {
   position: relative;
-  background-image: url("../../images/bannerbackground1.png");
+  background-image: url("../../images/SVG.svg");
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
   overflow: hidden;
 }
 
@@ -363,14 +366,31 @@
 /* ================================================================
    RESPONSIVE
    ================================================================ */
+@media (max-width: 1680px) {
+  .section {
+    background-image: url("../../images/1680x1260.svg");
+  }
+}
 
+@media (max-width: 1366px) {
+  .section {
+    background-image: url("../../images/SVG-4-01.svg");
+  }
+}
+
+@media (max-width: 1100px) {
+  .section {
+
+    background-image: url("../../images/1100x1256-01.svg");
+
+  }
+}
 /* Tablet landscape */
 @media (max-width: 1024px) {
   .statsRow {
     grid-template-columns: repeat(4, 1fr);
   }
 }
-
 /* Tablet portrait */
 @media (max-width: 860px) {
   .body {
@@ -398,8 +418,30 @@
     justify-content: center;
   }
 }
+@media (max-width: 861px) {
+  .section {
 
+    background-image: url("../../images/861x1236-01.svg");
+
+  }
+}
+@media (max-width: 768px) {
+  .section {
+
+    background-image: url("../../images/responsivebackground/3.png");
+
+  }
+}
 /* Mobile */
+@media (max-width: 660px) {
+
+
+  .section {
+
+    background-image: url("../../images/660x1596.svg");
+  }
+
+}
 @media (max-width: 540px) {
   .mainTitle {
     font-size: 1.15rem;
@@ -419,18 +461,16 @@
   }
 
   .section {
-    background-position: center;
-    background-size: cover;
-    background: #fff1d9;
-  }
-}
 
+    background-image: url("../../images/510x1739.svg");
+  }
+
+}
 /* Small mobile */
 @media (max-width: 380px) {
   .statsRow {
     grid-template-columns: 1fr 1fr;
   }
-
   .statValue {
     font-size: 1.3rem;
   }
@@ -438,5 +478,13 @@
   .quote {
     font-size: 1.1rem;
     padding: 1rem 1.1rem;
+  }
+
+}
+@media (max-width: 360px) {
+  .section {
+
+    background-image: url("../../images/responsivebackground/4.png");
+
   }
 }

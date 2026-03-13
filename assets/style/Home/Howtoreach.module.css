@@ -1,9 +1,3 @@
-/* ================================================================
-   Howtoreach.module.css
-   Layout: LEFT (3-col cards + pickup form) | RIGHT (sticky map)
-   Vintage parchment + saffron — Indian Yoga Association
-   Full responsive: 1400 / 1200 / 1024 / 900 / 768 / 600 / 480 / 375
-   ================================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap');
 
@@ -11,10 +5,11 @@
 
 .reachSection {
   position: relative;
-  background: #fdf6ec;
   overflow: hidden;
   font-family: 'Cormorant Garamond', serif;
-  background-image: url("../../images/1905x1715banner2.png");
+  background-image: url("../../images/1905x1555\(1\).svg");
+  background-size: contain;
+  
 }
 
 .reachSection::before {

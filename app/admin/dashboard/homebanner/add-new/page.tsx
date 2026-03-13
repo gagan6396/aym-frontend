@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/assets/style/Admin/dashboard/homebanner/Addbanner.module.css";
 import Link from "next/link";
+import api from "@/lib/api";
 
 interface FormData {
   bannerName: string;
@@ -41,7 +42,7 @@ export default function AddBannerPage() {
     else if (form.bannerName.trim().length < 3)
       e.bannerName = "Name must be at least 3 characters";
     if (!form.link.trim()) e.link = "Link is required";
-    else if (!/^https?:\/\/.+/.test(form.link.trim()))
+    else if (!/^https?:\/\/.+\..+/.test(form.link.trim()))
       e.link = "Enter a valid URL (e.g. https://example.com)";
     if (!form.image) e.image = "Please upload a banner image";
     setErrors(e);
@@ -103,15 +104,43 @@ export default function AddBannerPage() {
   };
 
   /* ── Submit ── */
-  const handleSubmit = async () => {
-    if (!validate()) return;
+ const handleSubmit = async () => {
+  if (!validate()) return;
+
+  try {
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1400));
+
+    const formData = new FormData();
+
+    formData.append("bannerName", form.bannerName);
+    formData.append("link", form.link);
+
+    if (form.image) {
+      formData.append("image", form.image);
+    }
+
+    const res = await api.post("/banners/create", formData);
+
+    if (res.data.success) {
+      setSubmitted(true);
+
+      setTimeout(() => {
+        router.push("/admin/dashboard/homebanner");
+      }, 1500);
+    }
+
+  } catch (error: any) {
+    console.error(error);
+    const message =
+  error?.response?.data?.message ||
+  error?.message ||
+  "Failed to add banner";
+
+alert(message);
+  } finally {
     setIsSubmitting(false);
-    setSubmitted(true);
-    setTimeout(() => router.push("/admin/home/hero"), 1500);
-  };
+  }
+};
 
   /* ── Success screen ── */
   if (submitted) {
@@ -251,21 +280,23 @@ export default function AddBannerPage() {
                   <span className={styles.previewName}>{form.image?.name}</span>
                   <span className={styles.previewSize}>
                     {form.image
-                      ? (form.image.size / 1024).toFixed(1) + " KB"
+                      ? (form.image.size / 1024 / 1024).toFixed(2) + " MB"
                       : ""}
                   </span>
                 </div>
                 <div className={styles.previewActions}>
-                  <button
-                    className={styles.previewChange}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
+                 <button
+  type="button"
+  className={styles.previewChange}
+  onClick={() => fileInputRef.current?.click()}
+>
                     ✎ Change
                   </button>
                   <button
-                    className={styles.previewRemove}
-                    onClick={removeImage}
-                  >
+  type="button"
+  className={styles.previewRemove}
+  onClick={removeImage}
+>
                     ✕ Remove
                   </button>
                 </div>
@@ -319,7 +350,8 @@ export default function AddBannerPage() {
           <Link href="/admin/dashboard/homebanner" className={styles.cancelBtn}>
             ← Cancel
           </Link>
-          <button
+          <button 
+          type="button"
             className={`${styles.submitBtn} ${isSubmitting ? styles.submitBtnLoading : ""}`}
             onClick={handleSubmit}
             disabled={isSubmitting}
