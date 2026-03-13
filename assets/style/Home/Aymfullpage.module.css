@@ -558,9 +558,11 @@
 .masterQuoteBlock {
   text-align: center;
   padding: clamp(2rem, 4vw, 3.5rem) clamp(1.5rem, 5vw, 4rem);
-  background: linear-gradient(135deg, #b08f71 0%, #a96a2e 50%, #432409 100%);
+  background-image: url("../../images/svgbanner-01.svg");
   position: relative;
   overflow: hidden;
+  color: #000000;
+   font-weight: 700;
 }
 
 .masterQuoteBlock::before {
@@ -581,7 +583,7 @@
   font-family: 'Playfair Display', serif;
   font-size: clamp(1.1rem, 2.5vw, 1.55rem);
   font-style: italic;
-  color: var(--parchment);
+  color: #000000;
   line-height: 1.6;
   max-width: 800px;
   margin: 0 auto 1rem;
@@ -594,8 +596,9 @@
   font-size: clamp(0.75rem, 1.2vw, 0.88rem);
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--saffron-light);
+  color: #000000;
   position: relative;
+  font-weight: 700;
   z-index: 1;
 }
 
