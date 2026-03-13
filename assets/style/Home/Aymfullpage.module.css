@@ -7,18 +7,18 @@
 
 /* ── CSS Variables ── */
 :root {
-  --saffron:       #e07b00;
-  --saffron-deep:  #c46a00;
+  --saffron: #e07b00;
+  --saffron-deep: #c46a00;
   --saffron-light: #f5b800;
-  --parchment:     #fdf6ec;
+  --parchment: #fdf6ec;
   --parchment-mid: #f5ead6;
-  --earth:         #3d1d00;
-  --earth-mid:     #5c2d00;
-  --earth-light:   #7a5c2e;
-  --earth-warm:    #3d2b10;
-  --gold-border:   #e8d5b5;
-  --cream-white:   #fffdf8;
-  --shadow-warm:   rgba(92, 45, 0, 0.12);
+  --earth: #3d1d00;
+  --earth-mid: #5c2d00;
+  --earth-light: #7a5c2e;
+  --earth-warm: #3d2b10;
+  --gold-border: #e8d5b5;
+  --cream-white: #fffdf8;
+  --shadow-warm: rgba(92, 45, 0, 0.12);
 }
 
 /* ── Page Wrapper ── */
@@ -36,7 +36,7 @@
   max-width: 1180px;
   margin: 0 auto;
   padding: clamp(2.5rem, 5vw, 4.5rem) clamp(1.2rem, 5vw, 3rem);
- 
+
 }
 
 /* ── Shared: Decorative Borders ── */
@@ -44,12 +44,11 @@
 .bottomBorder {
   height: 5px;
   background: linear-gradient(90deg,
-    transparent 0%,
-    var(--saffron) 20%,
-    var(--saffron-light) 50%,
-    var(--saffron) 80%,
-    transparent 100%
-  );
+      transparent 0%,
+      var(--saffron) 20%,
+      var(--saffron-light) 50%,
+      var(--saffron) 80%,
+      transparent 100%);
 }
 
 /* ── Shared: Section Heading ── */
@@ -126,7 +125,7 @@
   margin: 2rem 0;
   padding: 2rem;
   background: linear-gradient(135deg, #fff9f2 0%, #fdf0dc 100%);
-  border: 1px solid rgba(224,123,0,0.2);
+  border: 1px solid rgba(224, 123, 0, 0.2);
   border-radius: 10px;
   box-shadow: 0 4px 20px var(--shadow-warm);
   position: relative;
@@ -135,7 +134,9 @@
 .planesGrid::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 3px;
   background: linear-gradient(90deg, var(--saffron), var(--saffron-light), var(--saffron));
   border-radius: 10px 10px 0 0;
@@ -151,7 +152,7 @@
 /* ── Diagram Box with real image ── */
 .diagramBox {
   background: linear-gradient(135deg, #fff 0%, #fdf6ec 100%);
-  border: 1px solid rgba(224,123,0,0.25);
+  border: 1px solid rgba(224, 123, 0, 0.25);
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -175,7 +176,7 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   padding: 0.75rem 0.75rem;
-  background: rgba(224,123,0,0.05);
+  background: rgba(224, 123, 0, 0.05);
   width: 100%;
 }
 
@@ -185,10 +186,10 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--earth-light);
-  background: rgba(224,123,0,0.1);
+  background: rgba(224, 123, 0, 0.1);
   padding: 0.2rem 0.55rem;
   border-radius: 3px;
-  border: 1px solid rgba(224,123,0,0.2);
+  border: 1px solid rgba(224, 123, 0, 0.2);
 }
 
 /* ── Alignment Compare with real images ── */
@@ -260,7 +261,7 @@
   font-size: 1.02rem;
   color: var(--earth-warm);
   padding: 0.5rem 0 0.5rem 1.5rem;
-  border-bottom: 1px solid rgba(224,123,0,0.12);
+  border-bottom: 1px solid rgba(224, 123, 0, 0.12);
   position: relative;
   line-height: 1.6;
   counter-increment: list-counter;
@@ -285,7 +286,7 @@
   position: relative;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 8px 36px rgba(92,45,0,0.3);
+  box-shadow: 0 8px 36px rgba(92, 45, 0, 0.3);
   min-height: 320px;
 }
 
@@ -312,16 +313,16 @@
   left: 0;
   right: 0;
   padding: 1.5rem 2rem;
-  background: linear-gradient(to top, rgba(61,29,0,0.85) 0%, transparent 100%);
+  background: linear-gradient(to top, rgba(61, 29, 0, 0.85) 0%, transparent 100%);
   z-index: 2;
 }
 
 .groupPhotoText {
   font-family: 'Dancing Script', cursive;
   font-size: clamp(1rem, 2.5vw, 1.4rem);
-  color: rgba(253,246,236,0.95);
+  color: rgba(253, 246, 236, 0.95);
   font-weight: 600;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 
@@ -340,8 +341,8 @@
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(ellipse at 80% 10%, rgba(224,123,0,0.04) 0%, transparent 55%),
-    radial-gradient(ellipse at 10% 90%, rgba(92,45,0,0.04) 0%, transparent 55%);
+    radial-gradient(ellipse at 80% 10%, rgba(224, 123, 0, 0.04) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 90%, rgba(92, 45, 0, 0.04) 0%, transparent 55%);
   pointer-events: none;
 }
 
@@ -421,7 +422,7 @@
 
 .promoCard:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(92,45,0,0.15);
+  box-shadow: 0 8px 28px rgba(92, 45, 0, 0.15);
 }
 
 .promoTitle {
@@ -459,7 +460,9 @@
   transition: color 0.2s;
 }
 
-.promoLink:hover { color: var(--earth); }
+.promoLink:hover {
+  color: var(--earth);
+}
 
 
 /* ════════════════════════════════════════════════
@@ -486,7 +489,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: clamp(10rem, 20vw, 18rem);
-  color: rgba(255,255,255,0.06);
+  color: rgba(255, 255, 255, 0.06);
   font-family: 'Cinzel', serif;
   pointer-events: none;
   user-select: none;
@@ -498,8 +501,8 @@
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.08) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 30%, rgba(255,255,255,0.05) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -513,7 +516,7 @@
   position: relative;
   z-index: 1;
   letter-spacing: 0.03em;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .ctaSubtext {
@@ -541,7 +544,7 @@
   text-decoration: none;
   padding: 0.9rem 2.2rem;
   border-radius: 50px;
-  box-shadow: 0 6px 22px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.25);
   transition: transform 0.2s, box-shadow 0.2s;
   position: relative;
   z-index: 1;
@@ -549,10 +552,12 @@
 
 .whatsappBtn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 32px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.3);
 }
 
-.waIcon { font-size: 1.2em; }
+.waIcon {
+  font-size: 1.2em;
+}
 
 /* Master Quote */
 .masterQuoteBlock {
@@ -562,7 +567,7 @@
   position: relative;
   overflow: hidden;
   color: #000000;
-   font-weight: 700;
+  font-weight: 700;
 }
 
 .masterQuoteBlock::before {
@@ -573,7 +578,7 @@
   transform: translateX(-50%);
   font-family: 'Dancing Script', cursive;
   font-size: clamp(8rem, 15vw, 14rem);
-  color: rgba(224,123,0,0.08);
+  color: rgba(224, 123, 0, 0.08);
   line-height: 1;
   pointer-events: none;
   user-select: none;
