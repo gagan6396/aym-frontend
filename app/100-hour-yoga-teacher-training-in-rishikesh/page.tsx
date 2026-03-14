@@ -2,6 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import styles from "@/assets/style/100-hour-yoga-teacher-training-in-rishikesh/Hundredhouryoga.module.css";
 import HowToReach from "@/components/home/Howtoreach";
+import Image from "next/image";
+import heroImg from "@/assets/images/100hours.svg"; // apni image ka path
 
 /* ══════════════════════════════════════════════════
    MANDALA SVG — 7-layer concentric chakra wheel
@@ -231,32 +233,24 @@ export default function HundredHourYoga() {
       {/* ── Aged paper grain overlay ── */}
       <div className={styles.grainOverlay} aria-hidden="true" />
 
-      {/* ══════════════════════════════
-          TOP BORDER
-      ══════════════════════════════ */}
-      <BorderStrip />
-
-      {/* ══════════════════════════════
-          SCREENSHOT 1 — Hero + Intro
-      ══════════════════════════════ */}
-      <section className={styles.heroSection}>
+    
+     <section className={styles.heroSection}>
+  <Image
+    src={heroImg}
+    alt="Yoga Students Group"
+    width={1180}
+    height={540}
+    className={styles.heroImage}
+    priority
+  />
+</section>
+       <section className={styles.heroSection2}>
         {/* Mandala behind hero */}
         <div className={styles.heroMandalaBg} aria-hidden="true">
           <MandalaSVG size={900} opacity={0.06} />
         </div>
 
-        {/* Photo frame */}
-        <div className={styles.heroFrame}>
-          <CornerOrnament pos="tl" />
-          <CornerOrnament pos="tr" />
-          <CornerOrnament pos="bl" />
-          <CornerOrnament pos="br" />
-          <a href="#apply" className={styles.registerBtn}>Register Now</a>
-          {/* ↓ Replace with: <Image src="/images/group-photo.jpg" fill alt="AYM students" style={{objectFit:'cover'}} /> */}
-          <div className={styles.heroImgPlaceholder}>
-            <MandalaSVG size={260} opacity={0.18} />
-          </div>
-        </div>
+       
 
         {/* Title below photo */}
         <div className={styles.heroTextWrap}>

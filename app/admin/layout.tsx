@@ -13,10 +13,14 @@ const navItems = [
     icon: "🏡",
     children: [
       { href: "/admin/dashboard/homebanner", label: "Hero Section" },
-      { href: "/admin/home/about", label: "About Section" },
-      { href: "/admin/home/gallery", label: "Gallery" },
-      { href: "/admin/home/features", label: "Features / Highlights" },
-      { href: "/admin/home/contact", label: "Contact Info" },
+      { href: "/admin/dashboard/yogateachertraning", label: "About Section" },
+      { href: "/admin/dashboard/accreditationsection", label: "Accreditation Section" },
+      { href: "/admin/dashboard/yogacoursespage", label: "Yoga Courses Page" },
+      { href: "/admin/dashboard/Classcampusameniti", label: "Class Campus Ameniti" },
+      { href: "/admin/dashboard/aymfullpage", label: "Aym Full Page" },
+       { href: "/admin/home/aymfullpage", label: "Aym Full Page" },
+       
+       
     ],
   },
 

@@ -189,7 +189,7 @@ export const YogaCoursesTeachers: React.FC = () => {
           <div className={styles.sectionHead}>
             <p className={styles.eyebrow}>Open to All Seekers</p>
             <h2 className={styles.sectionTitle}>
-              Who Can Join Yoga TTC in Rishikesh?
+              Yoga TTC in Rishikesh?
             </h2>
             <div className={styles.omDivider}>
               <span className={styles.divLine} />
