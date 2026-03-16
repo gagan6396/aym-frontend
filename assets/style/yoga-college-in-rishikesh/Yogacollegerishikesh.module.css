@@ -98,9 +98,13 @@
 /* ================================================================
    TAB SECTION — Screenshots 2–5
    ================================================================ */
+.tabsectionmain{
+   background-image: url("../../images/1905x1705.webp") !important;
+  background-size: contain;
+}
 .tabSection {
   padding: clamp(2rem, 4vw, 3rem) 0;
-  background: #fff;
+ 
   border-bottom: 1px solid var(--border);
 }
 
@@ -168,9 +172,7 @@
   margin-bottom: 1.2rem;
 }
 
-.tabSection {
-  margin-bottom: 1.4rem;
-}
+
 
 .tabSectionTitle {
   font-family: 'Cormorant Garamond', serif;

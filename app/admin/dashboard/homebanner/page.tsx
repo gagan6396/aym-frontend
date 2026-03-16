@@ -17,7 +17,7 @@ interface Banner {
 
 function useBreakpoint() {
   const [width, setWidth] = useState<number>(
-    typeof window !== "undefined" ? window.innerWidth : 1024
+    typeof window !== "undefined" ? window.innerWidth : 1024,
   );
   useEffect(() => {
     const handler = () => setWidth(window.innerWidth);
@@ -40,7 +40,9 @@ export default function HeroBannerPage() {
   const { isMobile, isTablet, width } = useBreakpoint();
   const dragIndex = useRef<number | null>(null);
 
-  const handleDragStart = (i: number) => { dragIndex.current = i; };
+  const handleDragStart = (i: number) => {
+    dragIndex.current = i;
+  };
   const handleDragEnter = (i: number) => {
     if (dragIndex.current === null || dragIndex.current === i) return;
     const arr = [...banners];
@@ -49,12 +51,14 @@ export default function HeroBannerPage() {
     dragIndex.current = i;
     setBanners(arr.map((b, idx) => ({ ...b, order: idx + 1 })));
   };
-  const handleDragEnd = () => {
+  const handleDragEnd = async () => {
     dragIndex.current = null;
+
+    await updateOrderAPI(banners);
+
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 2500);
   };
-
   const moveUp = (i: number) => {
     if (i === 0) return;
     const arr = [...banners];
@@ -69,9 +73,13 @@ export default function HeroBannerPage() {
   };
 
   const toggleStatus = (id: string) =>
-    setBanners(banners.map(b =>
-      b.id === id ? { ...b, status: b.status === "Active" ? "Inactive" : "Active" } : b
-    ));
+    setBanners(
+      banners.map((b) =>
+        b.id === id
+          ? { ...b, status: b.status === "Active" ? "Inactive" : "Active" }
+          : b,
+      ),
+    );
 
   const handleDelete = async () => {
     try {
@@ -79,7 +87,7 @@ export default function HeroBannerPage() {
       setBanners(
         banners
           .filter((b) => b.id !== deleteModal)
-          .map((b, i) => ({ ...b, order: i + 1 }))
+          .map((b, i) => ({ ...b, order: i + 1 })),
       );
       setDeleteModal(null);
     } catch (error) {
@@ -91,17 +99,30 @@ export default function HeroBannerPage() {
     try {
       const res = await api.get("/banners");
       if (res.data.success) {
-        const formatted = res.data.data.map((b: any, index: number) => ({
+        const formatted = res.data.data.map((b: any) => ({
           id: b._id,
           title: b.bannerName,
           subtitle: "",
           position: "home",
           status: "Active",
-          order: index + 1,
+          order: b.order,
           image: b.image,
         }));
         setBanners(formatted);
       }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const updateOrderAPI = async (data: Banner[]) => {
+    try {
+      await api.put("/banners/reorder", {
+        banners: data.map((b) => ({
+          id: b.id,
+          order: b.order,
+        })),
+      });
     } catch (error) {
       console.log(error);
     }
@@ -160,15 +181,28 @@ export default function HeroBannerPage() {
       className={`${styles.statusBadge} ${b.status === "Active" ? styles.statusActive : styles.statusInactive}`}
       onClick={() => toggleStatus(b.id)}
     >
-      <span className={styles.statusDot} />{b.status}
+      <span className={styles.statusDot} />
+      {b.status}
     </button>
   );
 
   /* ── Arrows ── */
   const Arrows = ({ i }: { i: number }) => (
     <div className={styles.arrowGroup}>
-      <button className={styles.arrowBtn} onClick={() => moveUp(i)} disabled={i === 0}>▲</button>
-      <button className={styles.arrowBtn} onClick={() => moveDown(i)} disabled={i === banners.length - 1}>▼</button>
+      <button
+        className={styles.arrowBtn}
+        onClick={() => moveUp(i)}
+        disabled={i === 0}
+      >
+        ▲
+      </button>
+      <button
+        className={styles.arrowBtn}
+        onClick={() => moveDown(i)}
+        disabled={i === banners.length - 1}
+      >
+        ▼
+      </button>
     </div>
   );
 
@@ -176,10 +210,12 @@ export default function HeroBannerPage() {
   const Actions = ({ b }: { b: Banner }) => (
     <div className={styles.actionBtns}>
       <Link href={`homebanner/${b.id}`} className={styles.editBtn}>
-        <span>✎</span><span className={styles.btnLabel}> Edit</span>
+        <span>✎</span>
+        <span className={styles.btnLabel}> Edit</span>
       </Link>
       <button className={styles.deleteBtn} onClick={() => setDeleteModal(b.id)}>
-        <span>✕</span><span className={styles.btnLabel}> Delete</span>
+        <span>✕</span>
+        <span className={styles.btnLabel}> Delete</span>
       </button>
     </div>
   );
@@ -211,9 +247,13 @@ export default function HeroBannerPage() {
                 <Status b={b} />
               </div>
             </div>
-            <span className={styles.dragHandle} title="Drag to reorder">⠿</span>
+            <span className={styles.dragHandle} title="Drag to reorder">
+              ⠿
+            </span>
           </div>
-          <div className={styles.cardFooter}><Actions b={b} /></div>
+          <div className={styles.cardFooter}>
+            <Actions b={b} />
+          </div>
         </div>
       ))}
     </div>
@@ -247,13 +287,19 @@ export default function HeroBannerPage() {
                 <span className={styles.orderBadge}>{b.order}</span>
                 <Arrows i={i} />
               </td>
-              <td><Preview image={b.image} /></td>
+              <td>
+                <Preview image={b.image} />
+              </td>
               <td>
                 <p className={styles.bannerTitle}>{b.title}</p>
                 <p className={styles.bannerSubtitle}>{b.subtitle}</p>
               </td>
-              <td className={styles.tdCenter}><Status b={b} /></td>
-              <td className={styles.tdCenter}><Actions b={b} /></td>
+              <td className={styles.tdCenter}>
+                <Status b={b} />
+              </td>
+              <td className={styles.tdCenter}>
+                <Actions b={b} />
+              </td>
             </tr>
           ))}
         </tbody>
@@ -296,7 +342,9 @@ export default function HeroBannerPage() {
                   <Arrows i={i} />
                 </div>
               </td>
-              <td><Preview image={b.image} /></td>
+              <td>
+                <Preview image={b.image} />
+              </td>
               <td>
                 <p className={styles.bannerTitle}>{b.title}</p>
                 <p className={styles.bannerSubtitle}>{b.subtitle}</p>
@@ -306,8 +354,12 @@ export default function HeroBannerPage() {
                   <span className={styles.positionTag}>{b.position}</span>
                 </td>
               )}
-              <td className={styles.tdCenter}><Status b={b} /></td>
-              <td className={styles.tdCenter}><Actions b={b} /></td>
+              <td className={styles.tdCenter}>
+                <Status b={b} />
+              </td>
+              <td className={styles.tdCenter}>
+                <Actions b={b} />
+              </td>
             </tr>
           ))}
         </tbody>
@@ -317,8 +369,9 @@ export default function HeroBannerPage() {
 
   return (
     <div className={styles.page}>
-
-      {savedToast && <div className={styles.toast}>✦ Order updated successfully</div>}
+      {savedToast && (
+        <div className={styles.toast}>✦ Order updated successfully</div>
+      )}
 
       {/* Header */}
       <div className={styles.pageHeader}>
@@ -330,19 +383,25 @@ export default function HeroBannerPage() {
               : "Drag rows to reorder · click status to toggle"}
           </p>
         </div>
-        <Link href="/admin/dashboard/homebanner/add-new" className={styles.addBtn}>
+        <Link
+          href="/admin/dashboard/homebanner/add-new"
+          className={styles.addBtn}
+        >
           <span className={styles.addPlus}>+</span>
           <span className={styles.addLabel}>Add Banner</span>
         </Link>
       </div>
 
       <div className={styles.ornament}>
-        <span>❧</span><div className={styles.ornamentLine} />
-        <span>ॐ</span><div className={styles.ornamentLine} /><span>❧</span>
+        <span>❧</span>
+        <div className={styles.ornamentLine} />
+        <span>ॐ</span>
+        <div className={styles.ornamentLine} />
+        <span>❧</span>
       </div>
 
-      {isMobile  && <MobileCards />}
-      {isTablet  && <TabletTable />}
+      {isMobile && <MobileCards />}
+      {isTablet && <TabletTable />}
       {!isMobile && !isTablet && <DesktopTable />}
 
       {banners.length === 0 && (
@@ -353,14 +412,27 @@ export default function HeroBannerPage() {
       )}
 
       {deleteModal !== null && (
-        <div className={styles.modalOverlay} onClick={() => setDeleteModal(null)}>
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setDeleteModal(null)}
+        >
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalOm}>ॐ</div>
             <h3 className={styles.modalTitle}>Confirm Deletion</h3>
-            <p className={styles.modalText}>Are you sure you want to delete this banner? This cannot be undone.</p>
+            <p className={styles.modalText}>
+              Are you sure you want to delete this banner? This cannot be
+              undone.
+            </p>
             <div className={styles.modalActions}>
-              <button className={styles.modalCancel} onClick={() => setDeleteModal(null)}>Cancel</button>
-              <button className={styles.modalConfirm} onClick={handleDelete}>Delete</button>
+              <button
+                className={styles.modalCancel}
+                onClick={() => setDeleteModal(null)}
+              >
+                Cancel
+              </button>
+              <button className={styles.modalConfirm} onClick={handleDelete}>
+                Delete
+              </button>
             </div>
           </div>
         </div>

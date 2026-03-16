@@ -85,6 +85,15 @@ export default function YogaRetreatPage() {
             </div>
           </div>
 
+          
+
+        </div>
+      </section>
+        <section className={styles.heroSectionpara}>
+        <div className={styles.container}>
+
+        
+
           {/* Intro text — verbatim from screenshot 1 */}
           <p className={styles.bodyPara}>
             Rishikesh, also known as the <strong>Yoga Capital of the World</strong>, offers unique

@@ -224,7 +224,8 @@
    ================================================================ */
 .founderSection {
   padding: clamp(2.5rem, 5vw, 4rem) 0;
-  background: var(--cream);
+  background-image: url("../../images/1905x1290.webp") ;
+  background-size: contain;
   position: relative;
 }
 .founderSection::before {
@@ -368,8 +369,8 @@
    TEACHER CARDS
    ================================================================ */
 .teachersSection {
-  background: var(--ivory);
-  padding-bottom: 0;
+  background-image: url("../../images/1905x2531.webp") ;
+  background-size: contain;
 }
 
 /* Card — two-column: image | content */

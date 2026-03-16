@@ -26,9 +26,9 @@
 
 /* ── Section ── */
 .section {
-  position: relative;
-  background: linear-gradient(160deg, #fff9f0 0%, #fdf4e3 40%, #ffefd4 100%);
-  overflow: hidden;
+  background-image: url("../../images/1905x4862.webp") ;
+  background-size: contain;
+ 
   isolation: isolate;
   font-family: 'Cormorant Garamond', serif;
 }

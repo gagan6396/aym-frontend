@@ -39,8 +39,11 @@
    SECTIONS
    ================================================================ */
 .schoolSection {
-  background-color: var(--cream);
-  position: relative;
+  background: #f5f8f6; /* Softer calm spiritual tone */
+  color: #3d2b10;
+  animation: fadeIn 0.8s ease-in-out;
+  background-image: url("../../images/1905x1064.webp");
+  background-size: contain;
 }
 
 .contentSection {
@@ -48,10 +51,19 @@
   border-top: 1px solid var(--border-soft);
 }
 
-.altBg {
-  background-color: var(--cream-warm);
+.altBg{
+  background: #f5f8f6; /* Softer calm spiritual tone */
+  color: #3d2b10;
+  animation: fadeIn 0.8s ease-in-out;
+  background-image: url("../../images/1905x478.webp") ;
+  background-size: contain;
 }
 
+.altBg2{
+  background: #faf6ee; /* Softer calm spiritual tone */
+  
+
+}
 /* ================================================================
    BLOCK HEADER — Title + gold rule (matches screenshots exactly)
    ================================================================ */

@@ -1,16 +1,20 @@
-// FILE LOCATION: next.config.ts  (root of your project)
+// next.config.ts
 
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-    ],
-  },
+ images: {
+  remotePatterns: [
+    {
+      protocol: "http",
+      hostname: "**",
+    },
+    {
+      protocol: "https",
+      hostname: "**",
+    },
+  ],
+},
 };
 
 export default nextConfig;

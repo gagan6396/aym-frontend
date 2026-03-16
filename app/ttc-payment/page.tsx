@@ -62,8 +62,8 @@ const PaymentSection = () => {
     <>
       <section className={styles.section}>
         {/* Mandala background decoration */}
-        <div className={styles.mandalaTopLeft} />
-        <div className={styles.mandalaBottomRight} />
+      
+        
         <div className={styles.chakraCenter} />
 
         <div className={styles.topBorder} />

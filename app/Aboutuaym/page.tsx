@@ -190,7 +190,7 @@ const AboutUs: React.FC = () => {
       {/* ══════════════════════════════════════
           BLOCK 5 — Activities
       ══════════════════════════════════════ */}
-      <section className={`${styles.contentSection} ${styles.altBg}`}>
+      <section className={`${styles.contentSection} ${styles.altBg} ${styles.altBg2}`}>
         <div className={styles.container}>
 
           <header className={styles.blockHeader}>

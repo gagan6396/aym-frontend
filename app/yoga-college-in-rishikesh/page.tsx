@@ -469,7 +469,7 @@ export default function YogaCollegeRishikesh() {
       {/* ══════════════════════════════════════
           SECTION 2–5 — YCB Tabs (Screenshots 2,3,4,5)
       ══════════════════════════════════════ */}
-      <section className={styles.tabSection}>
+      <section className={`${styles.tabSection} ${styles.tabsectionmain}`}>
         <div className={styles.container}>
           {/* Tab headers */}
           <div className={styles.tabHeaders}>

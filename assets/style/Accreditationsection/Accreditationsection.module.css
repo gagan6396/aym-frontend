@@ -2,7 +2,8 @@
   background: #f5f8f6; /* Softer calm spiritual tone */
   color: #3d2b10;
   animation: fadeIn 0.8s ease-in-out;
-  background-image: url("../../images/SVG.svg");
+  background-image: url("../../images/1905x3172.webp");
+  background-size: contain;
 }
 
 /* Container */

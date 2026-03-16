@@ -94,7 +94,7 @@
   font-size: clamp(0.93rem, 1.65vw, 1.06rem);
   line-height: 1.9;
   color: var(--ink-mid);
-  margin: 0 0 1.1rem;
+  margin: 0 ;
   text-align: justify;
 }
 
@@ -141,7 +141,10 @@
   position: relative;
   z-index: 1;
 }
-
+.heroSectionpara{
+  background-image: url("../../images/1905x257.png") ;
+  background-size: contain;
+}
 /* Banner image wrapper */
 .bannerWrap {
   position: relative;
@@ -206,6 +209,8 @@
   letter-spacing: 0.04em;
   text-shadow: 0 1px 6px rgba(0,0,0,0.5);
 }
+
+
 
 /* ──────────────────────────────────────────
    SECTION 2 — SCHEDULE TABLE
@@ -359,6 +364,8 @@
 ────────────────────────────────────────── */
 .photoSection {
   background: var(--cream);
+   background-image: url("../../images/1905x915.png") ;
+  background-size: contain;
 }
 
 .photoStrip {
