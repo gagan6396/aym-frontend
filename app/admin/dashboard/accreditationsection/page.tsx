@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "@/assets/style/Admin/dashboard/accreditationsection/Accreditationsection.module.css";
 import api from "@/lib/api";
+import toast from "react-hot-toast";
 
 /* ─────────────────────── Types ─────────────────────── */
 
@@ -81,7 +82,14 @@ export default function AccreditationSectionListPage() {
       const cmp = av < bv ? -1 : av > bv ? 1 : 0;
       return sortDir === "asc" ? cmp : -cmp;
     });
+const handleAddClick = () => {
+  if (records.length > 0) {
+    toast.error("Only one Accreditation section allowed. Please edit or delete existing one.");
+    return;
+  }
 
+  router.push("/admin/dashboard/accreditationsection/add-new");
+};
   /* delete */
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -152,9 +160,9 @@ export default function AccreditationSectionListPage() {
           <h1 className={styles.pageTitle}>Accreditation Sections</h1>
           <p className={styles.pageSubtitle}>Manage the Accreditation &amp; Recognition page content</p>
         </div>
-        <Link href="/admin/dashboard/accreditationsection/add-new" className={styles.addNewBtn}>
-          <span>✦</span> Add New Section
-        </Link>
+        <button className={styles.addNewBtn} onClick={handleAddClick}>
+  <span>✦</span> Add New Section
+</button>
       </div>
 
       <div className={styles.ornament}>
