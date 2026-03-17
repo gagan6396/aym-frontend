@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import styles from "@/assets/style/our-teachers/Teachers.module.css";
 import HowToReach from "@/components/home/Howtoreach";
+import Link from "next/link";
 
 // ── Unsplash placeholder images ──────────────────────────────────
 const teacher1 =
@@ -458,10 +459,12 @@ const Teachers: React.FC = () => {
                   {p}
                 </p>
               ))}
-              <button className={styles.founderBtn}>
-                More Information about Yogi Chetan Mahesh Ji
-                <span className={styles.founderBtnArrow}>→</span>
-              </button>
+              <Link href="/yoga-teacher-india">
+  <button className={styles.founderBtn}>
+    More Information about Yogi Chetan Mahesh Ji
+    <span className={styles.founderBtnArrow}>→</span>
+  </button>
+</Link>
             </div>
           </div>
         </div>
