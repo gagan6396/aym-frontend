@@ -626,3 +626,124 @@
   .certCardBody { flex-direction: column; }
   .certImageUpload { width: 100%; }
 }
+
+/* ================================================================
+   ADDITIONS — Append these at the bottom of
+   Yogacoursessection.module.css
+   ================================================================ */
+
+/* ── Dual Image Field ── */
+.dualImgWrapper {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 1.2rem;
+  align-items: flex-start;
+}
+
+.dualImgLeft { display: flex; flex-direction: column; gap: 0.5rem; }
+.dualImgRight { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.dualImgSubLabel {
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.08em; color: #a07840;
+  text-transform: uppercase; margin: 0 0 0.3rem;
+}
+
+.dualImgOrDivider {
+  display: flex; align-items: center; gap: 0.6rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.78rem; color: rgba(160,120,64,0.5);
+  font-style: italic; margin: 0.2rem 0;
+}
+.dualImgOrDivider::before,
+.dualImgOrDivider::after {
+  content: '';
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, #e8d5b5, transparent);
+}
+
+.dualImgPreviewBox {
+  position: relative;
+  width: 100%; aspect-ratio: 4/3;
+  border-radius: 8px; overflow: hidden;
+  border: 1.5px solid #e8d5b5;
+  background: #fffdf8;
+}
+
+.dualImgPreviewImg {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+
+.dualImgClear {
+  position: absolute; top: 0.4rem; right: 0.4rem;
+  width: 22px; height: 22px;
+  background: rgba(30,10,0,0.65); border: none; border-radius: 50%;
+  color: #fff; font-size: 0.65rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.18s;
+}
+.dualImgClear:hover { background: #c44a00; }
+
+.dualImgPlaceholder {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.4rem; width: 100%; aspect-ratio: 4/3;
+  border: 1.5px dashed #e8d5b5; border-radius: 8px;
+  background: #fffdf8;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.78rem; color: rgba(160,120,64,0.5);
+  font-style: italic;
+}
+.dualImgPlaceholder span:first-child { font-size: 1.4rem; }
+
+/* ── Jodit Rich Text Editor Wrapper ── */
+.joditWrap {
+  border-radius: 8px;
+  border: 1.5px solid #e8d5b5;
+  overflow: hidden;
+  transition: border-color 0.22s, box-shadow 0.22s;
+}
+.joditWrap:focus-within {
+  border-color: #e07b00;
+  box-shadow: 0 0 0 3px rgba(224,123,0,0.1);
+}
+.joditError  { border-color: #c44a00 !important; box-shadow: 0 0 0 3px rgba(196,74,0,0.1) !important; }
+.joditSuccess { border-color: #4a8c2a; box-shadow: 0 0 0 3px rgba(74,140,42,0.08); }
+
+/* Override Jodit internals to match parchment theme */
+.joditWrap :global(.jodit-container) {
+  border: none !important;
+  border-radius: 0 !important;
+  font-family: 'Cormorant Garamond', serif !important;
+}
+.joditWrap :global(.jodit-toolbar__box) {
+  background: linear-gradient(90deg, #fdf6ec, #fffaf2) !important;
+  border-bottom: 1px solid #e8d5b5 !important;
+}
+.joditWrap :global(.jodit-toolbar-button__button) {
+  color: #5c2d00 !important;
+}
+.joditWrap :global(.jodit-toolbar-button__button:hover) {
+  background: rgba(224,123,0,0.12) !important;
+  border-radius: 4px !important;
+}
+.joditWrap :global(.jodit-workplace) {
+  background: #fff !important;
+}
+.joditWrap :global(.jodit-wysiwyg) {
+  font-family: 'Cormorant Garamond', serif !important;
+  font-size: 1rem !important;
+  color: #3d1d00 !important;
+  padding: 0.8rem 1rem !important;
+  min-height: 120px !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .dualImgWrapper {
+    grid-template-columns: 1fr;
+  }
+  .dualImgRight {
+    order: -1; /* Preview upar aaye mobile par */
+  }
+}

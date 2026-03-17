@@ -1,136 +1,207 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import styles from "../../assets/style/Home/Yogacoursesteachers.module.css";
-import founder from "../../assets/images/yogi-chetan-mahesh-ji.webp";
-import teacher1 from "../../assets/images/yogi-mahesh.webp";
-import teacher2 from "../../assets/images/multi-style-yoga-teacher.webp";
-import teacher3 from "../../assets/images/yoga-teacher-anatomy.webp";
-import teacher4 from "../../assets/images/ajay.webp";
+import api from "@/lib/api";
 
-const courses = [
-  {
-    id: 1,
-    hours: "100 HOUR YOGA",
-    days: "14 Days Program",
-    name: "Beginner Yoga Course",
-    style: "Ashtanga / Hatha",
-    duration: "14 Days",
-    certificate: "100 Hour",
-    fee: "500 USD / 550 USD",
-    color: "#8B5E3C",
-    img: "https://images.unsplash.com/photo-1545389336-cf090694435e?w=600&q=80",
-  },
-  {
-    id: 2,
-    hours: "200 HOUR YOGA",
-    days: "24 Days Program",
-    name: "Foundation Yoga Course",
-    style: "Hatha / Ashtanga Yoga",
-    duration: "24 Days",
-    certificate: "200 RYT",
-    fee: "749 USD / 899 USD",
-    color: "#2D5A27",
-    img: "https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?w=600&q=80",
-  },
-  {
-    id: 3,
-    hours: "300 HOUR YOGA",
-    days: "28 Days Program",
-    name: "Intermediate Yoga Course",
-    style: "Multi-Style Yoga",
-    duration: "28 Days",
-    certificate: "300 RYT",
-    fee: "849 USD / 999 USD",
-    color: "#1A4A6B",
-    img: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=600&q=80",
-  },
-  {
-    id: 4,
-    hours: "500 HOUR YOGA",
-    days: "56 Days Program",
-    name: "Advanced Yoga Course",
-    style: "Hatha / Multi-Style",
-    duration: "56 Days",
-    certificate: "500 RYT",
-    fee: "1649 USD / 1949 USD",
-    color: "#7B3F00",
-    img: "https://images.unsplash.com/photo-1588286840104-8957b019727f?w=600&q=80",
-  },
-];
+/* ══════════════════════════════════════════════════════
+   IMAGE URL HELPER
+   /uploads/file.jpg  →  http://172.20.10.2:5000/uploads/file.jpg
+   https://...        →  unchanged
+   "" / null          →  ""
+══════════════════════════════════════════════════════ */
+function getImageUrl(path: string | undefined | null): string {
+  if (!path || path.trim() === "") return "";
+  if (/^https?:\/\//.test(path)) return path;
+  const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
+  return `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+}
 
-const teachers = [
-  {
-    id: 1,
-    name: "Dr. Mahesh",
-    surname: "Bhatt",
-    img: teacher1,
-  },
-  {
-    id: 2,
-    name: "Yogi Deepak",
-    surname: "Bisht",
-    img: teacher2,
-  },
-  {
-    id: 3,
-    name: "Dr. Hemlata",
-    surname: "Saklani",
-    img: teacher3,
-  },
-  {
-    id: 4,
-    name: "Yogi Ajay",
-    surname: "Kumar",
-    img: teacher4,
-  },
-];
+/* ══════════════════════════════════════════════════════
+   TYPES
+══════════════════════════════════════════════════════ */
+interface CourseItem {
+  _id: string;
+  hours: string;
+  days: string;
+  name: string;
+  style: string;
+  duration: string;
+  certificate: string;
+  feeShared: string;
+  feePrivate: string;
+  color: string;
+  imgUrl: string;
+  detailsLink: string;
+  bookLink: string;
+}
 
+interface TeacherItem {
+  _id: string;
+  name: string;
+  surname: string;
+  imgUrl: string;
+}
 
+interface FounderData {
+  eyebrow: string;
+  name: string;
+  imgUrl: string;
+  imgAlt: string;
+  para1: string;
+  para2: string;
+  para3: string;
+  para3Highlight: string;
+  detailsBtnText: string;
+  detailsBtnLink: string;
+  bookBtnText: string;
+  bookBtnLink: string;
+}
 
+interface SectionHeader {
+  eyebrow: string;
+  sectionTitle: string;
+  sectionDesc: string;
+}
+
+interface WhoData {
+  eyebrow: string;
+  sectionTitle: string;
+  para1: string;
+  para2: string;
+  para3: string;
+  para4: string;
+  para5: string;
+  chips: string[];
+  quoteText: string;
+  quoteAttrib: string;
+}
+
+interface TeachersHeaderData {
+  eyebrow: string;
+  sectionTitle: string;
+  introPara1: string;
+  introPara1Highlight: string;
+  introPara2: string;
+  introPara2Highlight: string;
+  ctaBtnText: string;
+  ctaBtnLink: string;
+}
+
+interface PageData {
+  sectionHeader: SectionHeader;
+  courses: CourseItem[];
+  who: WhoData;
+  teachersHeader: TeachersHeaderData;
+  founder: FounderData;
+  teachers: TeacherItem[];
+}
+
+/* ══════════════════════════════════════════════════════
+   HIGHLIGHT HELPER
+   Wraps a keyword inside a paragraph with <strong className={styles.hl}>
+══════════════════════════════════════════════════════ */
+function HighlightedPara({
+  text,
+  highlight,
+  className,
+}: {
+  text: string;
+  highlight: string;
+  className?: string;
+}) {
+  if (!highlight || !text.includes(highlight)) {
+    return <p className={className}>{text}</p>;
+  }
+  const [before, after] = text.split(highlight);
+  return (
+    <p className={className}>
+      {before}
+      <strong className={styles.hl}>{highlight}</strong>
+      {after}
+    </p>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   COMPONENT
+══════════════════════════════════════════════════════ */
 export const YogaCoursesTeachers: React.FC = () => {
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [data, setData]       = useState<PageData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get("/yoga-courses/get");
+        if (res.data?.data) setData(res.data.data);
+      } catch (err) {
+        console.error("YogaCoursesTeachers fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  /* ── Loading skeleton ── */
+  if (loading) {
+    return (
+      <div className={styles.wrapper}>
+        <section className={styles.coursesSection}>
+          <div className={styles.topBorder} />
+          <div className={styles.container}>
+            <div style={{ minHeight: 400, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.4 }}>
+              <span style={{ fontFamily: "serif", fontSize: "2rem" }}>ॐ</span>
+            </div>
+          </div>
+          <div className={styles.bottomBorder} />
+        </section>
+      </div>
+    );
+  }
+
+  /* ── No data ── */
+  if (!data) return null;
+
+  const { sectionHeader, courses, who, teachersHeader, founder, teachers } = data;
 
   return (
     <div className={styles.wrapper}>
+
+      {/* ══════════════════════════════════════════════════
+          COURSES SECTION
+      ══════════════════════════════════════════════════ */}
       <section className={styles.coursesSection}>
-     
         <div className={styles.topBorder} />
         <div className={styles.container}>
+
           <div className={styles.sectionHead}>
-            <p className={styles.eyebrow}>Sacred Path of Yoga</p>
-            <h2 className={styles.sectionTitle}>
-              Join Our Yoga Teacher Training in Rishikesh
-            </h2>
+            <p className={styles.eyebrow}>{sectionHeader.eyebrow}</p>
+            <h2 className={styles.sectionTitle}>{sectionHeader.sectionTitle}</h2>
             <div className={styles.omDivider}>
               <span className={styles.divLine} />
               <span className={styles.divOm}>ॐ</span>
               <span className={styles.divLine} />
             </div>
-            <p className={styles.sectionDesc}>
-              Ready to embark on a transformative path with the power of Yoga?
-              Join us today and discover clarity, peace of mind, and an overall
-              healthy, happy spirit with the Indian Association for Yoga and
-              Meditation.
-            </p>
+            <p className={styles.sectionDesc}>{sectionHeader.sectionDesc}</p>
           </div>
+
           <div className={styles.coursesGrid}>
             {courses.map((course, i) => (
               <div
-                key={course.id}
+                key={course._id}
                 className={styles.courseCard}
-                style={
-                  {
-                    "--card-color": course.color,
-                    "--delay": `${i * 0.1}s`,
-                  } as React.CSSProperties
-                }
-                onMouseEnter={() => setHoveredCard(course.id)}
+                style={{
+                  "--card-color": course.color,
+                  "--delay": `${i * 0.1}s`,
+                } as React.CSSProperties}
+                onMouseEnter={() => setHoveredCard(course._id)}
                 onMouseLeave={() => setHoveredCard(null)}
               >
                 <div className={styles.cardImgWrap}>
                   <img
-                    src={course.img}
+                    src={getImageUrl(course.imgUrl)}
                     alt={course.name}
                     className={styles.cardImg}
                     loading="lazy"
@@ -145,6 +216,7 @@ export const YogaCoursesTeachers: React.FC = () => {
                   <div className={styles.cardHours}>{course.hours}</div>
                   <div className={styles.cardOmPulse}>ॐ</div>
                 </div>
+
                 <div className={styles.cardBody}>
                   <h3 className={styles.cardName}>{course.name}</h3>
                   <div className={styles.cardNameUnderline} />
@@ -159,20 +231,20 @@ export const YogaCoursesTeachers: React.FC = () => {
                     </div>
                     <div className={styles.metaRow}>
                       <span className={styles.metaKey}>Certificate</span>
-                      <span className={styles.metaVal}>
-                        {course.certificate}
-                      </span>
+                      <span className={styles.metaVal}>{course.certificate}</span>
                     </div>
                     <div className={styles.metaRow}>
                       <span className={styles.metaKey}>Course Fee</span>
-                      <span className={styles.metaVal}>{course.fee}</span>
+                      <span className={styles.metaVal}>
+                        {course.feeShared} USD / {course.feePrivate} USD
+                      </span>
                     </div>
                   </div>
                   <div className={styles.cardActions}>
-                    <a href="#" className={styles.detailsBtn}>
+                    <a href={course.detailsLink || "#"} className={styles.detailsBtn}>
                       More Details
                     </a>
-                    <a href="#" className={styles.bookBtn}>
+                    <a href={course.bookLink || "#"} className={styles.bookBtn}>
                       Book Now
                     </a>
                   </div>
@@ -180,72 +252,39 @@ export const YogaCoursesTeachers: React.FC = () => {
               </div>
             ))}
           </div>
+
         </div>
         <div className={styles.bottomBorder} />
       </section>
+
+      {/* ══════════════════════════════════════════════════
+          WHO SECTION
+      ══════════════════════════════════════════════════ */}
       <section className={styles.whoSection}>
-      
         <div className={styles.container}>
+
           <div className={styles.sectionHead}>
-            <p className={styles.eyebrow}>Open to All Seekers</p>
-            <h2 className={styles.sectionTitle}>
-              Yoga TTC in Rishikesh?
-            </h2>
+            <p className={styles.eyebrow}>{who.eyebrow}</p>
+            <h2 className={styles.sectionTitle}>{who.sectionTitle}</h2>
             <div className={styles.omDivider}>
               <span className={styles.divLine} />
               <span className={styles.divOm}>ॐ</span>
               <span className={styles.divLine} />
             </div>
           </div>
+
           <div className={styles.whoGrid}>
             <div className={styles.whoText}>
-              <p className={styles.para}>
-                An internationally certified hatha yoga teacher training course
-                in Rishikesh does not limit itself to those who wish to pursue
-                it as a vocation. It is suited for everyone who wants to learn
-                and deepen their Yoga practice.
-              </p>
-              <p className={styles.para}>
-                As you become part of yoga training in India, you will slowly
-                uncover its benefits to your body and the peace you feel in your
-                mind. Anyone between the age of 18–50 can be a part of our yoga
-                retreats in Rishikesh.
-              </p>
-              <p className={styles.para}>
-                Whether you want to become a yoga teacher, maintain an active
-                lifestyle, lose weight or just experience the positivity that
-                this ancient practice brings to life, you can choose to enrol
-                for our yoga certification course in Rishikesh. Students,
-                working professionals or individuals from other walks of life
-                can explore this holistic Rishikesh yoga lifestyle.
-              </p>
-              <p className={styles.para}>
-                Several of our yoga teachers accelerated their personal and
-                spiritual growth by spreading the knowledge of authentic and
-                traditional forms of Yoga. Once you start sharing and teaching
-                others, it is a relearning of the Yogic techniques opening up
-                newer avenues for yourself.
-              </p>
-              <p className={styles.para}>
-                With a certified yoga course from Rishikesh, you can also
-                explore it as a career opportunity. Seek solace in helping
-                others better their bodies and mind. With a Yoga Alliance
-                certificate, you can teach yoga globally. It's an asset to
-                become a certified Yoga professional in India and abroad.
-              </p>
+              {[who.para1, who.para2, who.para3, who.para4, who.para5].map((para, i) => (
+                <p key={i} className={styles.para}>{para}</p>
+              ))}
             </div>
+
             <div className={styles.whoDecor}>
               <div className={styles.whoDecorInner}>
                 <div className={styles.bigOm}>ॐ</div>
                 <div className={styles.whoDecorItems}>
-                  {[
-                    "Age 18–50 Welcome",
-                    "All Levels",
-                    "Career Opportunity",
-                    "Global Certification",
-                    "Mind & Body Growth",
-                    "Spiritual Awakening",
-                  ].map((item, i) => (
+                  {who.chips.map((item, i) => (
                     <div
                       key={i}
                       className={styles.whoDecorChip}
@@ -257,67 +296,69 @@ export const YogaCoursesTeachers: React.FC = () => {
                   ))}
                 </div>
                 <div className={styles.whoDecorQuote}>
-                  "Yoga is the journey of the self,
-                  <br />
-                  through the self, to the self."
-                  <span className={styles.whoDecorAttrib}>— Bhagavad Gita</span>
+                  "{who.quoteText}"
+                  <span className={styles.whoDecorAttrib}>{who.quoteAttrib}</span>
                 </div>
               </div>
             </div>
           </div>
+
         </div>
       </section>
+
+      {/* ══════════════════════════════════════════════════
+          TEACHERS SECTION
+      ══════════════════════════════════════════════════ */}
       <section className={styles.teachersSection}>
-     
         <div className={styles.topBorder} />
         <div className={styles.container}>
+
           <div className={styles.sectionHead}>
-            <p className={styles.eyebrow}>Masters of the Ancient Art</p>
-            <h2 className={styles.sectionTitle}>
-              Our Experienced Yoga Teachers
-            </h2>
+            <p className={styles.eyebrow}>{teachersHeader.eyebrow}</p>
+            <h2 className={styles.sectionTitle}>{teachersHeader.sectionTitle}</h2>
             <div className={styles.omDivider}>
               <span className={styles.divLine} />
               <span className={styles.divOm}>ॐ</span>
               <span className={styles.divLine} />
             </div>
           </div>
+
+          {/* Teachers Intro Paragraphs */}
           <div className={styles.teachersIntro}>
-            <p className={styles.para}>
-              AYM has a highly qualified team of Yoga professionals who conduct{" "}
-              <strong className={styles.hl}>
-                hatha yoga teacher training in Rishikesh
-              </strong>
-              . They impart their yogic wisdom and teach students to form deeper
-              connections with themselves. You will learn from expert yogis who
-              have mastered the art and movements throughout their years of
-              dedicated practice.
-            </p>
-            <p className={styles.para}>
-              Our aim goes beyond just yoga teacher training — we are committed
-              to promoting the practice of yoga in institutes across India. To
-              support this vision, we also offer{" "}
-              <strong className={styles.hl}>
-                online yoga instructor courses in Rishikesh
-              </strong>
-              . Our certified yoga teachers form the pillars of strength that
-              uphold AYM's reputation as the best yoga school in Rishikesh.
-            </p>
+            <HighlightedPara
+              text={teachersHeader.introPara1}
+              highlight={teachersHeader.introPara1Highlight}
+              className={styles.para}
+            />
+            <HighlightedPara
+              text={teachersHeader.introPara2}
+              highlight={teachersHeader.introPara2Highlight}
+              className={styles.para}
+            />
           </div>
+
+          {/* Founder Block */}
           <div className={styles.founderBlock}>
             <div className={styles.founderImgCol}>
               <div className={styles.founderImgFrame}>
-                <Image
-                  src={founder}
-                  alt="Yogi Chetan Mahesh — Founder of AYM Yoga School"
-                  className={styles.founderImg}
-                  width={500}
-                  height={600}
-                />
+                {getImageUrl(founder.imgUrl) ? (
+                  <img
+                    src={getImageUrl(founder.imgUrl)}
+                    alt={founder.imgAlt}
+                    className={styles.founderImg}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  /* Fallback placeholder if no image saved */
+                  <div style={{
+                    width: "100%", height: "100%", minHeight: 300,
+                    background: "linear-gradient(135deg,#fdf6ec,#e8d5b5)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "3rem", opacity: 0.4,
+                  }}>🧘</div>
+                )}
                 <div className={styles.founderImgOverlay}>
-                  <span className={styles.founderImgName}>
-                    Yogi Chetan Mahesh
-                  </span>
+                  <span className={styles.founderImgName}>{founder.name}</span>
                 </div>
                 <div className={styles.fCornerTL} />
                 <div className={styles.fCornerTR} />
@@ -325,55 +366,53 @@ export const YogaCoursesTeachers: React.FC = () => {
                 <div className={styles.fCornerBR} />
               </div>
             </div>
+
             <div className={styles.founderTextCol}>
-              <p className={styles.founderEyebrow}>
-                Founder of AYM Yoga School
-              </p>
-              <h3 className={styles.founderName}>Yogi Chetan Mahesh</h3>
+              <p className={styles.founderEyebrow}>{founder.eyebrow}</p>
+              <h3 className={styles.founderName}>{founder.name}</h3>
               <div className={styles.founderNameUnderline} />
-              <p className={styles.para}>
-                Yogi Chetan Mahesh, founder-director of AYM school has over 20
-                years of experience in teaching and practicing Hatha Yoga and
-                Ashtanga Yoga.
-              </p>
-              <p className={styles.para}>
-                His mastery of yogic practice serves as an extension for
-                students to learn the best tips and techniques to perform yoga
-                better. He and his group of teachers have taught more than
-                15,000 students at AYM, who are now successful yoga teachers. He
-                is considered one of the best yoga instructors in India.
-              </p>
-              <p className={styles.para}>
-                Achieving a significant milestone in his yogic journey, he is
-                also a{" "}
-                <strong className={styles.hl}>Gold Medal recipient</strong> in a
-                district-level Yoga competition.
-              </p>
+              <p className={styles.para}>{founder.para1}</p>
+              <p className={styles.para}>{founder.para2}</p>
+              <HighlightedPara
+                text={founder.para3}
+                highlight={founder.para3Highlight}
+                className={styles.para}
+              />
               <div className={styles.founderActions}>
-                <a href="#" className={styles.detailsBtn}>
-                  Know More About Yogi Chetan Mahesh
+                <a href={founder.detailsBtnLink || "#"} className={styles.detailsBtn}>
+                  {founder.detailsBtnText}
                 </a>
-                <a href="#" className={styles.bookBtn}>
-                  Book Now
+                <a href={founder.bookBtnLink || "#"} className={styles.bookBtn}>
+                  {founder.bookBtnText}
                 </a>
               </div>
             </div>
           </div>
+
+          {/* Teachers Grid */}
           <div className={styles.teachersGrid}>
             {teachers.map((t, i) => (
               <div
-                key={t.id}
+                key={t._id}
                 className={styles.teacherCard}
                 style={{ "--delay": `${i * 0.1}s` } as React.CSSProperties}
               >
                 <div className={styles.teacherImgWrap}>
-                  <Image
-                    src={t.img}
-                    alt={`${t.name} ${t.surname}`}
-                    className={styles.teacherImg}
-                    width={300}
-                    height={350}
-                  />
+                  {getImageUrl(t.imgUrl) ? (
+                    <img
+                      src={getImageUrl(t.imgUrl)}
+                      alt={`${t.name} ${t.surname}`}
+                      className={styles.teacherImg}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: "100%", height: "100%", minHeight: 220,
+                      background: "linear-gradient(135deg,#fdf6ec,#e8d5b5)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: "2.5rem", opacity: 0.5,
+                    }}>🧘</div>
+                  )}
                   <div className={styles.teacherImgOverlay}>
                     <span className={styles.teacherOm}>ॐ</span>
                   </div>
@@ -385,14 +424,21 @@ export const YogaCoursesTeachers: React.FC = () => {
               </div>
             ))}
           </div>
+
+          {/* CTA */}
           <div className={styles.teachersCta}>
-            <a href="#" className={styles.teachersCtaBtn}>
-              Our Teachers' Information <span>→</span>
+            <a
+              href={teachersHeader.ctaBtnLink || "#"}
+              className={styles.teachersCtaBtn}
+            >
+              {teachersHeader.ctaBtnText} <span>→</span>
             </a>
           </div>
+
         </div>
         <div className={styles.bottomBorder} />
       </section>
+
     </div>
   );
 };
