@@ -8,6 +8,7 @@ import styles from "@/assets/style/Admin/dashboard/gallery/Gallery.module.css";
 
 /* ── Types ── */
 interface ImageItem {
+  file?: File; 
   src: string;
   label: string;
   editingLabel?: boolean;
