@@ -82,9 +82,18 @@ export const HomeaboutSection = () => {
         <div className={styles.body}>
           {/* LEFT */}
           <div className={styles.bodyLeft}>
-            <p className={styles.para}>{data.paraOne}</p>
-            <p className={styles.para}>{data.paraTwo}</p>
-            <p className={styles.para}>{data.paraThree}</p>
+            <div 
+              className={styles.para}
+              dangerouslySetInnerHTML={{ __html: data.paraOne }}
+            />
+            <div 
+              className={styles.para}
+              dangerouslySetInnerHTML={{ __html: data.paraTwo }}
+            />
+            <div 
+              className={styles.para}
+              dangerouslySetInnerHTML={{ __html: data.paraThree }}
+            />
 
             <div className={styles.accreditations}>
               {data.accreditations?.map((a, i) => (
@@ -99,11 +108,14 @@ export const HomeaboutSection = () => {
           <div className={styles.bodyRight}>
             <blockquote className={styles.quote}>
               <span className={styles.quoteMarks}>"</span>
-              {data.quoteText}
+              <span dangerouslySetInnerHTML={{ __html: data.quoteText }} />
               <span className={styles.quoteMarks}>"</span>
             </blockquote>
 
-            <p className={styles.para}>{data.paraRight}</p>
+            <div 
+              className={styles.para}
+              dangerouslySetInnerHTML={{ __html: data.paraRight }}
+            />
 
             <div className={styles.stylesBlock}>
               <h4 className={styles.stylesTitle}>Multi-Style Yoga Courses</h4>
@@ -117,13 +129,19 @@ export const HomeaboutSection = () => {
               </div>
             </div>
 
-            <p className={styles.paraSmall}>{data.paraSmall}</p>
+            <div 
+              className={styles.paraSmall}
+              dangerouslySetInnerHTML={{ __html: data.paraSmall }}
+            />
           </div>
         </div>
 
         {/* CTA */}
         <div className={styles.ctaRow}>
-          <p className={styles.ctaText}>{data.ctaText}</p>
+          <div 
+            className={styles.ctaText}
+            dangerouslySetInnerHTML={{ __html: data.ctaText }}
+          />
 
           <a href={data.ctaLink} className={styles.ctaBtn}>
             Explore All Courses

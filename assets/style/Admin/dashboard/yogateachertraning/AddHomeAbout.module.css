@@ -576,3 +576,98 @@
   }
 }
 
+/* Add to your AddHomeAbout.module.css */
+
+.joditWrapper {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.joditWrapper :global(.jodit-container) {
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+}
+
+.joditWrapper :global(.jodit-toolbar__box) {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.joditWrapper :global(.jodit-workplace) {
+  min-height: 200px;
+  background: #fff;
+}
+
+.joditWrapper :global(.jodit-wysiwyg) {
+  padding: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.joditWrapper :global(.jodit-status-bar) {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.joditWrapper :global(.jodit-placeholder) {
+  color: #999 !important;
+  font-style: italic;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.inputError :global(.jodit-container) {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 1px #dc2626;
+}
+
+.inputSuccess :global(.jodit-container) {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 1px #10b981;
+}
+
+/* Fix for dark text in editor */
+.joditWrapper :global(.jodit-wysiwyg p),
+.joditWrapper :global(.jodit-wysiwyg div),
+.joditWrapper :global(.jodit-wysiwyg span) {
+  color: #333;
+}
+
+/* Style for color picker button */
+.joditWrapper :global(.jodit-toolbar-button__trigger) {
+  border-radius: 4px;
+}
+
+/* Make sure text color picker is visible */
+.joditWrapper :global(.jodit-color-picker) {
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Placeholder styling for all inputs */
+.input::placeholder,
+.textarea::placeholder {
+  color: #999;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* Stats input placeholders */
+.statInput .input::placeholder {
+  color: #999;
+  font-style: italic;
+}
