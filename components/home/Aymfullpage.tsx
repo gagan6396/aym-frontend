@@ -1,227 +1,329 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import styles from "../../assets/style/Home/Aymfullpage.module.css";
-import yogaoutdoor from "../../assets/images/yoga-ttc-classes-outdoor.webp";
-import yogaBodyPlanes from "../../assets/images/Alignment-and-Adjustment.jpg";
+import api from "@/lib/api";
 
-const campusFacilities = [
-  {
-    bold: "Location:",
-    text: "Our campus is a spacious blend of natural beauty and airy buildings, creating a quiet and contemplative atmosphere. The AYM campus is one of the most lush campuses among Yoga TTC schools in Rishikesh. The spacious and vast gardens maintain a peaceful ambience to learn, relax, and rejuvenate in the lap of nature. Our yoga TTC ashram in Rishikesh spans 50,000 square feet of land in the heart of Rishikesh, complemented by the distant sound of mantras being chanted from the main hall. Our Authentic Yoga Ashram in Rishikesh is located in Upper Tapovan.",
-  },
-  {
-    bold: "AYM Buildings/Wings:",
-    text: "We have a total of six wings, each with 20 to 25 rooms, as well as yoga studios, a library, an Ayurveda spa centre, and a swimming pool. Each is built in such a way that it gets plenty of fresh air and sunlight.",
-  },
-  {
-    bold: "AYM Accommodation:",
-    text: "We have a variety of accommodations at our Transformative Yoga teacher training centre in Rishikesh. Like the Luxury room, a private deluxe air-conditioned room, deluxe double room, a twin-sharing room, a dormitory for boys, and a dormitory for girls. All rooms feature windows for natural light and fresh air.",
-  },
-  {
-    bold: "AYM Garden:",
-    text: "At the centre of our campus, we have a beautiful garden with lush greenery, featuring large mango and avocado trees, as well as swinging chairs. Sunlight dappled through the broad leaves of the mango tree, and the flower beds overflowed with vibrant colours.",
-  },
-  {
-    bold: "AYM Yoga studios:",
-    text: "Our campus has 10 Yoga halls designed to help you leave the outside world behind. Soft, wooden flooring and sun-drenched, large windows fill the space with natural light, creating a calm atmosphere perfect for yoga practice.",
-  },
-  {
-    bold: "AYM Dining space and cuisine:",
-    text: "Our dining hall is a peaceful space where mindful eating and nourishing, simple meals are served. We emphasize providing sattvic, healthy, Indian vegetarian, locally sourced meals that support yoga practice.",
-  },
-  {
-    bold: "AYM Central Temple or Agnihotra shala:",
-    text: "Agnihotra shala is a space for performing the Vedic healing ritual, which purifies the atmosphere and promotes physical, mental, and spiritual well-being. In this space, we burn fire using herbal medicine, sandalwood, and chant positive Mantras.",
-  },
-  {
-    bold: "Swimming pool:",
-    text: "A small pool in open air and in sunlight, designed for the Healing properties of water and being used for water yoga, pregnancy yoga, teacher training classes, water breathing exercise and contemplation.",
-  },
-  {
-    bold: "AYM Ayurveda centre:",
-    text: "You can step away from every tension into a world of relaxation, rejuvenation, and natural healing at AYM Ayurveda Center in Rishikesh India. Our campus also offers combined yoga and ayurveda teacher training courses in Rishikesh.",
-  },
-  {
-    bold: "Sound / Reiki healing studios:",
-    text: "We have three sound healing studios, a haven of peace featuring soothing light and many sound healers from the Himalayas.",
-  },
-  {
-    bold: "A yoga library:",
-    text: "The space is a blend of traditional and modern ambience. Having books on yoga philosophy, ayurveda, computers, and high-speed internet.",
-  },
-  {
-    bold: "The atmosphere of AYM Yoga School in Rishikesh:",
-    text: "The vibe of the Aym campus is full of spiritual energy, with a community of residential yoga teacher training certification students, long-stay students who indulge in self-practice of yoga, and yoga volunteers, as well as individuals pursuing Ayurveda courses and treatments, or hoteliers. The campus is peaceful, with the soft sound of nature, sparrows, and a modern community, all set against a fresh mountain breeze and sunlight.",
-  },
-];
+/* ══════════════════════════════════════════════
+   TYPES
+══════════════════════════════════════════════ */
+interface BodyPlane     { label: string; listItem: string; }
+interface CampusFacility { bold: string; text: string; imageUrl?: string; imageAlt?: string; }
+interface PromoCard     { title: string; text: string; link: string; }
+interface JourneyPara   { text: string; }
 
-const bodyPlanes = [
-  "Sagittal (Longitudinal) plane.",
-  "Coronal (frontal) plane.",
-  "Transverse (Axial) plane.",
-];
+interface PageData {
+  alignTitle:         string;
+  salutation:         string;
+  alignPara1:         string;
+  alignPara2:         string;
+  alignPara3:         string;
+  bodyPlanes:         BodyPlane[];
+  planesPara:         string;
+  bodyPlanesImage:    string;
+  bodyPlanesImageAlt: string;
+  outdoorImage:       string;
+  outdoorImageAlt:    string;
+  outdoorCaption:     string;
+  highlight1:         string;
+  highlight2:         string;
+  campusTitle:        string;
+  campusFacilities:   CampusFacility[];
+  promoCard1:         PromoCard;
+  promoCard2:         PromoCard;
+  ctaHeading:         string;
+  ctaSubtext:         string;
+  whatsappLink:       string;
+  masterQuote:        string;
+  masterAttrib:       string;
+  journeyParas:       JourneyPara[];
+  namesteText:        string;
+}
 
-export const AYMFullPage: React.FC = () => {
+/* ══════════════════════════════════════════════
+   HELPER — relative path → absolute URL
+══════════════════════════════════════════════ */
+const BASE = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+const toAbsUrl = (path: string | undefined | null): string => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  return `${BASE}${path}`;
+};
+
+/* ══════════════════════════════════════════════
+   COMPONENT
+══════════════════════════════════════════════ */
+const AYMFullPage: React.FC = () => {
+  const [data,      setData]      = useState<PageData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error,     setError]     = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const res = await api.get("/aym-full-page/get");
+        const raw = res.data.data;
+        if (!raw) { setError("Content not found."); return; }
+
+        setData({
+          alignTitle:         raw.alignTitle         ?? "",
+          salutation:         raw.salutation         ?? "",
+          alignPara1:         raw.alignPara1         ?? "",
+          alignPara2:         raw.alignPara2         ?? "",
+          alignPara3:         raw.alignPara3         ?? "",
+          bodyPlanes:         raw.bodyPlanes         ?? [],
+          planesPara:         raw.planesPara         ?? "",
+          bodyPlanesImage:    toAbsUrl(raw.bodyPlanesImage),
+          bodyPlanesImageAlt: raw.bodyPlanesImageAlt ?? "",
+          outdoorImage:       toAbsUrl(raw.outdoorImage),
+          outdoorImageAlt:    raw.outdoorImageAlt    ?? "",
+          outdoorCaption:     raw.outdoorCaption     ?? "",
+          highlight1:         raw.highlight1         ?? "",
+          highlight2:         raw.highlight2         ?? "",
+          campusTitle:        raw.campusTitle        ?? "",
+          campusFacilities:   (raw.campusFacilities ?? []).map((f: any) => ({
+            bold:     f.bold     ?? "",
+            text:     f.text     ?? "",
+            imageUrl: toAbsUrl(f.imageUrl),
+            imageAlt: f.imageAlt ?? "",
+          })),
+          promoCard1: {
+            title: raw.promoCard1?.title ?? "",
+            text:  raw.promoCard1?.text  ?? "",
+            link:  raw.promoCard1?.link  ?? "#",
+          },
+          promoCard2: {
+            title: raw.promoCard2?.title ?? "",
+            text:  raw.promoCard2?.text  ?? "",
+            link:  raw.promoCard2?.link  ?? "#",
+          },
+          ctaHeading:   raw.ctaHeading   ?? "",
+          ctaSubtext:   raw.ctaSubtext   ?? "",
+          whatsappLink: raw.whatsappLink ?? "#",
+          masterQuote:  raw.masterQuote  ?? "",
+          masterAttrib: raw.masterAttrib ?? "",
+          journeyParas: raw.journeyParas ?? [],
+          namesteText:  raw.namesteText  ?? "",
+        });
+      } catch (err: any) {
+        setError(err?.response?.data?.message || "Failed to load content.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  /* ── Loading ── */
+  if (isLoading) {
+    return (
+      <div className={styles.pageWrapper} style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1.1rem", color: "#a07840", fontStyle: "italic" }}>
+          Loading…
+        </p>
+      </div>
+    );
+  }
+
+  /* ── Error ── */
+  if (error || !data) {
+    return (
+      <div className={styles.pageWrapper} style={{ minHeight: "40vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ fontFamily: "'Cormorant Garamond', serif", color: "#c44a00", fontStyle: "italic" }}>
+          {error ?? "Content unavailable."}
+        </p>
+      </div>
+    );
+  }
+
+  /* ════════════════════════════════════════════
+     RENDER
+  ════════════════════════════════════════════ */
   return (
     <div className={styles.pageWrapper}>
+
+      {/* ══════════ ALIGNMENT SECTION ══════════ */}
       <section className={styles.alignSection}>
         <div className={styles.container}>
+
+          {/* Section heading — rich text */}
           <div className={styles.sectionHeaderCenter}>
-            <h2 className={styles.sectionTitle}>
-              Yoga Alliance's Alignment and Adjustment Certification course in
-              India, at AYM
-            </h2>
+            <h2
+              className={styles.sectionTitle}
+              dangerouslySetInnerHTML={{ __html: data.alignTitle }}
+            />
             <div className={styles.titleUnderline} />
           </div>
 
-          <p className={styles.salutation}>Nameste! yogis</p>
+          {/* Salutation — plain text */}
+          <p className={styles.salutation}>{data.salutation}</p>
 
-          <p className={styles.para}>
-            I was thinking of addressing this significant topic with you. There
-            are numerous Yoga schools, colleges, institutes, and ashrams
-            worldwide that offer Yoga certifications, diplomas, and degrees;
-            however, how many of them incorporate the art of alignment and
-            adjustment into their course curriculum? In Rishikesh, there are
-            very few, almost none, except at our school.
-          </p>
+          {/* Body paragraphs — rich text */}
+          <div
+            className={styles.para}
+            dangerouslySetInnerHTML={{ __html: data.alignPara1 }}
+          />
+          <div
+            className={styles.para}
+            dangerouslySetInnerHTML={{ __html: data.alignPara2 }}
+          />
+          <div
+            className={styles.para}
+            dangerouslySetInnerHTML={{ __html: data.alignPara3 }}
+          />
 
-          <p className={styles.para}>
-            There are very few experts in the universe who are the complete
-            masters of the alignment and adjustment of asana or postures. There
-            are three planes of the body that yoga experts frequently use in
-            teaching yoga postures and describing how the body moves during
-            entry into asanas or while holding asanas. For example, when
-            practicing the triangle pose, students often move to the wrong plane
-            because they lack anatomical knowledge about the body's planes.
-          </p>
-
-          <p className={styles.para}>
-            By knowing the different body planes correctly, you can use this
-            knowledge in designing your yoga lesson planning to ensure you're
-            moving and strengthening your body in all the correct directions. A
-            proper understanding of the three different planes of the body helps
-            you comprehend the body in various asanas, and it brings better
-            flexibility as the body is stretched in the correct direction of
-            movement.
-          </p>
-
+          {/* Body planes grid */}
           <div className={styles.planesGrid}>
+            {/* Diagram image */}
             <div className={styles.planesImageBlock}>
               <div className={styles.planesImagePlaceholder}>
-                <div className={styles.diagramBox}>
-                  <img
-                    src={yogaBodyPlanes.src}
-                    alt="Yoga body planes diagram - Sagittal, Coronal and Transverse planes"
-                    className={styles.diagramImage}
-                  />
-                  <div className={styles.diagramLabelsRow}>
-                    <div className={styles.diagramLabel}>Sagittal plane</div>
-                    <div className={styles.diagramLabel}>Coronal plane</div>
-                    <div className={styles.diagramLabel}>Transverse plane</div>
+                {data.bodyPlanesImage ? (
+                  <div className={styles.diagramBox}>
+                    <img
+                      src={data.bodyPlanesImage}
+                      alt={data.bodyPlanesImageAlt || "Yoga body planes diagram"}
+                      className={styles.diagramImage}
+                    />
+                    {/* Diagram labels from bodyPlanes array */}
+                    {data.bodyPlanes.length > 0 && (
+                      <div className={styles.diagramLabelsRow}>
+                        {data.bodyPlanes.map((plane, i) => (
+                          <div key={i} className={styles.diagramLabel}>
+                            {plane.label}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
+                ) : null}
               </div>
             </div>
+
+            {/* Planes info — rich text intro + numbered list */}
             <div className={styles.planesInfoBlock}>
-              <p className={styles.para}>
-                The three planes of movement in different postures of Yoga, and
-                a Yoga teacher should have deep knowledge of them: the names
-                are:
-              </p>
-              <ol className={styles.planesList}>
-                {bodyPlanes.map((plane, i) => (
-                  <li key={i} className={styles.planesListItem}>
-                    {plane}
-                  </li>
-                ))}
-              </ol>
+              <div
+                className={styles.para}
+                dangerouslySetInnerHTML={{ __html: data.planesPara }}
+              />
+              {data.bodyPlanes.length > 0 && (
+                <ol className={styles.planesList}>
+                  {data.bodyPlanes.map((plane, i) => (
+                    <li key={i} className={styles.planesListItem}>
+                      {plane.listItem}
+                    </li>
+                  ))}
+                </ol>
+              )}
             </div>
           </div>
 
+          {/* Highlight paragraph — plain text injected into rich context */}
           <p className={styles.para}>
             According to Yogi Chetan Mahesh, every Yoga student or Yoga teacher
             trainer should master all exercises, such as flexion, extension,
             dorsiflexion, abduction, and adduction, among others, during asana
             practice. While searching for your Yoga training school, You should
             search for{" "}
-            <strong className={styles.highlight}>
-              200 Hour Yoga TTC in Rishikesh with Alignment Focus
-            </strong>{" "}
-            or{" "}
-            <strong className={styles.highlight}>
-              Advanced Yoga Teacher Training with Alignment in Rishikesh.
-            </strong>
+            <strong className={styles.highlight}>{data.highlight1}</strong>
+            {" "}or{" "}
+            <strong className={styles.highlight}>{data.highlight2}</strong>
           </p>
 
-          {/* Group yoga photo — Local Image */}
-          <div className={styles.groupPhotoBlock}>
-            <div className={styles.groupPhotoBanner}>
-              <img
-                src={yogaoutdoor.src}
-                alt="Outdoor Yoga Practice by the Ganges, Rishikesh"
-                className={styles.groupPhotoImg}
-              />
-              <div className={styles.groupPhotoOverlay}>
-                <span className={styles.groupPhotoText}>
-                  🌊 Outdoor Yoga Practice by the Ganges, Rishikesh
-                </span>
+          {/* Outdoor group photo */}
+          {data.outdoorImage && (
+            <div className={styles.groupPhotoBlock}>
+              <div className={styles.groupPhotoBanner}>
+                <img
+                  src={data.outdoorImage}
+                  alt={data.outdoorImageAlt || "Outdoor Yoga Practice"}
+                  className={styles.groupPhotoImg}
+                />
+                {data.outdoorCaption && (
+                  <div className={styles.groupPhotoOverlay}>
+                    <span className={styles.groupPhotoText}>
+                      {data.outdoorCaption}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
+
+      {/* ══════════ CAMPUS SECTION ══════════ */}
       <section className={styles.campusSection}>
         <div className={styles.topBorder} />
         <div className={styles.container}>
+
+          {/* Campus heading — rich text */}
           <div className={styles.sectionHeaderCenter}>
-            <h2 className={styles.sectionTitle}>
-              Campus: AYM Yoga school / Yoga ashram in Rishikesh
-            </h2>
+            <h2
+              className={styles.sectionTitle}
+              dangerouslySetInnerHTML={{ __html: data.campusTitle }}
+            />
             <div className={styles.titleUnderline} />
           </div>
 
+          {/* Facilities list */}
           <div className={styles.facilitiesList}>
-            {campusFacilities.map((f, i) => (
+            {data.campusFacilities.map((f, i) => (
               <div key={i} className={styles.facilityItem}>
                 <div className={styles.facilityHeader}>
                   <span className={styles.facilityDot}>✦</span>
                   <strong className={styles.facilityBold}>{f.bold}</strong>
                 </div>
-                <p className={styles.facilityText}>{f.text}</p>
+                {/* facility text — rich text */}
+                <div
+                  className={styles.facilityText}
+                  dangerouslySetInnerHTML={{ __html: f.text }}
+                />
+                {/* optional facility photo */}
+                {f.imageUrl && (
+                  <img
+                    src={f.imageUrl}
+                    alt={f.imageAlt || f.bold}
+                    className={styles.facilityImage}
+                    style={{ marginTop: "0.75rem", maxWidth: "100%", borderRadius: "8px" }}
+                  />
+                )}
               </div>
             ))}
           </div>
 
+          {/* Promo cards */}
           <div className={styles.promoCards}>
+            {/* Promo Card 1 */}
             <div className={styles.promoCard}>
-              <h3 className={styles.promoTitle}>Yoga for Beginners at AYM</h3>
+              <h3
+                className={styles.promoTitle}
+                dangerouslySetInnerHTML={{ __html: data.promoCard1.title }}
+              />
               <div className={styles.promoUnderline} />
-              <p className={styles.promoText}>
-                New to Yoga? Join our short yet intensive 1 and 2-week-long yoga
-                training programs in Rishikesh. Get acquainted with the yoga
-                philosophy and learn Hatha yoga, Yoga Nidra and meditation.
-              </p>
-              <a href="#" className={styles.promoLink}>
-                More information beginner course →
+              <div
+                className={styles.promoText}
+                dangerouslySetInnerHTML={{ __html: data.promoCard1.text }}
+              />
+              <a href={data.promoCard1.link} className={styles.promoLink}>
+                More information →
               </a>
             </div>
+
+            {/* Promo Card 2 */}
             <div className={styles.promoCard}>
-              <h3 className={styles.promoTitle}>
-                Yoga in India Compared to Yoga Around the World
-              </h3>
+              <h3
+                className={styles.promoTitle}
+                dangerouslySetInnerHTML={{ __html: data.promoCard2.title }}
+              />
               <div className={styles.promoUnderline} />
-              <p className={styles.promoText}>
-                India is the birthplace of Yoga, which proves the potential to
-                learn and master the art from trained yogis within the country.
-                The authenticity of yogic practices in India is strongly
-                reflected in our yoga TTC in India. Laced with traditional
-                Indian culture and traditions, mastering the mudras of ancient
-                art here promises a holistic and affordable alternative. In a
-                place where the spiritual aura imbibes so well, learning
-                Rishikesh yoga is starkly different from taking your yoga
-                training anywhere else in the world.
-              </p>
-              <a href="#" className={styles.promoLink}>
-                More Information Compared to Yoga →
+              <div
+                className={styles.promoText}
+                dangerouslySetInnerHTML={{ __html: data.promoCard2.text }}
+              />
+              <a href={data.promoCard2.link} className={styles.promoLink}>
+                More information →
               </a>
             </div>
           </div>
@@ -229,68 +331,61 @@ export const AYMFullPage: React.FC = () => {
         <div className={styles.bottomBorder} />
       </section>
 
+      {/* ══════════ CTA SECTION ══════════ */}
       <section className={styles.ctaSection}>
         <div className={styles.ctaBg} />
         <div className={styles.ctaContent}>
-          <h2 className={styles.ctaHeading}>
-            Begin Your Journey to Inner Peace
-          </h2>
-          <p className={styles.ctaSubtext}>
-            Transform your mind, body, and spirit with our expert-led yoga
-            classes. Connect with us now to start your personalized yoga
-            experience.
-          </p>
-          <a href="https://wa.me/918476898395" className={styles.whatsappBtn}>
+
+          {/* CTA heading — rich text */}
+          <h2
+            className={styles.ctaHeading}
+            dangerouslySetInnerHTML={{ __html: data.ctaHeading }}
+          />
+
+          {/* CTA subtext — rich text */}
+          <div
+            className={styles.ctaSubtext}
+            dangerouslySetInnerHTML={{ __html: data.ctaSubtext }}
+          />
+
+          <a href={data.whatsappLink} className={styles.whatsappBtn}>
             <span className={styles.waIcon}>💬</span> Chat with Us on WhatsApp
           </a>
         </div>
 
-        {/* Quote block below CTA banner */}
+        {/* Master quote block — rich text */}
         <div className={styles.masterQuoteBlock}>
-          <div className={styles.masterQuote}>
-            "The beauty of Yoga is, it shows you fitness with a side of
-            spirituality and happiness."
-          </div>
-          <div className={styles.masterAttrib}>— Yogi Chetan Mahesh Ji</div>
+          <div
+            className={styles.masterQuote}
+            dangerouslySetInnerHTML={{ __html: data.masterQuote }}
+          />
+          <div className={styles.masterAttrib}>{data.masterAttrib}</div>
         </div>
 
+        {/* Journey paragraphs — rich text */}
         <div className={styles.container}>
           <div className={styles.journeyText}>
-            <p className={styles.para}>
-              Are you ready to witness the beauty of yogic practices? Tune into
-              your spiritual self with us. Join our yoga teacher training
-              courses in Rishikesh and take the transformative path.
-            </p>
-            <p className={styles.para}>
-              Our courses are built to imbibe self-confidence and reach personal
-              growth milestones. Learn to replace your negative emotions with
-              positive-inducing thoughts, expand your consciousness, and learn
-              to enjoy and live fully. Take the first step towards
-              transformation to become a yoga teacher in India with AYM.
-            </p>
-            <p className={styles.para}>
-              Learn from fellow yogis, cherish the moments spent mastering
-              perfection and find your calm and inner peace. As you learn to
-              live your life on yogic principles, watch your outlook towards
-              life change positively. Grow within a like-minded community and
-              nurture your skills.
-            </p>
-            <p className={styles.para}>
-              Get in touch with us to enrol in our upcoming yoga teacher
-              training programs in Rishikesh. Each batch of our yoga training
-              certification courses has limited seats.
-            </p>
-            <p className={styles.para}>
-              Start your journey to become a registered yoga teacher. The best
-              yoga training school in Rishikesh looks forward to welcoming you.
-            </p>
-            <p className={`${styles.para} ${styles.namaste}`}>
-              May you always be happy, healthy and peaceful.{" "}
-              <strong>Namaste!</strong>
-            </p>
+            {data.journeyParas.map((para, i) => {
+              const isLast = i === data.journeyParas.length - 1;
+              return (
+                <div
+                  key={i}
+                  className={isLast ? `${styles.para} ${styles.namaste}` : styles.para}
+                  dangerouslySetInnerHTML={{ __html: para.text }}
+                />
+              );
+            })}
+
+            {/* Closing namaste line */}
+            {data.namesteText && (
+              <p className={`${styles.para} ${styles.namaste}`}>
+                {data.namesteText} <strong>Namaste!</strong>
+              </p>
+            )}
           </div>
         </div>
       </section>
+
     </div>
   );
 };
