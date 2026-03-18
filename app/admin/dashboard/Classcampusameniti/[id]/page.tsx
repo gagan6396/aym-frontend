@@ -3,18 +3,16 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import styles from "@/assets/style/Admin/dashboard/Classcampusameniti/Classcampusamenities.module.css";
-// import api from "@/lib/api";
+import api from "@/lib/api";
+
+// ── JoditEditor (SSR disabled) ──
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 /* ─────────────────────────────────────────
    Types
 ───────────────────────────────────────── */
-interface CampusImage {
-  file: File | null;
-  preview: string;       // blob URL (new) or existing URL from API
-  existingUrl?: string;  // original URL from DB — send as-is if unchanged
-}
-
 interface FormData {
   classSizeSuperLabel: string;
   classSizeTitle: string;
@@ -118,6 +116,28 @@ function SingleImageUpload({ preview, badge, hint, error, onSelect, onRemove }: 
 }
 
 /* ─────────────────────────────────────────
+   Jodit config (stable reference)
+───────────────────────────────────────── */
+const joditConfig = {
+  readonly: false,
+  height: 220,
+  toolbarAdaptive: false,
+  buttons: [
+    "bold", "italic", "underline", "strikethrough", "|",
+    "ul", "ol", "|",
+    "outdent", "indent", "|",
+    "font", "fontsize", "paragraph", "|",
+    "superscript", "subscript", "|",
+    "align", "|",
+    "undo", "redo", "|",
+    "hr", "eraser", "copyformat", "|",
+    "fullsize",
+  ],
+  style: { fontFamily: "inherit", fontSize: "14px" },
+  placeholder: "",
+};
+
+/* ─────────────────────────────────────────
    Main Page
 ───────────────────────────────────────── */
 export default function EditClassCampusAmenitiesPage() {
@@ -131,79 +151,57 @@ export default function EditClassCampusAmenitiesPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Image states — preview holds either existing URL or new blob URL
-  const [classSizeImageFile, setClassSizeImageFile] = useState<File | null>(null);
+  // ── Image states ──
+  const [classSizeImageFile, setClassSizeImageFile]     = useState<File | null>(null);
   const [classSizeImagePreview, setClassSizeImagePreview] = useState("");
-  const [campusImages, setCampusImages] = useState<CampusImage[]>([]);
-  const [amenityImageFile, setAmenityImageFile] = useState<File | null>(null);
+
+  // Campus — single image only
+  const [campusImageFile, setCampusImageFile]       = useState<File | null>(null);
+  const [campusImagePreview, setCampusImagePreview] = useState("");
+
+  const [amenityImageFile, setAmenityImageFile]       = useState<File | null>(null);
   const [amenityImagePreview, setAmenityImagePreview] = useState("");
 
   /* ── Fetch existing data ── */
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // ── Uncomment and adapt when API is ready ──
-        // const res = await api.get(`/class-campus-amenities/${id}`);
-        // const d = res.data.data;
-        // setForm({
-        //   classSizeSuperLabel:  d.classSizeSuperLabel  || "",
-        //   classSizeTitle:       d.classSizeTitle       || "",
-        //   classSizeWelcomeText: d.classSizeWelcomeText || "",
-        //   classSizeHighlight:   d.classSizeHighlight   || "",
-        //   classSizePara:        d.classSizePara        || "",
-        //   campusSuperLabel:     d.campusSuperLabel     || "",
-        //   campusTitle:          d.campusTitle          || "",
-        //   campusHighlight:      d.campusHighlight      || "",
-        //   campusPara:           d.campusPara           || "",
-        //   amenitiesSuperLabel:  d.amenitiesSuperLabel  || "",
-        //   amenitiesTitle:       d.amenitiesTitle       || "",
-        //   amenitiesMainPara:    d.amenitiesMainPara    || "",
-        //   amenitiesSubLabel:    d.amenitiesSubLabel    || "",
-        //   amenities:            d.amenities?.length ? d.amenities : [""],
-        //   amenityMosaicTag:     d.amenityMosaicTag     || "",
-        // });
-        // if (d.classSizeImageUrl) setClassSizeImagePreview(d.classSizeImageUrl);
-        // if (d.campusImageUrls?.length)
-        //   setCampusImages(d.campusImageUrls.map((url: string) => ({ file: null, preview: url, existingUrl: url })));
-        // if (d.amenityImageUrl) setAmenityImagePreview(d.amenityImageUrl);
+        const res = await api.get(`/class-campus-amenities/${id}`);
+        const d = res.data.data;
 
-        // ── MOCK DATA — remove after API connected ──
         setForm({
-          classSizeSuperLabel:  "Small Batches · Personal Attention",
-          classSizeTitle:       "AYM CLASS SIZE",
-          classSizeWelcomeText: "Welcome to AYM Family",
-          classSizeHighlight:   "25 students",
-          classSizePara:        "At AYM, only 25 students are admitted in one batch. The class size is consciously kept low to focus individual attention and seamless interactions between the faculty and students.",
-          campusSuperLabel:     "5000 sq.mts. · Rishikesh",
-          campusTitle:          "AYM YOGA CAMPUS",
-          campusHighlight:      "5000 sq.mts.",
-          campusPara:           "Spread across an expansive 5000 sq.mts., the AYM campus is one of the lushest campuses in Rishikesh.",
-          amenitiesSuperLabel:  "Comfort · Nature · Serenity",
-          amenitiesTitle:       "AMENITIES",
-          amenitiesMainPara:    "Students have fully furnished rooms amid lush gardens at this yoga teacher training school.",
-          amenitiesSubLabel:    "Other amenities include:",
-          amenities: [
-            "Accommodation ( Private / Shared / Dormitory )",
-            "Spacious yoga hall",
-            "Free Wi-Fi",
-            "Lush Garden area",
-            "Hot / Cold water 24x7",
-          ],
-          amenityMosaicTag: "Furnished Rooms",
+          classSizeSuperLabel:  d.classSizeSuperLabel  || "",
+          classSizeTitle:       d.classSizeTitle       || "",
+          classSizeWelcomeText: d.classSizeWelcomeText || "",
+          classSizeHighlight:   d.classSizeHighlight   || "",
+          classSizePara:        d.classSizePara        || "",
+          campusSuperLabel:     d.campusSuperLabel     || "",
+          campusTitle:          d.campusTitle          || "",
+          campusHighlight:      d.campusHighlight      || "",
+          campusPara:           d.campusPara           || "",
+          amenitiesSuperLabel:  d.amenitiesSuperLabel  || "",
+          amenitiesTitle:       d.amenitiesTitle       || "",
+          amenitiesMainPara:    d.amenitiesMainPara    || "",
+          amenitiesSubLabel:    d.amenitiesSubLabel    || "",
+          amenities:            d.amenities?.length ? d.amenities : [""],
+          amenityMosaicTag:     d.amenityMosaicTag     || "",
         });
-        // Mock image previews (replace with real API URLs)
-        setClassSizeImagePreview("/mock/aym-class-size.webp");
-        setCampusImages([
-          { file: null, preview: "/mock/aym-yoga-campus.webp", existingUrl: "/mock/aym-yoga-campus.webp" },
-        ]);
-        setAmenityImagePreview("/mock/shared-room.webp");
+
+        // Existing image previews from API
+        if (d.classSizeImage)       setClassSizeImagePreview(d.classSizeImage);
+        // campusImages[0] is the single campus image
+        if (d.campusImages?.[0])    setCampusImagePreview(d.campusImages[0]);
+        if (d.amenityImage)         setAmenityImagePreview(d.amenityImage);
+
       } catch (error) {
-        console.error(error);
+        console.error("Failed to fetch data:", error);
+        alert("Failed to load section data. Please try again.");
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+
+    if (id) fetchData();
   }, [id]);
 
   const set = (key: keyof FormData, val: string) => {
@@ -220,54 +218,56 @@ export default function EditClassCampusAmenitiesPage() {
   const removeAmenity = (i: number) =>
     setForm((p) => ({ ...p, amenities: p.amenities.filter((_, idx) => idx !== i) }));
 
-  const addCampusImage = (file: File, preview: string) => {
-    if (campusImages.length >= 5) return;
-    setCampusImages((p) => [...p, { file, preview }]);
-  };
-  const updateCampusImage = (i: number, file: File, preview: string) =>
-    setCampusImages((p) => p.map((img, idx) => idx === i ? { file, preview } : img));
-  const removeCampusImage = (i: number) =>
-    setCampusImages((p) => p.filter((_, idx) => idx !== i));
-
+  /* ── Validation ── */
   const validate = (): boolean => {
     const e: FormErrors = {};
     if (!form.classSizeSuperLabel.trim())  e.classSizeSuperLabel  = "Super label is required";
     if (!form.classSizeTitle.trim())       e.classSizeTitle       = "Title is required";
     if (!form.classSizeWelcomeText.trim()) e.classSizeWelcomeText = "Overlay text is required";
     if (!form.classSizeHighlight.trim())   e.classSizeHighlight   = "Highlight text is required";
-    if (!form.classSizePara.trim())        e.classSizePara        = "Paragraph is required";
+    if (!form.classSizePara.replace(/<[^>]*>/g, "").trim()) e.classSizePara = "Paragraph is required";
     if (!form.campusSuperLabel.trim())     e.campusSuperLabel     = "Super label is required";
     if (!form.campusTitle.trim())          e.campusTitle          = "Title is required";
     if (!form.campusHighlight.trim())      e.campusHighlight      = "Highlight text is required";
-    if (!form.campusPara.trim())           e.campusPara           = "Paragraph is required";
+    if (!form.campusPara.replace(/<[^>]*>/g, "").trim()) e.campusPara = "Paragraph is required";
     if (!form.amenitiesSuperLabel.trim())  e.amenitiesSuperLabel  = "Super label is required";
     if (!form.amenitiesTitle.trim())       e.amenitiesTitle       = "Title is required";
-    if (!form.amenitiesMainPara.trim())    e.amenitiesMainPara    = "Main paragraph is required";
+    if (!form.amenitiesMainPara.replace(/<[^>]*>/g, "").trim()) e.amenitiesMainPara = "Main paragraph is required";
     if (form.amenities.some((a) => !a.trim())) e.amenities = "All amenity fields must be filled";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
+  /* ── Submit ── */
   const handleSubmit = async () => {
     if (!validate()) return;
+
     try {
       setIsSubmitting(true);
+
       const fd = new FormData();
+
+      // id — backend update route needs it
+      fd.append("id", id);
+
+      // Text fields
       Object.entries(form).forEach(([k, v]) => {
         if (Array.isArray(v)) v.forEach((item) => fd.append(k, item));
         else fd.append(k, v as string);
       });
-      // New files
+
+      // New files only — if unchanged, backend keeps existing
       if (classSizeImageFile) fd.append("classSizeImage", classSizeImageFile);
-      campusImages.forEach((img, i) => {
-        if (img.file) fd.append(`campusImage_${i}`, img.file);
-        else if (img.existingUrl) fd.append(`campusImageExisting_${i}`, img.existingUrl);
+      if (campusImageFile)    fd.append("campusImage_0", campusImageFile);   // single → index 0
+      if (amenityImageFile)   fd.append("amenityImage", amenityImageFile);
+
+      await api.put("/class-campus-amenities/update", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      if (amenityImageFile) fd.append("amenityImage", amenityImageFile);
-      // await api.put(`/class-campus-amenities/update/${id}`, fd, { headers: { "Content-Type": "multipart/form-data" } });
-      console.log("FormData ready:", [...fd.keys()]);
+
       setSubmitted(true);
-      setTimeout(() => router.push("/admin/dashboard/yogateachertraning/classcampusamenities"), 1500);
+      setTimeout(() => router.push("/admin/dashboard/Classcampusameniti"), 1500);
+
     } catch (error: any) {
       alert(error?.response?.data?.message || error?.message || "Failed to update");
     } finally {
@@ -306,7 +306,7 @@ export default function EditClassCampusAmenitiesPage() {
 
       <div className={styles.breadcrumb}>
         <button className={styles.breadcrumbLink}
-          onClick={() => router.push("/admin/dashboard/yogateachertraning/classcampusamenities")}>
+          onClick={() => router.push("/admin/dashboard/Classcampusameniti")}>
           Class, Campus & Amenities
         </button>
         <span className={styles.breadcrumbSep}>›</span>
@@ -363,7 +363,7 @@ export default function EditClassCampusAmenitiesPage() {
           {/* ── Class Size Image ── */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}><span className={styles.labelIcon}>✦</span>Class Group Photo<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Main image in the class size block — click to replace existing image</p>
+            <p className={styles.fieldHint}>Click to replace the existing image</p>
             <SingleImageUpload
               preview={classSizeImagePreview}
               badge="AYM Class Group Photo"
@@ -397,15 +397,16 @@ export default function EditClassCampusAmenitiesPage() {
             {errors.classSizeHighlight && <p className={styles.errorMsg}>⚠ {errors.classSizeHighlight}</p>}
           </div>
 
+          {/* ── JoditEditor: classSizePara ── */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}><span className={styles.labelIcon}>✦</span>Description Paragraph<span className={styles.required}>*</span></label>
             <p className={styles.fieldHint}>Full description about the class size policy</p>
-            <div className={`${styles.inputWrap} ${errors.classSizePara ? styles.inputError : ""} ${form.classSizePara && !errors.classSizePara ? styles.inputSuccess : ""}`}>
-              <textarea className={`${styles.input} ${styles.textarea}`}
-                placeholder="e.g. At AYM, only 25 students are admitted in one batch…"
-                value={form.classSizePara} maxLength={500} rows={4}
-                onChange={(e) => set("classSizePara", e.target.value)} />
-              <span className={`${styles.charCount} ${styles.charCountBottom}`}>{form.classSizePara.length}/500</span>
+            <div className={errors.classSizePara ? styles.inputError : ""} style={{ borderRadius: 8, overflow: "hidden" }}>
+              <JoditEditor
+                value={form.classSizePara}
+                config={{ ...joditConfig, placeholder: "e.g. At AYM, only 25 students are admitted in one batch…" }}
+                onBlur={(val) => set("classSizePara", val)}
+              />
             </div>
             {errors.classSizePara && <p className={styles.errorMsg}>⚠ {errors.classSizePara}</p>}
           </div>
@@ -446,39 +447,17 @@ export default function EditClassCampusAmenitiesPage() {
             {errors.campusTitle && <p className={styles.errorMsg}>⚠ {errors.campusTitle}</p>}
           </div>
 
-          {/* ── Campus Images Grid ── */}
+          {/* ══ CAMPUS PHOTO — single image ══ */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Campus Photos<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Thumbnail gallery images in the campus block — add, replace, or remove (max 5)</p>
-
-            <div className={styles.campusImagesGrid}>
-              {campusImages.map((img, i) => (
-                <div key={i} className={`${styles.campusImageSlot} ${styles.hasImg}`}>
-                  <img src={img.preview} alt={`Campus ${i + 1}`} className={styles.campusSlotPreview} />
-                  <button type="button" className={styles.campusSlotRemove} onClick={() => removeCampusImage(i)}>✕</button>
-                  <input type="file" accept="image/*" style={{ zIndex: 3 }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      updateCampusImage(i, file, URL.createObjectURL(file));
-                      e.target.value = "";
-                    }} />
-                </div>
-              ))}
-              {campusImages.length < 5 && (
-                <label className={styles.addCampusImgBtn}>
-                  <span>🖼️</span>
-                  <span>Add Photo</span>
-                  <input type="file" accept="image/*" style={{ display: "none" }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      addCampusImage(file, URL.createObjectURL(file));
-                      e.target.value = "";
-                    }} />
-                </label>
-              )}
-            </div>
+            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Campus Photo<span className={styles.required}>*</span></label>
+            <p className={styles.fieldHint}>Click to replace the existing campus image</p>
+            <SingleImageUpload
+              preview={campusImagePreview}
+              badge="AYM Campus"
+              hint="JPG / PNG / WebP · Recommended 1200×800px"
+              onSelect={(file, preview) => { setCampusImageFile(file); setCampusImagePreview(preview); }}
+              onRemove={() => { setCampusImageFile(null); setCampusImagePreview(""); }}
+            />
           </div>
 
           <div className={styles.fieldGroup}>
@@ -493,15 +472,16 @@ export default function EditClassCampusAmenitiesPage() {
             {errors.campusHighlight && <p className={styles.errorMsg}>⚠ {errors.campusHighlight}</p>}
           </div>
 
+          {/* ── JoditEditor: campusPara ── */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}><span className={styles.labelIcon}>✦</span>Description Paragraph<span className={styles.required}>*</span></label>
             <p className={styles.fieldHint}>Full description about the campus</p>
-            <div className={`${styles.inputWrap} ${errors.campusPara ? styles.inputError : ""} ${form.campusPara && !errors.campusPara ? styles.inputSuccess : ""}`}>
-              <textarea className={`${styles.input} ${styles.textarea}`}
-                placeholder="e.g. Spread across an expansive 5000 sq.mts.…"
-                value={form.campusPara} maxLength={500} rows={4}
-                onChange={(e) => set("campusPara", e.target.value)} />
-              <span className={`${styles.charCount} ${styles.charCountBottom}`}>{form.campusPara.length}/500</span>
+            <div className={errors.campusPara ? styles.inputError : ""} style={{ borderRadius: 8, overflow: "hidden" }}>
+              <JoditEditor
+                value={form.campusPara}
+                config={{ ...joditConfig, placeholder: "e.g. Spread across an expansive 5000 sq.mts.…" }}
+                onBlur={(val) => set("campusPara", val)}
+              />
             </div>
             {errors.campusPara && <p className={styles.errorMsg}>⚠ {errors.campusPara}</p>}
           </div>
@@ -543,15 +523,16 @@ export default function EditClassCampusAmenitiesPage() {
             {errors.amenitiesTitle && <p className={styles.errorMsg}>⚠ {errors.amenitiesTitle}</p>}
           </div>
 
+          {/* ── JoditEditor: amenitiesMainPara ── */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}><span className={styles.labelIcon}>✦</span>Main Paragraph<span className={styles.required}>*</span></label>
             <p className={styles.fieldHint}>First paragraph about accommodation and rooms</p>
-            <div className={`${styles.inputWrap} ${errors.amenitiesMainPara ? styles.inputError : ""} ${form.amenitiesMainPara && !errors.amenitiesMainPara ? styles.inputSuccess : ""}`}>
-              <textarea className={`${styles.input} ${styles.textarea}`}
-                placeholder="e.g. Students have fully furnished rooms amid lush gardens…"
-                value={form.amenitiesMainPara} maxLength={500} rows={3}
-                onChange={(e) => set("amenitiesMainPara", e.target.value)} />
-              <span className={`${styles.charCount} ${styles.charCountBottom}`}>{form.amenitiesMainPara.length}/500</span>
+            <div className={errors.amenitiesMainPara ? styles.inputError : ""} style={{ borderRadius: 8, overflow: "hidden" }}>
+              <JoditEditor
+                value={form.amenitiesMainPara}
+                config={{ ...joditConfig, placeholder: "e.g. Students have fully furnished rooms amid lush gardens…" }}
+                onBlur={(val) => set("amenitiesMainPara", val)}
+              />
             </div>
             {errors.amenitiesMainPara && <p className={styles.errorMsg}>⚠ {errors.amenitiesMainPara}</p>}
           </div>
@@ -603,7 +584,7 @@ export default function EditClassCampusAmenitiesPage() {
           {/* ── Amenity Room Image ── */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}><span className={styles.labelIcon}>✦</span>Amenity Mosaic / Room Image<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Right-side image alongside the amenities list — click to replace existing image</p>
+            <p className={styles.fieldHint}>Click to replace the existing room image</p>
             <SingleImageUpload
               preview={amenityImagePreview}
               badge="Furnished Rooms"
@@ -629,7 +610,7 @@ export default function EditClassCampusAmenitiesPage() {
         <div className={styles.formDivider} />
 
         <div className={styles.formActions}>
-          <Link href="/admin/dashboard/yogateachertraning/classcampusamenities" className={styles.cancelBtn}>
+          <Link href="/admin/dashboard/Classcampusameniti" className={styles.cancelBtn}>
             ← Cancel
           </Link>
           <button type="button"

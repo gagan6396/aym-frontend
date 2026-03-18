@@ -1,29 +1,66 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styles from "../../assets/style/Home/Classcampusamenities.module.css";
-import rightsectionimage from "../../assets/images/aym-class-size.webp";
+import api from "@/lib/api";
 
-import campus1 from "../../assets/images/aym-yoga-campus.webp";
+/* ─────────────────────────────────────────
+   Type
+───────────────────────────────────────── */
+interface SectionData {
+  /* Class Size */
+  classSizeSuperLabel: string;
+  classSizeTitle: string;
+  classSizeWelcomeText: string;
+  classSizeHighlight: string;
+  classSizePara: string;
+  classSizeImage: string;
 
-import amenity1 from "../../assets/images/shared-room.webp";
+  /* Campus */
+  campusSuperLabel: string;
+  campusTitle: string;
+  campusHighlight: string;
+  campusPara: string;
+  campusImages: string[];        // array — we use [0]
 
-const amenities = [
-  "Accommodation ( Private / Shared / Dormitory )",
-  "Spacious yoga hall",
-  "Free Wi-Fi",
-  "Lush Garden area",
-  "Hot / Cold water 24x7",
-];
+  /* Amenities */
+  amenitiesSuperLabel: string;
+  amenitiesTitle: string;
+  amenitiesMainPara: string;
+  amenitiesSubLabel: string;
+  amenities: string[];
+  amenityMosaicTag: string;
+  amenityImage: string;
+}
 
-const campusImages = [campus1.src];
-
-const amenityImages = [amenity1.src];
-
+/* ─────────────────────────────────────────
+   Component
+───────────────────────────────────────── */
 export const ClassCampusAmenities: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
+  const [data, setData] = useState<SectionData | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  /* ── Fetch ── */
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await api.get("/class-campus-amenities");
+        if (res.data.success && res.data.data?.length > 0) {
+          setData(res.data.data[0]);
+        }
+      } catch (err) {
+        console.error("ClassCampusAmenities fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  /* ── Intersection observer (runs after data loads) ── */
+  useEffect(() => {
+    if (!data) return;
     const els = sectionRef.current?.querySelectorAll(`.${styles.reveal}`);
     if (!els) return;
     const observer = new IntersectionObserver(
@@ -32,40 +69,46 @@ export const ClassCampusAmenities: React.FC = () => {
           if (e.isIntersecting) e.target.classList.add(styles.revealed);
         });
       },
-      { threshold: 0.08 },
+      { threshold: 0.08 }
     );
     els.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [data]);
+
+  /* ── Loading state ── */
+  if (loading) return null; // or a skeleton — returns nothing until data arrives
+
+  /* ── No data ── */
+  if (!data) return null;
 
   return (
     <section className={styles.section} ref={sectionRef}>
-    
-
       <div className={styles.topBorder} />
 
       <div className={styles.container}>
+        {/* ══════════════════════════════════════
+            TOP ROW — Class Size + Campus
+        ══════════════════════════════════════ */}
         <div className={styles.topRow}>
+
           {/* ── AYM CLASS SIZE ── */}
           <div className={`${styles.classBlock} ${styles.reveal}`}>
             <div className={styles.blockHeader}>
-              <p className={styles.superLabel}>
-                Small Batches · Personal Attention
-              </p>
-              <h2 className={styles.blockTitle}>AYM CLASS SIZE</h2>
+              <p className={styles.superLabel}>{data.classSizeSuperLabel}</p>
+              <h2 className={styles.blockTitle}>{data.classSizeTitle}</h2>
               <div className={styles.titleBar} />
             </div>
 
             <div className={styles.classImgWrap}>
               <div className={styles.classImgFrame}>
                 <img
-                  src={rightsectionimage.src}
+                  src={data.classSizeImage}
                   alt="AYM Yoga Class Group"
                   className={styles.classImg}
                 />
                 <div className={styles.classImgOverlay}>
                   <span className={styles.welcomeScript}>
-                    Welcome to AYM Family
+                    {data.classSizeWelcomeText}
                   </span>
                 </div>
                 <span className={styles.cornerTL} aria-hidden="true" />
@@ -73,111 +116,115 @@ export const ClassCampusAmenities: React.FC = () => {
               </div>
             </div>
 
-            <p className={styles.blockPara}>
-              At AYM, only{" "}
-              <strong className={styles.highlight}>25 students</strong> are
-              admitted in one batch. The class size is consciously kept low to
-              focus individual attention and seamless interactions between the
-              faculty and students. We believe in creating a pleasant and safe
-              environment for everyone to interact and learn from one another
-              under the guidance of our knowledgeable yogis.
-            </p>
+            {/* HTML from JoditEditor — rendered safely (admin-only input) */}
+            <div
+              className={styles.blockPara}
+              dangerouslySetInnerHTML={{ __html: data.classSizePara }}
+            />
           </div>
 
+          {/* ── Vertical divider ── */}
           <div className={styles.vertDivider} aria-hidden="true">
             <span className={styles.vertLine} />
             <span className={styles.vertOm}>ॐ</span>
             <span className={styles.vertLine} />
           </div>
 
+          {/* ── AYM YOGA CAMPUS ── */}
           <div
             className={`${styles.campusBlock} ${styles.reveal}`}
             style={{ "--d": "0.15s" } as React.CSSProperties}
           >
             <div className={styles.blockHeader}>
-              <p className={styles.superLabel}>5000 sq.mts. · Rishikesh</p>
-              <h2 className={styles.blockTitle}>AYM YOGA CAMPUS</h2>
+              <p className={styles.superLabel}>{data.campusSuperLabel}</p>
+              <h2 className={styles.blockTitle}>{data.campusTitle}</h2>
               <div className={styles.titleBar} />
             </div>
 
-            {campusImages.map((src, i) => (
-              <div key={i} className={styles.campusThumb}>
+            {/* Single campus image (index 0) */}
+            {data.campusImages?.[0] && (
+              <div className={styles.campusThumb}>
                 <img
-                  src={src}
-                  alt={`Campus ${i + 1}`}
+                  src={data.campusImages[0]}
+                  alt="AYM Yoga Campus"
                   className={styles.campusThumbImg}
                 />
               </div>
-            ))}
+            )}
 
-            <p className={styles.blockPara}>
-              Spread across an expansive{" "}
-              <strong className={styles.highlight}>5000 sq.mts.</strong>, the
-              AYM campus is one of the lushest campuses in Rishikesh. The
-              spacious and vast gardens maintain a peaceful ambience to learn,
-              relax and rejuvenate in the lap of nature. On a site that feels so
-              sacred, learning Rishikesh Yoga is a blissful experience.
-            </p>
+            {/* HTML from JoditEditor */}
+            <div
+              className={styles.blockPara}
+              dangerouslySetInnerHTML={{ __html: data.campusPara }}
+            />
           </div>
         </div>
+
+        {/* ── Mid ornament ── */}
         <div className={styles.midOrnament}>
           <span className={styles.ornLine} />
           <span className={styles.ornPattern}>✦ 卐 ✦ ॐ ✦ 卐 ✦</span>
           <span className={styles.ornLine} />
         </div>
+
+        {/* ══════════════════════════════════════
+            AMENITIES ROW
+        ══════════════════════════════════════ */}
         <div className={styles.amenitiesRow}>
+
           {/* Left — text */}
           <div className={`${styles.amenitiesLeft} ${styles.reveal}`}>
             <div className={styles.blockHeader}>
-              <p className={styles.superLabel}>Comfort · Nature · Serenity</p>
-              <h2 className={styles.amenitiesTitle}>AMENITIES</h2>
+              <p className={styles.superLabel}>{data.amenitiesSuperLabel}</p>
+              <h2 className={styles.amenitiesTitle}>{data.amenitiesTitle}</h2>
               <div className={styles.titleBar} />
             </div>
 
-            <p className={styles.amenPara}>
-              Students have fully furnished rooms amid lush gardens at this{" "}
-              <strong className={styles.highlight}>
-                yoga teacher training school
-              </strong>
-              . You can opt for private rooms or shared accommodation in a
-              dormitory setup in a peaceful environment.
-            </p>
+            {/* HTML from JoditEditor */}
+            <div
+              className={styles.amenPara}
+              dangerouslySetInnerHTML={{ __html: data.amenitiesMainPara }}
+            />
 
-            <p className={styles.blockParaSm}>Other amenities include:</p>
+            {data.amenitiesSubLabel && (
+              <p className={styles.blockParaSm}>{data.amenitiesSubLabel}</p>
+            )}
 
             <ul className={styles.amenityList}>
-              {amenities.map((item, i) => (
+              {data.amenities.map((item, i) => (
                 <li
                   key={i}
                   className={`${styles.amenityItem} ${styles.reveal}`}
                   style={{ "--d": `${i * 0.08}s` } as React.CSSProperties}
                 >
-                  <span className={styles.bullet} aria-hidden="true">
-                    ॐ
-                  </span>
+                  <span className={styles.bullet} aria-hidden="true">ॐ</span>
                   <span>{item}</span>
                 </li>
               ))}
             </ul>
           </div>
 
+          {/* Right — room image */}
           <div
             className={`${styles.amenitiesRight} ${styles.reveal}`}
             style={{ "--d": "0.12s" } as React.CSSProperties}
           >
             <div className={styles.amenityMosaic}>
               <img
-                src={amenityImages[0]}
+                src={data.amenityImage}
                 alt="Furnished Room"
                 className={styles.mosaicImg}
               />
-              <div className={styles.mosaicMainOverlay}>
-                <span className={styles.mosaicTag}>Furnished Rooms</span>
-              </div>
+              {data.amenityMosaicTag && (
+                <div className={styles.mosaicMainOverlay}>
+                  <span className={styles.mosaicTag}>{data.amenityMosaicTag}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
       <div className={styles.bottomBorder} />
     </section>
   );

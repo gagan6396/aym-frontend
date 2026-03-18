@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "@/assets/style/Admin/dashboard/yogacoursespage/Yogacoursessection.module.css";
 import api from "@/lib/api";
+import toast from "react-hot-toast";
 
 /* ─────────────────────── Types ─────────────────────── */
 interface CourseRecord {
@@ -282,9 +283,18 @@ export default function YogaCoursesSectionListPage() {
           <h1 className={styles.pageTitle}>Yoga Courses &amp; Teachers</h1>
           <p className={styles.pageSubtitle}>Manage all yoga teacher training courses and faculty</p>
         </div>
-        <Link href="/admin/dashboard/yogacoursespage/add-new" className={styles.addNewBtn}>
-          <span>✦</span> Edit Page Content
-        </Link>
+       <Link
+  href="/admin/dashboard/yogacoursespage/add-new"
+  className={`${styles.addNewBtn} ${(courses.length >= 1 || teachers.length >= 1) ? styles.disabledBtn : ""}`}
+  onClick={(e) => {
+    if (courses.length >= 1 || teachers.length >= 1) {
+      e.preventDefault();
+      toast.error("A record already exists. Please edit or delete the existing item before adding a new one.");
+    }
+  }}
+>
+  <span>✦</span> Add Page Content
+</Link>
       </div>
 
       <div className={styles.ornament}>

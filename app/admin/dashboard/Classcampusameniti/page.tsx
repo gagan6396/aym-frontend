@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import styles from "@/assets/style/Admin/dashboard/Classcampusameniti/Classcampusamenities.module.css";
 import Link from "next/link";
-// import api from "@/lib/api";
+import api from "@/lib/api";
+import toast from "react-hot-toast";
 
 /* ─────────────────────────────────────────
    Types
@@ -45,46 +46,42 @@ function useBreakpoint() {
    Main Page
 ───────────────────────────────────────── */
 export default function ClassCampusAmenitiesListPage() {
-  const [sections, setSections] = useState<ClassCampusSection[]>([]);
+  const [sections, setSections]     = useState<ClassCampusSection[]>([]);
+  const [loading, setLoading]       = useState(true);
   const [deleteModal, setDeleteModal] = useState<string | null>(null);
-  const [savedToast, setSavedToast] = useState(false);
+  const [deleting, setDeleting]     = useState(false);
+  const [toastMsg, setToastMsg] = useState("");
   const { isMobile, isTablet, isDesktop, isWide } = useBreakpoint();
   const dragIndex = useRef<number | null>(null);
+
+  
+    const isLimitReached = sections.length >= 1;
 
   /* ── Fetch ── */
   useEffect(() => {
     const fetchSections = async () => {
       try {
-        // const res = await api.get("/class-campus-amenities");
-        // if (res.data.success) setSections(res.data.data);
-
-        // MOCK DATA
-        setSections([
-          {
-            id: "1",
-            classSizeSuperLabel: "Small Batches · Personal Attention",
-            classSizeTitle: "AYM CLASS SIZE",
-            campusSuperLabel: "5000 sq.mts. · Rishikesh",
-            campusTitle: "AYM YOGA CAMPUS",
-            amenitiesSuperLabel: "Comfort · Nature · Serenity",
-            amenitiesCount: 5,
-            status: "Active",
-            order: 1,
-          },
-          {
-            id: "2",
-            classSizeSuperLabel: "Expert Faculty · Certified",
-            classSizeTitle: "AYM CLASS SIZE",
-            campusSuperLabel: "Lush Garden · River View",
-            campusTitle: "AYM CAMPUS ANNEX",
-            amenitiesSuperLabel: "Peace · Wellness · Growth",
-            amenitiesCount: 7,
-            status: "Inactive",
-            order: 2,
-          },
-        ]);
+        const res = await api.get("/class-campus-amenities");
+        if (res.data.success) {
+          const mapped: ClassCampusSection[] = res.data.data.map(
+            (item: any, idx: number) => ({
+              id:                  item._id,
+              classSizeSuperLabel: item.classSizeSuperLabel || "",
+              classSizeTitle:      item.classSizeTitle      || "",
+              campusSuperLabel:    item.campusSuperLabel    || "",
+              campusTitle:         item.campusTitle         || "",
+              amenitiesSuperLabel: item.amenitiesSuperLabel || "",
+              amenitiesCount:      item.amenities?.length   ?? 0,
+              status:              "Active",           // toggle is UI-only (no status field in schema)
+              order:               idx + 1,
+            })
+          );
+          setSections(mapped);
+        }
       } catch (error) {
-        console.error(error);
+        console.error("Failed to fetch sections:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchSections();
@@ -102,8 +99,8 @@ export default function ClassCampusAmenitiesListPage() {
   };
   const handleDragEnd = () => {
     dragIndex.current = null;
-    setSavedToast(true);
-    setTimeout(() => setSavedToast(false), 2500);
+    toast.success("Order saved successfully");
+setTimeout(() => setToastMsg(""), 2500);
   };
 
   /* ── Move up / down ── */
@@ -125,19 +122,41 @@ export default function ClassCampusAmenitiesListPage() {
       s.id === id ? { ...s, status: s.status === "Active" ? "Inactive" : "Active" } : s
     ));
 
-  const handleDelete = async () => {
-    try {
-      // await api.delete(`/class-campus-amenities/delete/${deleteModal}`);
-      setSections(
-        sections
-          .filter((s) => s.id !== deleteModal)
-          .map((s, i) => ({ ...s, order: i + 1 }))
-      );
-      setDeleteModal(null);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  /* ── Delete ── */
+ const handleDelete = async () => {
+  if (!deleteModal) return;
+
+  try {
+    setDeleting(true);
+
+    await api.delete(`/class-campus-amenities/${deleteModal}`);
+
+    setSections(
+      sections
+        .filter((s) => s.id !== deleteModal)
+        .map((s, i) => ({ ...s, order: i + 1 }))
+    );
+
+    setDeleteModal(null);
+
+    // ✅ SUCCESS TOAST
+    toast.success("Section deleted successfully");
+    setTimeout(() => setToastMsg(""), 2500);
+
+  } catch (error: any) {
+    const msg =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to delete";
+
+    // ❌ ERROR TOAST
+    toast.error(msg);
+    setTimeout(() => setToastMsg(""), 2500);
+
+  } finally {
+    setDeleting(false);
+  }
+};
 
   /* ─────────────────────────────────────────
      Shared sub-components
@@ -176,6 +195,20 @@ export default function ClassCampusAmenitiesListPage() {
   );
 
   /* ─────────────────────────────────────────
+     LOADING SKELETON
+  ───────────────────────────────────────── */
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <div className={styles.skeletonHeader} />
+        <div className={styles.skeletonCard}>
+          {[...Array(4)].map((_, i) => <div key={i} className={styles.skeletonField} />)}
+        </div>
+      </div>
+    );
+  }
+
+  /* ─────────────────────────────────────────
      MOBILE CARDS  (< 480px)
   ───────────────────────────────────────── */
   const MobileCards = () => (
@@ -190,17 +223,14 @@ export default function ClassCampusAmenitiesListPage() {
           onDragEnd={handleDragEnd}
           onDragOver={(e) => e.preventDefault()}
         >
-          {/* colour accent strip */}
           <div className={styles.cardStrip} />
 
           <div className={styles.cardHeader}>
-            {/* Order + arrows */}
             <div className={styles.cardOrderBlock}>
               <span className={styles.orderBadge}>{s.order}</span>
               <Arrows i={i} />
             </div>
 
-            {/* Content */}
             <div className={styles.cardBody}>
               <p className={styles.cardSuperTitle}>{s.classSizeSuperLabel}</p>
               <p className={styles.cardMainTitle}>{s.classSizeTitle}</p>
@@ -232,7 +262,6 @@ export default function ClassCampusAmenitiesListPage() {
               </div>
             </div>
 
-            {/* Drag handle */}
             <span className={styles.cardDragHandle} title="Drag to reorder">⠿</span>
           </div>
 
@@ -376,9 +405,8 @@ export default function ClassCampusAmenitiesListPage() {
   return (
     <div className={styles.page}>
 
-      {savedToast && (
-        <div className={styles.toast}>✦ Order saved successfully</div>
-      )}
+   
+
 
       {/* ── Header ── */}
       <div className={styles.pageHeader}>
@@ -390,8 +418,19 @@ export default function ClassCampusAmenitiesListPage() {
               : "Drag rows to reorder · click status badge to toggle"}
           </p>
         </div>
-
-        <Link href="/admin/dashboard/Classcampusameniti/add-new" className={styles.addBtn}>
+<Link
+  href={isLimitReached ? "#" : "/admin/dashboard/Classcampusameniti/add-new"}
+  className={`${styles.addBtn} ${isLimitReached ? styles.disabledBtn : ""}`}
+  onClick={(e) => {
+    if (isLimitReached) {
+      e.preventDefault();
+      toast("Section already exists. Please edit or delete first.", {
+  icon: "⚠️",
+});
+      setTimeout(() => setToastMsg(""), 2500);
+    }
+  }}
+>
           <span className={styles.addPlus}>+</span>
           <span className={styles.addLabel}>Add Section</span>
         </Link>
@@ -407,9 +446,9 @@ export default function ClassCampusAmenitiesListPage() {
       </div>
 
       {/* ── Views ── */}
-      {isMobile                    && <MobileCards />}
-      {isTablet && !isMobile       && <TabletTable />}
-      {isDesktop && !isTablet      && <DesktopTable />}
+      {isMobile               && <MobileCards />}
+      {isTablet && !isMobile  && <TabletTable />}
+      {isDesktop && !isTablet && <DesktopTable />}
 
       {/* ── Empty State ── */}
       {sections.length === 0 && (
@@ -421,7 +460,7 @@ export default function ClassCampusAmenitiesListPage() {
 
       {/* ── Delete Modal ── */}
       {deleteModal !== null && (
-        <div className={styles.modalOverlay} onClick={() => setDeleteModal(null)}>
+        <div className={styles.modalOverlay} onClick={() => !deleting && setDeleteModal(null)}>
           <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalOm}>ॐ</div>
             <h3 className={styles.modalTitle}>Confirm Deletion</h3>
@@ -429,11 +468,19 @@ export default function ClassCampusAmenitiesListPage() {
               Are you sure you want to delete this section? This action cannot be undone.
             </p>
             <div className={styles.modalActions}>
-              <button className={styles.modalCancel} onClick={() => setDeleteModal(null)}>
+              <button
+                className={styles.modalCancel}
+                onClick={() => setDeleteModal(null)}
+                disabled={deleting}
+              >
                 Cancel
               </button>
-              <button className={styles.modalConfirm} onClick={handleDelete}>
-                Delete
+              <button
+                className={styles.modalConfirm}
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting…" : "Delete"}
               </button>
             </div>
           </div>
