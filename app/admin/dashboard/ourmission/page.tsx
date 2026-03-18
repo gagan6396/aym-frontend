@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "@/assets/style/Admin/dashboard/ourmission/Ourmission.module.css";
 import api from "@/lib/api";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 /* ── Types ── */
 interface ContentBlock {
@@ -83,6 +83,28 @@ export default function OurMissionListPage() {
       setIsDeleting(false);
     }
   };
+
+  /* ── Locked Add Button (already has record) ── */
+  const LockedAddButton = () => (
+    <button
+      className={styles.addBtn}
+      onClick={() =>
+        toast("Only one Mission record allowed. Edit or delete the existing one.", {
+          icon: "🔒",
+          style: {
+            background: "#1f2937",
+            color: "#fff",
+            borderRadius: "10px",
+            padding: "12px 16px",
+            fontSize: "14px",
+          },
+        })
+      }
+    >
+      <span className={styles.addPlus}>+</span>
+      <span className={styles.addLabel}>Add Content</span>
+    </button>
+  );
 
   /* ── Actions ── */
   const Actions = ({ id }: { id: string }) => (
@@ -317,6 +339,21 @@ export default function OurMissionListPage() {
   return (
     <div className={styles.page}>
 
+      {/* Toaster */}
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "#1f2937",
+            color: "#fff",
+            borderRadius: "10px",
+            padding: "12px 16px",
+            fontSize: "14px",
+          },
+        }}
+      />
+
       {/* Header */}
       <div className={styles.pageHeader}>
         <div className={styles.pageHeaderLeft}>
@@ -328,8 +365,8 @@ export default function OurMissionListPage() {
           </p>
         </div>
 
-        {/* Add button — only show if no record exists yet */}
-        {records.length === 0 && (
+        {/* Add button — always visible, but locked if record exists */}
+        {records.length === 0 ? (
           <Link
             href="/admin/dashboard/ourmission/add-new"
             className={styles.addBtn}
@@ -337,6 +374,8 @@ export default function OurMissionListPage() {
             <span className={styles.addPlus}>+</span>
             <span className={styles.addLabel}>Add Content</span>
           </Link>
+        ) : (
+          <LockedAddButton />
         )}
       </div>
 

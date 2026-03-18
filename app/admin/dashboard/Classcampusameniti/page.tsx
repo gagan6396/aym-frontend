@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import styles from "@/assets/style/Admin/dashboard/Classcampusameniti/Classcampusamenities.module.css";
 import Link from "next/link";
 import api from "@/lib/api";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 /* ─────────────────────────────────────────
    Types
@@ -388,6 +388,21 @@ export default function ClassCampusAmenitiesListPage() {
   return (
     <div className={styles.page}>
 
+      {/* ── Toaster ── */}
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "#1f2937",
+            color: "#fff",
+            borderRadius: "10px",
+            padding: "12px 16px",
+            fontSize: "14px",
+          },
+        }}
+      />
+
       {/* ── Header ── */}
       <div className={styles.pageHeader}>
         <div className={styles.pageHeaderText}>
@@ -399,19 +414,35 @@ export default function ClassCampusAmenitiesListPage() {
           </p>
         </div>
 
-        <Link
-          href={isLimitReached ? "#" : "/admin/dashboard/Classcampusameniti/add-new"}
-          className={`${styles.addBtn} ${isLimitReached ? styles.disabledBtn : ""}`}
-          onClick={(e) => {
-            if (isLimitReached) {
-              e.preventDefault();
-              toast("Section already exists. Please edit or delete first.", { icon: "⚠️" });
+        {/* Add button — always visible, locked if limit reached */}
+        {isLimitReached ? (
+          <button
+            className={styles.addBtn}
+            onClick={() =>
+              toast("Section already exists. Edit or delete it first.", {
+                icon: "🔒",
+                style: {
+                  background: "#1f2937",
+                  color: "#fff",
+                  borderRadius: "10px",
+                  padding: "12px 16px",
+                  fontSize: "14px",
+                },
+              })
             }
-          }}
-        >
-          <span className={styles.addPlus}>+</span>
-          <span className={styles.addLabel}>Add Section</span>
-        </Link>
+          >
+            <span className={styles.addPlus}>+</span>
+            <span className={styles.addLabel}>Add Section</span>
+          </button>
+        ) : (
+          <Link
+            href="/admin/dashboard/Classcampusameniti/add-new"
+            className={styles.addBtn}
+          >
+            <span className={styles.addPlus}>+</span>
+            <span className={styles.addLabel}>Add Section</span>
+          </Link>
+        )}
       </div>
 
       {/* ── Ornament ── */}

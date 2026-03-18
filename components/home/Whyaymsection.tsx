@@ -1,126 +1,239 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styles from "../../assets/style/Home/Whyaymsection.module.css";
 import Image from "next/image";
-import image1 from "../../assets/images/certification-yoga-course-in-rishikesh-india.jpg";
+import api from "@/lib/api";
 
+/* ══════════════════════════════════════════════
+   TYPES
+══════════════════════════════════════════════ */
 interface Feature {
   title: string;
   desc: string;
 }
 
-const sideFeatures: Feature[] = [
-  {
-    title: "The most experienced yoga teachers:",
-    desc: "The main foundation of yoga teachers' training is laid by the wisdom imparted by the teachers and their mentorship. We have a team of the most experienced teachers in each major of the yoga teacher training curriculum. Our passionate and nurturing teachers make it easy for them to learn yoga at our yoga school.",
-  },
-  {
-    title: "The most experienced yoga school:",
-    desc: "Our school has been recognized for over 25 years for its comprehensive yoga training programs in Rishikesh and Goa, India. Our school employs both traditional and modern approaches to impart structured and authentic yoga training to our yogis.",
-  },
-  {
-    title: "Developed yoga curriculum:",
-    desc: "Research is a key aspect of any development in any field. Our yoga school in India is continuously developing its curriculum, teaching methodology, infrastructure, and classroom experience as a whole. Following this approach, our trainees find it easier to learn and grasp concepts more quickly compared to other trainees of other similar yoga institutions.",
-  },
-  {
-    title: "Most graduate students:",
-    desc: "We established our yoga teacher training center in Rishikesh, India, in 2000, and since then, more than 15,000 yogis have graduated from our 200-hour and 300-hour yoga courses in Rishikesh and Goa.",
-  },
-];
+interface WhyAYMData {
+  _id: string;
+  superTitle: string;
+  mainTitle: string;
+  introPara: string;
+  imageSrc: string;
+  imageAlt: string;
+  imgBadgeYear: string;
+  imgQuote: string;
+  sideFeatures: Feature[];
+  bottomFeatures: Feature[];
+}
 
-const bottomFeatures: Feature[] = [
-  {
-    title: "Authentic, traditional, and holistic approach:",
-    desc: "We are committed to provide authentic, traditional, and original teachings of yoga as it is found in ancient yoga textbooks and with yogis of the Himalayas. We use a holistic and scientific approach in our yoga studio in rishikesh India. We do not just teach physical postures, but all components of yoga, so that a holistic personality develops after completing yoga training.",
-  },
-  {
-    title: "Most affordable:",
-    desc: "Our school fee is the most affordable for joining our yoga teacher training course worldwide, while maintaining all standards, amenities, and quality of life. Many of our graduates appreciated this. Additionally, our mission is to bring yoga to everyone, and affordability enables us to reach millions.",
-  },
+/* ══════════════════════════════════════════════
+   IMAGE URL HELPER
+   DB mein /uploads/... stored hai → full URL
+══════════════════════════════════════════════ */
+const getImageUrl = (src: string): string => {
+  if (!src) return "";
+  if (src.startsWith("http")) return src;
+  return `${process.env.NEXT_PUBLIC_API_URL}${src}`;
+};
 
-  {
-    title: "Top-rated Accreditation and certification:",
-    desc: "There are many yoga schools and institutions in Rishikesh, but AYM Yoga Institute is the only one in Rishikesh that is recognized by the Yoga Certification Board of the Government of India. We have also been internationally recognised by the Yoga Alliance USA and worldwide yoga alliances since 2005. Our graduates get internationally recognised certification in rishikesh India, which they can enroll to get RYT 200 hours, RYT 300 or RYT 500 hours at Yoga Alliance, USA.",
-  },
-  {
-    title: "Yoga community - worldwide AYM family:",
-    desc: "AYM yoga community is a Global family of yoga practitioners and yoga teachers who graduate from AYM yoga school and share their innovative teaching and experiences on this platform. It helps to grow and get feedback, and assists the incoming graduates.",
-  },
-];
+/* ══════════════════════════════════════════════
+   SKELETON LOADER
+══════════════════════════════════════════════ */
+const Skeleton = () => (
+  <section className={styles.section}>
+    <div className={styles.topBorder} />
+    <div className={styles.container}>
+      <div className={`${styles.header}`}>
+        <div
+          style={{
+            height: "16px",
+            width: "220px",
+            background: "rgba(160,120,64,0.15)",
+            borderRadius: "6px",
+            margin: "0 auto 1rem",
+            animation: "pulse 1.5s ease-in-out infinite",
+          }}
+        />
+        <div
+          style={{
+            height: "28px",
+            width: "80%",
+            background: "rgba(160,120,64,0.15)",
+            borderRadius: "6px",
+            margin: "0 auto 0.6rem",
+            animation: "pulse 1.5s ease-in-out infinite",
+          }}
+        />
+        <div
+          style={{
+            height: "28px",
+            width: "60%",
+            background: "rgba(160,120,64,0.12)",
+            borderRadius: "6px",
+            margin: "0 auto 1.5rem",
+            animation: "pulse 1.5s ease-in-out infinite",
+          }}
+        />
+      </div>
+    </div>
+    <style>{`
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
+    `}</style>
+  </section>
+);
 
+/* ══════════════════════════════════════════════
+   COMPONENT
+══════════════════════════════════════════════ */
 export const WhyAYMSection: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
+  const [data, setData] = useState<WhyAYMData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
 
+  /* ────────────────────────────────────────────
+     FETCH  →  GET /why-aym/get-all-why-aym
+  ──────────────────────────────────────────── */
   useEffect(() => {
-    const els = sectionRef.current?.querySelectorAll(`.${styles.fadeUp}`);
-    if (!els) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add(styles.fadeUpVisible);
-        });
-      },
-      { threshold: 0.08 },
-    );
-    els.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+    const fetchData = async () => {
+      try {
+        const res = await api.get("/why-aym/get-all-why-aym");
+        setData(res.data.data || null);
+      } catch (err) {
+        console.error("WhyAYMSection fetch error:", err);
+        setError(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
+
+  /* ────────────────────────────────────────────
+     INTERSECTION OBSERVER — fadeUp animation
+     Data load hone ke baad run karo
+  ──────────────────────────────────────────── */
+  useEffect(() => {
+    if (!data) return;
+
+    /* Small timeout — DOM update hone do pehle */
+    const timer = setTimeout(() => {
+      const els = sectionRef.current?.querySelectorAll(`.${styles.fadeUp}`);
+      if (!els) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) e.target.classList.add(styles.fadeUpVisible);
+          });
+        },
+        { threshold: 0.08 }
+      );
+
+      els.forEach((el) => observer.observe(el));
+      return () => observer.disconnect();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [data]);
+
+  /* ── Loading ── */
+  if (isLoading) return <Skeleton />;
+
+  /* ── Error ya data nahi ── */
+  if (error || !data) return null;
+
+  /* ── Image URL resolve ── */
+  const heroImageUrl = getImageUrl(data.imageSrc);
 
   return (
     <section className={styles.section} ref={sectionRef}>
-     
 
       {/* ── Top decorative border ── */}
       <div className={styles.topBorder} />
 
       <div className={styles.container}>
-        {/* ── Header ── */}
+
+        {/* ══ HEADER ══ */}
         <div className={`${styles.header} ${styles.fadeUp}`}>
-          <p className={styles.superTitle}>
-            Yoga Teacher Training in Rishikesh
-          </p>
-          <h2 className={styles.mainTitle}>
-            What Makes AYM Yoga School Different from Other Yoga Schools in
-            Rishikesh, India?
-          </h2>
+
+          {/* superTitle — plain text */}
+          <p className={styles.superTitle}>{data.superTitle}</p>
+
+          {/* mainTitle — Jodit se HTML aa sakta hai */}
+          <h2
+            className={styles.mainTitle}
+            dangerouslySetInnerHTML={{ __html: data.mainTitle }}
+          />
+
           <div className={styles.omDivider}>
             <span className={styles.dividerLine} />
             <span className={styles.omSymbol}>ॐ</span>
             <span className={styles.dividerLine} />
           </div>
-          <p className={styles.introPara}>
-            Namaste, yoga lovers! AYM Yoga School stands out among
-            Rishikesh&apos;s yoga schools for its commitment to authentic
-            teaching, experienced instructors, and a welcoming environment.
-            Let&apos;s discuss what makes it special.
-          </p>
+
+          {/* introPara — Jodit se HTML aa sakta hai */}
+          <p
+            className={styles.introPara}
+            dangerouslySetInnerHTML={{ __html: data.introPara }}
+          />
         </div>
+
+        {/* ══ BODY — image + side features ══ */}
         <div className={styles.body}>
+
+          {/* ── Image Column ── */}
           <div className={`${styles.imageCol} ${styles.fadeUp}`}>
             <div className={styles.imageWrap}>
               <div className={styles.imageFrame}>
-                <Image
-                  src={image1}
-                  alt="AYM Yoga School certified student"
-                  className={styles.heroImg}
-                  width={600}
-                  height={400}
-                />
+                {heroImageUrl ? (
+                  /* External URL ya /uploads/... → next/image unoptimized */
+                  data.imageSrc.startsWith("http") ? (
+                    <img
+                      src={heroImageUrl}
+                      alt={data.imageAlt || "AYM Yoga School"}
+                      className={styles.heroImg}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <Image
+                      src={heroImageUrl}
+                      alt={data.imageAlt || "AYM Yoga School"}
+                      className={styles.heroImg}
+                      width={600}
+                      height={400}
+                      unoptimized
+                    />
+                  )
+                ) : null}
               </div>
-              <div className={styles.imgBadge}>
-                <span className={styles.imgBadgeOm}>ॐ</span>
-                <span className={styles.imgBadgeYear}>Est. 2005</span>
-              </div>
-              <blockquote className={styles.imgQuote}>
-                <span className={styles.qMark}>&ldquo;</span>
-                Where Ancient Yoga Lives &amp; Transforms Lives
-                <span className={styles.qMark}>&rdquo;</span>
-              </blockquote>
+
+              {/* Badge Year */}
+              {data.imgBadgeYear && (
+                <div className={styles.imgBadge}>
+                  <span className={styles.imgBadgeOm}>ॐ</span>
+                  <span className={styles.imgBadgeYear}>{data.imgBadgeYear}</span>
+                </div>
+              )}
+
+              {/* Image Quote */}
+              {data.imgQuote && (
+                <blockquote className={styles.imgQuote}>
+                  <span className={styles.qMark}>&ldquo;</span>
+                  {data.imgQuote}
+                  <span className={styles.qMark}>&rdquo;</span>
+                </blockquote>
+              )}
             </div>
           </div>
+
+          {/* ── Side Features Column ── */}
           <div className={styles.featuresCol}>
-            {sideFeatures.map((f, i) => (
+            {data.sideFeatures.map((f, i) => (
               <div
                 key={i}
                 className={`${styles.featureItem} ${styles.fadeUp}`}
@@ -130,20 +243,29 @@ export const WhyAYMSection: React.FC = () => {
                   ॐ
                 </span>
                 <p className={styles.featureText}>
-                  <strong className={styles.featureTitle}>{f.title}</strong>{" "}
-                  {f.desc}
+                  {/* title — Jodit HTML */}
+                  <strong
+                    className={styles.featureTitle}
+                    dangerouslySetInnerHTML={{ __html: f.title }}
+                  />{" "}
+                  {/* desc — Jodit HTML */}
+                  <span dangerouslySetInnerHTML={{ __html: f.desc }} />
                 </p>
               </div>
             ))}
           </div>
         </div>
+
+        {/* ══ MID DIVIDER ══ */}
         <div className={styles.midDivider}>
           <span className={styles.dividerLine} />
           <span className={styles.midPattern}>✦ 卐 ✦ ॐ ✦ 卐 ✦</span>
           <span className={styles.dividerLine} />
         </div>
+
+        {/* ══ BOTTOM FEATURES ══ */}
         <div className={styles.bottomFeatures}>
-          {bottomFeatures.map((f, i) => (
+          {data.bottomFeatures.map((f, i) => (
             <div
               key={i}
               className={`${styles.bottomItem} ${styles.fadeUp}`}
@@ -153,12 +275,18 @@ export const WhyAYMSection: React.FC = () => {
                 卐
               </span>
               <p className={styles.featureText}>
-                <strong className={styles.featureTitle}>{f.title}</strong>{" "}
-                {f.desc}
+                {/* title — Jodit HTML */}
+                <strong
+                  className={styles.featureTitle}
+                  dangerouslySetInnerHTML={{ __html: f.title }}
+                />{" "}
+                {/* desc — Jodit HTML */}
+                <span dangerouslySetInnerHTML={{ __html: f.desc }} />
               </p>
             </div>
           ))}
         </div>
+
       </div>
       <div className={styles.bottomBorder} />
     </section>

@@ -1,12 +1,24 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  useForm,
+  useFieldArray,
+  Controller,
+  SubmitHandler,
+} from "react-hook-form";
+import dynamic from "next/dynamic";
+import api from "@/lib/api";
 import styles from "@/assets/style/Admin/dashboard/whyaymschool/Whyaym.module.css";
-// import api from "@/lib/api";
 
-/* ── Types ── */
+/* ── Dynamically import JoditEditor (SSR disabled) ── */
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
+
+/* ══════════════════════════════════════════════
+   TYPES
+══════════════════════════════════════════════ */
 interface Feature {
   title: string;
   desc: string;
@@ -16,100 +28,144 @@ interface FormData {
   superTitle: string;
   mainTitle: string;
   introPara: string;
-  /* Image */
+  /* imageSrc ab sirf preview ke liye — actual file alag state mein */
   imageSrc: string;
   imageAlt: string;
   imgBadgeYear: string;
   imgQuote: string;
-  /* Features */
   sideFeatures: Feature[];
   bottomFeatures: Feature[];
 }
 
-interface FormErrors {
-  superTitle?: string;
-  mainTitle?: string;
-  introPara?: string;
-  imageSrc?: string;
-  sideFeatures?: string;
-  bottomFeatures?: string;
-}
+/* ══════════════════════════════════════════════
+   JODIT CONFIG FACTORY
+══════════════════════════════════════════════ */
+const makeJoditConfig = (placeholder: string, height = 220) => ({
+  readonly: false,
+  placeholder,
+  toolbarAdaptive: false,
+  showCharsCounter: false,
+  showWordsCounter: false,
+  showXPathInStatusbar: false,
+  buttons: [
+    "bold", "italic", "underline", "strikethrough", "|",
+    "fontsize", "font", "brush", "paragraph", "|",
+    "align", "ul", "ol", "|",
+    "link", "hr", "|",
+    "undo", "redo", "eraser",
+  ],
+  height,
+  style: {
+    fontFamily: "'Cormorant Garamond', serif",
+    fontSize: "15px",
+    color: "#3d1d00",
+  },
+});
 
-const emptyFeature = (): Feature => ({ title: "", desc: "" });
+/* ── Jodit error border ── */
+const joditErrorStyle: React.CSSProperties = {
+  border: "1.5px solid #c44a00",
+  borderRadius: "8px",
+  boxShadow: "0 0 0 3px rgba(196,74,0,0.10)",
+};
 
+/* ══════════════════════════════════════════════
+   COMPONENT
+══════════════════════════════════════════════ */
 export default function AddWhyAYMPage() {
   const router = useRouter();
+
+  /* ── Image file state (actual File object for FormData) ── */
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string>("");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [urlInput, setUrlInput] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  const [form, setForm] = useState<FormData>({
-    superTitle: "Yoga Teacher Training in Rishikesh",
-    mainTitle: "",
-    introPara: "",
-    imageSrc: "",
-    imageAlt: "",
-    imgBadgeYear: "Est. 2005",
-    imgQuote: "",
-    sideFeatures: [emptyFeature(), emptyFeature()],
-    bottomFeatures: [emptyFeature(), emptyFeature()],
+  /* ── Jodit configs (memoized) ── */
+  const mainTitleConfig = useMemo(
+    () =>
+      makeJoditConfig(
+        "e.g. What Makes AYM Yoga School Different from Other Yoga Schools in Rishikesh, India?",
+        220
+      ),
+    []
+  );
+  const introParaConfig = useMemo(
+    () =>
+      makeJoditConfig(
+        "e.g. Namaste, yoga lovers! AYM Yoga School stands out among Rishikesh's yoga schools…",
+        200
+      ),
+    []
+  );
+  const featureDescConfig = useMemo(
+    () =>
+      makeJoditConfig(
+        "e.g. The main foundation of yoga teachers' training is laid by the wisdom imparted by the teachers…",
+        180
+      ),
+    []
+  );
+
+  /* ── React Hook Form ── */
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<FormData>({
+    defaultValues: {
+      superTitle: "Yoga Teacher Training in Rishikesh",
+      mainTitle: "",
+      introPara: "",
+      imageSrc: "",
+      imageAlt: "",
+      imgBadgeYear: "Est. 2005",
+      imgQuote: "",
+      sideFeatures: [{ title: "", desc: "" }, { title: "", desc: "" }],
+      bottomFeatures: [{ title: "", desc: "" }, { title: "", desc: "" }],
+    },
   });
 
-  const [errors, setErrors] = useState<FormErrors>({});
+  /* ── Field Arrays ── */
+  const {
+    fields: sideFields,
+    append: appendSide,
+    remove: removeSide,
+    move: moveSide,
+  } = useFieldArray({ control, name: "sideFeatures" });
 
-  /* ── Setters ── */
-  const set = (key: keyof Omit<FormData, "sideFeatures" | "bottomFeatures">, val: string) => {
-    setForm((p) => ({ ...p, [key]: val }));
-    setErrors((p) => ({ ...p, [key]: undefined }));
+  const {
+    fields: bottomFields,
+    append: appendBottom,
+    remove: removeBottom,
+    move: moveBottom,
+  } = useFieldArray({ control, name: "bottomFeatures" });
+
+  /* ── Watched values ── */
+  const watchedImgQuote = watch("imgQuote");
+
+  /* ══════════════════════════════════════════════
+     IMAGE HANDLERS
+     File upload → state mein File object save karo
+     URL paste → sirf preview ke liye imageSrc use karo
+  ══════════════════════════════════════════════ */
+  const applyFile = (f: File) => {
+    setImageFile(f);
+    const preview = URL.createObjectURL(f);
+    setImagePreviewUrl(preview);
   };
 
-  /* ── Feature handlers ── */
-  const updateFeature = (
-    group: "sideFeatures" | "bottomFeatures",
-    i: number,
-    field: keyof Feature,
-    val: string
-  ) => {
-    setForm((p) => {
-      const arr = [...p[group]];
-      arr[i] = { ...arr[i], [field]: val };
-      return { ...p, [group]: arr };
-    });
-    setErrors((p) => ({ ...p, [group]: undefined }));
-  };
-
-  const addFeature = (group: "sideFeatures" | "bottomFeatures") => {
-    if (form[group].length >= 8) return;
-    setForm((p) => ({ ...p, [group]: [...p[group], emptyFeature()] }));
-  };
-
-  const removeFeature = (group: "sideFeatures" | "bottomFeatures", i: number) => {
-    setForm((p) => ({ ...p, [group]: p[group].filter((_, idx) => idx !== i) }));
-  };
-
-  /* Drag reorder features */
-  const featureDragIdx = useRef<{ group: string; idx: number } | null>(null);
-  const handleFeatureDragStart = (group: "sideFeatures" | "bottomFeatures", i: number) => {
-    featureDragIdx.current = { group, idx: i };
-  };
-  const handleFeatureDragEnter = (group: "sideFeatures" | "bottomFeatures", i: number) => {
-    if (!featureDragIdx.current || featureDragIdx.current.group !== group || featureDragIdx.current.idx === i) return;
-    const arr = [...form[group]];
-    const [moved] = arr.splice(featureDragIdx.current.idx, 1);
-    arr.splice(i, 0, moved);
-    featureDragIdx.current = { group, idx: i };
-    setForm((p) => ({ ...p, [group]: arr }));
-  };
-
-  /* ── Image handlers ── */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    const url = URL.createObjectURL(f);
-    set("imageSrc", url);
-    if (!form.imageAlt) set("imageAlt", f.name.replace(/\.[^.]+$/, ""));
+    applyFile(f);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -118,50 +174,127 @@ export default function AddWhyAYMPage() {
     setIsDragOver(false);
     const f = e.dataTransfer.files[0];
     if (!f || !f.type.startsWith("image/")) return;
-    const url = URL.createObjectURL(f);
-    set("imageSrc", url);
-    if (!form.imageAlt) set("imageAlt", f.name.replace(/\.[^.]+$/, ""));
+    applyFile(f);
   };
 
   const handleAddUrl = () => {
     const url = urlInput.trim();
     if (!url) return;
-    set("imageSrc", url);
+    /* URL case: no File object, just preview */
+    setImageFile(null);
+    setImagePreviewUrl(url);
     setUrlInput("");
   };
 
-  /* ── Validation ── */
-  const validate = (): boolean => {
-    const e: FormErrors = {};
-    if (!form.superTitle.trim()) e.superTitle = "Super title is required";
-    if (!form.mainTitle.trim()) e.mainTitle = "Main title is required";
-    if (!form.introPara.trim()) e.introPara = "Intro paragraph is required";
-    if (!form.imageSrc.trim()) e.imageSrc = "Hero image is required";
-    if (form.sideFeatures.some((f) => !f.title.trim() || !f.desc.trim()))
-      e.sideFeatures = "All side feature title & description fields must be filled";
-    if (form.bottomFeatures.some((f) => !f.title.trim() || !f.desc.trim()))
-      e.bottomFeatures = "All bottom feature title & description fields must be filled";
-    setErrors(e);
-    return Object.keys(e).length === 0;
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreviewUrl("");
   };
 
-  /* ── Submit ── */
-  const handleSubmit = async () => {
-    if (!validate()) return;
+  /* ══════════════════════════════════════════════
+     DRAG-REORDER FEATURES
+  ══════════════════════════════════════════════ */
+  const featureDragIdx = useRef<{
+    group: "sideFeatures" | "bottomFeatures";
+    idx: number;
+  } | null>(null);
+
+  const handleFeatureDragStart = (
+    group: "sideFeatures" | "bottomFeatures",
+    i: number
+  ) => {
+    featureDragIdx.current = { group, idx: i };
+  };
+
+  const handleFeatureDragEnter = (
+    group: "sideFeatures" | "bottomFeatures",
+    i: number
+  ) => {
+    if (
+      !featureDragIdx.current ||
+      featureDragIdx.current.group !== group ||
+      featureDragIdx.current.idx === i
+    )
+      return;
+    const from = featureDragIdx.current.idx;
+    featureDragIdx.current = { group, idx: i };
+    if (group === "sideFeatures") moveSide(from, i);
+    else moveBottom(from, i);
+  };
+
+  /* ══════════════════════════════════════════════
+     SUBMIT  →  POST /why-aym/create-why-aym
+     
+     Backend multer expect karta hai:
+       - req.file       → image field name: "image"
+       - req.body       → baaki text fields
+       - sideFeatures / bottomFeatures → JSON string as req.body
+     
+     Isliye FormData use karo, JSON nahi
+  ══════════════════════════════════════════════ */
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
+    /* Image validation */
+    if (!imageFile && !imagePreviewUrl) {
+      setApiError("Hero image is required. Please upload an image or paste a URL.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      const payload = { ...form };
-      // await api.post("/why-aym/create", payload);
-      console.log("Payload:", payload);
+      setApiError(null);
+
+      /* ── Build FormData ── */
+      const formData = new FormData();
+
+      /* Text fields */
+      formData.append("superTitle", data.superTitle);
+      formData.append("mainTitle", data.mainTitle);
+      formData.append("introPara", data.introPara);
+      formData.append("imageAlt", data.imageAlt || "");
+      formData.append("imgBadgeYear", data.imgBadgeYear || "");
+      formData.append("imgQuote", data.imgQuote || "");
+
+      /* Array fields — JSON string ke roop mein bhejna padega */
+      formData.append("sideFeatures", JSON.stringify(data.sideFeatures));
+      formData.append("bottomFeatures", JSON.stringify(data.bottomFeatures));
+
+      /* Image:
+         - File upload kiya → actual File object append karo (field name: "image")
+         - URL paste kiya   → imageSrc as text bheho (multer req.file nahi banayega) */
+      if (imageFile) {
+        formData.append("image", imageFile);
+      } else {
+        /* URL case: backend mein imageSrc directly save hoga
+           Controller mein yeh handle karna padega agar URL support chahiye */
+        formData.append("imageSrc", imagePreviewUrl);
+      }
+
+      await api.post("/why-aym/create-why-aym", formData, {
+        headers: {
+          /* Content-Type: multipart/form-data browser khud set karta hai
+             boundary ke saath — manually set mat karo */
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
       setSubmitted(true);
-      setTimeout(() => router.push("/admin/dashboard/whyaym"), 1500);
+      setTimeout(() => router.push("/admin/dashboard/whyaymschool"), 1500);
     } catch (err: any) {
-      alert(err?.response?.data?.message || err?.message || "Failed to save");
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Something went wrong. Please try again.";
+      setApiError(msg);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  /* ══════════════════════════════════════════════
+     SUCCESS SCREEN
+  ══════════════════════════════════════════════ */
   if (submitted) {
     return (
       <div className={styles.successScreen}>
@@ -175,299 +308,600 @@ export default function AddWhyAYMPage() {
     );
   }
 
-  /* ── Feature block builder ── */
+  /* ══════════════════════════════════════════════
+     FEATURE BUILDER
+  ══════════════════════════════════════════════ */
   const FeatureBuilder = ({
     group,
     label,
     symbol,
+    fields,
+    onAppend,
+    onRemove,
   }: {
     group: "sideFeatures" | "bottomFeatures";
     label: string;
     symbol: string;
+    fields: { id: string }[];
+    onAppend: () => void;
+    onRemove: (i: number) => void;
   }) => (
     <div className={styles.sectionBlock}>
       <div className={styles.sectionHeader}>
         <span className={styles.sectionIcon}>✦</span>
         <h3 className={styles.sectionTitle}>{label}</h3>
-        <span className={styles.sectionBadge}>{form[group].length} / 8</span>
+        <span className={styles.sectionBadge}>{fields.length} / 8</span>
       </div>
 
-      {errors[group] && (
-        <p className={styles.errorMsg} style={{ marginBottom: "0.8rem" }}>⚠ {errors[group]}</p>
-      )}
-
-      {form[group].map((feat, i) => (
+      {fields.map((field, i) => (
         <div
-          key={i}
+          key={field.id}
           className={styles.featureItemCard}
           draggable
           onDragStart={() => handleFeatureDragStart(group, i)}
           onDragEnter={() => handleFeatureDragEnter(group, i)}
-          onDragEnd={() => { featureDragIdx.current = null; }}
+          onDragEnd={() => {
+            featureDragIdx.current = null;
+          }}
           onDragOver={(e) => e.preventDefault()}
         >
           <div className={styles.featureItemHeader}>
             <span className={styles.featureDragHandle}>⠿</span>
-            <span className={styles.featureItemNumber}>{symbol}{i + 1}</span>
-            <span className={styles.featureItemType}>{label} #{i + 1}</span>
+            <span className={styles.featureItemNumber}>
+              {symbol}
+              {i + 1}
+            </span>
+            <span className={styles.featureItemType}>
+              {label} #{i + 1}
+            </span>
             <button
               type="button"
               className={styles.featureRemoveBtn}
-              onClick={() => removeFeature(group, i)}
-              disabled={form[group].length <= 1}
-            >✕</button>
+              onClick={() => onRemove(i)}
+              disabled={fields.length <= 1}
+            >
+              ✕
+            </button>
           </div>
 
-          {/* Title */}
+          {/* Feature Title */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}>
               <span className={styles.labelIcon}>✦</span>
               Feature Title<span className={styles.required}>*</span>
             </label>
-            <p className={styles.fieldHint}>Bold heading shown before the description (e.g. "The most experienced yoga teachers:")</p>
-            <div className={`${styles.inputWrap} ${feat.title && !errors[group] ? styles.inputSuccess : ""}`}>
+            <p className={styles.fieldHint}>
+              Bold heading shown before the description (e.g. "The most
+              experienced yoga teachers:")
+            </p>
+            <div
+              className={`${styles.inputWrap} ${
+                errors[group]?.[i]?.title ? styles.inputError : ""
+              }`}
+            >
               <input
                 type="text"
                 className={styles.input}
                 placeholder="e.g. The most experienced yoga teachers:"
-                value={feat.title}
                 maxLength={120}
-                onChange={(e) => updateFeature(group, i, "title", e.target.value)}
+                {...register(`${group}.${i}.title` as const, {
+                  required: "Feature title is required",
+                })}
               />
-              <span className={styles.charCount}>{feat.title.length}/120</span>
             </div>
+            {errors[group]?.[i]?.title && (
+              <p className={styles.errorMsg}>
+                ⚠ {errors[group]?.[i]?.title?.message}
+              </p>
+            )}
           </div>
 
-          {/* Desc */}
+          {/* Feature Description — JoditEditor */}
           <div className={styles.fieldGroup} style={{ marginBottom: 0 }}>
             <label className={styles.label}>
               <span className={styles.labelIcon}>✦</span>
               Feature Description<span className={styles.required}>*</span>
             </label>
-            <p className={styles.fieldHint}>Body text explaining this feature</p>
-            <div className={`${styles.inputWrap} ${feat.desc && !errors[group] ? styles.inputSuccess : ""}`}>
-              <textarea
-                className={`${styles.input} ${styles.textarea}`}
-                placeholder="e.g. The main foundation of yoga teachers' training is laid by the wisdom imparted by the teachers…"
-                value={feat.desc}
-                maxLength={800}
-                rows={3}
-                onChange={(e) => updateFeature(group, i, "desc", e.target.value)}
-              />
-              <span className={styles.charCount}>{feat.desc.length}/800</span>
-            </div>
+            <p className={styles.fieldHint}>
+              Body text — bold, color, italic sab toolbar se kar sakte ho
+            </p>
+            <Controller
+              control={control}
+              name={`${group}.${i}.desc` as const}
+              rules={{
+                required: "Feature description is required",
+                validate: (v) =>
+                  v.replace(/<[^>]*>/g, "").trim().length > 0 ||
+                  "Description cannot be empty",
+              }}
+              render={({ field }) => (
+                <div style={errors[group]?.[i]?.desc ? joditErrorStyle : {}}>
+                  <JoditEditor
+                    value={field.value}
+                    config={featureDescConfig}
+                    onBlur={(newContent) => field.onChange(newContent)}
+                  />
+                </div>
+              )}
+            />
+            {errors[group]?.[i]?.desc && (
+              <p className={styles.errorMsg} style={{ marginTop: "0.4rem" }}>
+                ⚠ {errors[group]?.[i]?.desc?.message}
+              </p>
+            )}
           </div>
         </div>
       ))}
 
-      {form[group].length < 8 && (
-        <button type="button" className={styles.addFeatureBtn} onClick={() => addFeature(group)}>
+      {fields.length < 8 && (
+        <button
+          type="button"
+          className={styles.addFeatureBtn}
+          onClick={onAppend}
+        >
           + Add {label.replace(" Features", "")} Feature
         </button>
       )}
     </div>
   );
 
+  /* ══════════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════════ */
   return (
     <div className={styles.formPage}>
 
       {/* Breadcrumb */}
       <div className={styles.breadcrumb}>
-        <Link href="/admin/dashboard/whyaym" className={styles.breadcrumbLink}>Why AYM</Link>
+        <Link
+          href="/admin/dashboard/whyaymschool"
+          className={styles.breadcrumbLink}
+        >
+          Why AYM
+        </Link>
         <span className={styles.breadcrumbSep}>›</span>
         <span className={styles.breadcrumbCurrent}>Add Section</span>
       </div>
 
+      {/* Page Header */}
       <div className={styles.pageHeader}>
         <div className={styles.pageHeaderLeft}>
           <h1 className={styles.pageTitle}>Add Why AYM Section</h1>
-          <p className={styles.pageSubtitle}>Configure all content — header, hero image, side features & bottom features</p>
+          <p className={styles.pageSubtitle}>
+            Configure all content — header, hero image, side features & bottom
+            features
+          </p>
         </div>
       </div>
 
+      {/* Ornament */}
       <div className={styles.ornament}>
-        <span>❧</span><div className={styles.ornamentLine} />
-        <span>ॐ</span><div className={styles.ornamentLine} /><span>❧</span>
+        <span>❧</span>
+        <div className={styles.ornamentLine} />
+        <span>ॐ</span>
+        <div className={styles.ornamentLine} />
+        <span>❧</span>
       </div>
 
-      <div className={styles.formCard}>
-
-        {/* ══ 1. SECTION HEADER ══ */}
-        <div className={styles.sectionBlock}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionIcon}>✦</span>
-            <h3 className={styles.sectionTitle}>Section Header</h3>
-          </div>
-
-          {/* Super Title */}
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Super Title<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Small label shown above the main heading (e.g. "Yoga Teacher Training in Rishikesh")</p>
-            <div className={`${styles.inputWrap} ${errors.superTitle ? styles.inputError : ""} ${form.superTitle && !errors.superTitle ? styles.inputSuccess : ""}`}>
-              <input type="text" className={styles.input}
-                placeholder="e.g. Yoga Teacher Training in Rishikesh"
-                value={form.superTitle} maxLength={120}
-                onChange={(e) => set("superTitle", e.target.value)} />
-              <span className={styles.charCount}>{form.superTitle.length}/120</span>
-            </div>
-            {errors.superTitle && <p className={styles.errorMsg}>⚠ {errors.superTitle}</p>}
-          </div>
-
-          {/* Main Title */}
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Main Title (H2)<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Primary heading — the key differentiator question</p>
-            <div className={`${styles.inputWrap} ${errors.mainTitle ? styles.inputError : ""} ${form.mainTitle && !errors.mainTitle ? styles.inputSuccess : ""}`}>
-              <textarea className={`${styles.input} ${styles.textarea}`}
-                placeholder="e.g. What Makes AYM Yoga School Different from Other Yoga Schools in Rishikesh, India?"
-                value={form.mainTitle} maxLength={300} rows={3}
-                onChange={(e) => set("mainTitle", e.target.value)} />
-              <span className={styles.charCount}>{form.mainTitle.length}/300</span>
-            </div>
-            {errors.mainTitle && <p className={styles.errorMsg}>⚠ {errors.mainTitle}</p>}
-          </div>
-
-          {/* Intro Para */}
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Intro Paragraph<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Short introductory text shown below the divider and above the image grid</p>
-            <div className={`${styles.inputWrap} ${errors.introPara ? styles.inputError : ""} ${form.introPara && !errors.introPara ? styles.inputSuccess : ""}`}>
-              <textarea className={`${styles.input} ${styles.textarea}`}
-                placeholder="e.g. Namaste, yoga lovers! AYM Yoga School stands out among Rishikesh's yoga schools…"
-                value={form.introPara} maxLength={500} rows={3}
-                onChange={(e) => set("introPara", e.target.value)} />
-              <span className={styles.charCount}>{form.introPara.length}/500</span>
-            </div>
-            {errors.introPara && <p className={styles.errorMsg}>⚠ {errors.introPara}</p>}
-          </div>
+      {/* ── API Error Banner ── */}
+      {apiError && (
+        <div
+          style={{
+            background: "rgba(196,74,0,0.08)",
+            border: "1.5px solid #c44a00",
+            borderRadius: "10px",
+            padding: "0.85rem 1.2rem",
+            marginBottom: "1.2rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+          }}
+        >
+          <span style={{ fontSize: "1.1rem" }}>⚠</span>
+          <p
+            style={{
+              margin: 0,
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "0.95rem",
+              color: "#c44a00",
+              fontStyle: "italic",
+            }}
+          >
+            {apiError}
+          </p>
+          <button
+            type="button"
+            onClick={() => setApiError(null)}
+            style={{
+              marginLeft: "auto",
+              background: "none",
+              border: "none",
+              color: "#c44a00",
+              cursor: "pointer",
+              fontSize: "1rem",
+              padding: "0",
+            }}
+          >
+            ✕
+          </button>
         </div>
+      )}
 
-        <div className={styles.formDivider} />
+      {/* ══ FORM ══ */}
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <div className={styles.formCard}>
 
-        {/* ══ 2. HERO IMAGE ══ */}
-        <div className={styles.sectionBlock}>
-          <div className={styles.sectionHeader}>
-            <span className={styles.sectionIcon}>✦</span>
-            <h3 className={styles.sectionTitle}>Hero Image</h3>
-          </div>
+          {/* ════════════════════════════════
+              1. SECTION HEADER
+          ════════════════════════════════ */}
+          <div className={styles.sectionBlock}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionIcon}>✦</span>
+              <h3 className={styles.sectionTitle}>Section Header</h3>
+            </div>
 
-          {errors.imageSrc && <p className={styles.errorMsg} style={{ marginBottom: "0.8rem" }}>⚠ {errors.imageSrc}</p>}
-
-          <div className={styles.imageUploadArea}>
-            {/* Preview */}
-            <div className={styles.imagePreviewBox}>
-              {form.imageSrc ? (
-                <>
-                  <img src={form.imageSrc} alt={form.imageAlt || "Hero"} className={styles.imagePreviewImg} />
-                  <div className={styles.imagePreviewOverlay}>
-                    <button type="button" className={styles.removeImgBtn} onClick={() => set("imageSrc", "")}>✕</button>
-                  </div>
-                </>
-              ) : (
-                <div className={styles.imagePreviewEmpty}>
-                  <span className={styles.imagePreviewEmptyIcon}>🖼</span>
-                  No image yet
-                </div>
+            {/* Super Title */}
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>
+                <span className={styles.labelIcon}>✦</span>
+                Super Title<span className={styles.required}>*</span>
+              </label>
+              <p className={styles.fieldHint}>
+                Small label shown above the main heading (e.g. "Yoga Teacher
+                Training in Rishikesh")
+              </p>
+              <div
+                className={`${styles.inputWrap} ${
+                  errors.superTitle ? styles.inputError : ""
+                }`}
+              >
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="e.g. Yoga Teacher Training in Rishikesh"
+                  maxLength={120}
+                  {...register("superTitle", {
+                    required: "Super title is required",
+                  })}
+                />
+              </div>
+              {errors.superTitle && (
+                <p className={styles.errorMsg}>
+                  ⚠ {errors.superTitle.message}
+                </p>
               )}
             </div>
 
-            {/* Controls */}
-            <div className={styles.imageUploadControls}>
-              {/* Dropzone */}
-              <div
-                className={`${styles.uploadZone} ${isDragOver ? styles.uploadZoneDragOver : ""}`}
-                onClick={() => fileInputRef.current?.click()}
-                onDrop={handleDrop}
-                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-                onDragLeave={() => setIsDragOver(false)}
+            {/* Main Title — JoditEditor */}
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>
+                <span className={styles.labelIcon}>✦</span>
+                Main Title (H2)<span className={styles.required}>*</span>
+              </label>
+              <p className={styles.fieldHint}>
+                Primary heading — bold, color, italic sab toolbar se kar sakte
+                ho
+              </p>
+              <Controller
+                control={control}
+                name="mainTitle"
+                rules={{
+                  required: "Main title is required",
+                  validate: (v) =>
+                    v.replace(/<[^>]*>/g, "").trim().length > 0 ||
+                    "Main title cannot be empty",
+                }}
+                render={({ field }) => (
+                  <div style={errors.mainTitle ? joditErrorStyle : {}}>
+                    <JoditEditor
+                      value={field.value}
+                      config={mainTitleConfig}
+                      onBlur={(newContent) => field.onChange(newContent)}
+                    />
+                  </div>
+                )}
+              />
+              {errors.mainTitle && (
+                <p className={styles.errorMsg} style={{ marginTop: "0.4rem" }}>
+                  ⚠ {errors.mainTitle.message}
+                </p>
+              )}
+            </div>
+
+            {/* Intro Paragraph — JoditEditor */}
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>
+                <span className={styles.labelIcon}>✦</span>
+                Intro Paragraph<span className={styles.required}>*</span>
+              </label>
+              <p className={styles.fieldHint}>
+                Short introductory text shown below the divider and above the
+                image grid
+              </p>
+              <Controller
+                control={control}
+                name="introPara"
+                rules={{
+                  required: "Intro paragraph is required",
+                  validate: (v) =>
+                    v.replace(/<[^>]*>/g, "").trim().length > 0 ||
+                    "Intro paragraph cannot be empty",
+                }}
+                render={({ field }) => (
+                  <div style={errors.introPara ? joditErrorStyle : {}}>
+                    <JoditEditor
+                      value={field.value}
+                      config={introParaConfig}
+                      onBlur={(newContent) => field.onChange(newContent)}
+                    />
+                  </div>
+                )}
+              />
+              {errors.introPara && (
+                <p className={styles.errorMsg} style={{ marginTop: "0.4rem" }}>
+                  ⚠ {errors.introPara.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.formDivider} />
+
+          {/* ════════════════════════════════
+              2. HERO IMAGE
+          ════════════════════════════════ */}
+          <div className={styles.sectionBlock}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionIcon}>✦</span>
+              <h3 className={styles.sectionTitle}>Hero Image</h3>
+            </div>
+
+            {/* Image required error (manual check in onSubmit) */}
+            {!imagePreviewUrl && apiError?.includes("image") && (
+              <p
+                className={styles.errorMsg}
+                style={{ marginBottom: "0.8rem" }}
               >
-                <span className={styles.uploadIcon}>📁</span>
-                <p className={styles.uploadText}>Click or drag & drop to upload</p>
-                <p className={styles.uploadSubText}>JPG · PNG · WEBP</p>
-                <input ref={fileInputRef} type="file" accept="image/*" className={styles.uploadInput} onChange={handleFileChange} />
+                ⚠ Hero image is required
+              </p>
+            )}
+
+            <div className={styles.imageUploadArea}>
+              {/* Preview */}
+              <div className={styles.imagePreviewBox}>
+                {imagePreviewUrl ? (
+                  <>
+                    <img
+                      src={imagePreviewUrl}
+                      alt="Hero preview"
+                      className={styles.imagePreviewImg}
+                    />
+                    <div className={styles.imagePreviewOverlay}>
+                      <button
+                        type="button"
+                        className={styles.removeImgBtn}
+                        onClick={handleRemoveImage}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className={styles.imagePreviewEmpty}>
+                    <span className={styles.imagePreviewEmptyIcon}>🖼</span>
+                    No image yet
+                  </div>
+                )}
               </div>
 
-              {/* URL input */}
-              <div className={styles.urlRow}>
-                <div className={styles.inputWrap}>
-                  <input type="text" className={styles.input}
-                    placeholder="Or paste image URL…"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleAddUrl(); }}
+              {/* Controls */}
+              <div className={styles.imageUploadControls}>
+                {/* Dropzone */}
+                <div
+                  className={`${styles.uploadZone} ${
+                    isDragOver ? styles.uploadZoneDragOver : ""
+                  }`}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDrop={handleDrop}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragOver(true);
+                  }}
+                  onDragLeave={() => setIsDragOver(false)}
+                >
+                  <span className={styles.uploadIcon}>📁</span>
+                  <p className={styles.uploadText}>
+                    Click or drag & drop to upload
+                  </p>
+                  <p className={styles.uploadSubText}>JPG · PNG · WEBP</p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className={styles.uploadInput}
+                    onChange={handleFileChange}
                   />
                 </div>
-                <button type="button" className={styles.addUrlBtn} onClick={handleAddUrl}>Use URL</button>
-              </div>
 
-              {/* Meta fields */}
-              <div className={styles.imageMetaFields}>
-                <div className={styles.fieldGroup} style={{ marginBottom: "0.8rem" }}>
-                  <label className={styles.label}><span className={styles.labelIcon}>✦</span>Image Alt Text</label>
-                  <p className={styles.fieldHint}>Accessibility & SEO description</p>
-                  <div className={`${styles.inputWrap} ${form.imageAlt ? styles.inputSuccess : ""}`}>
-                    <input type="text" className={styles.input}
-                      placeholder="e.g. AYM Yoga School certified student"
-                      value={form.imageAlt} maxLength={150}
-                      onChange={(e) => set("imageAlt", e.target.value)} />
-                    <span className={styles.charCount}>{form.imageAlt.length}/150</span>
+                {/* URL Row */}
+                <div className={styles.urlRow}>
+                  <div className={styles.inputWrap}>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      placeholder="Or paste image URL…"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddUrl();
+                        }
+                      }}
+                    />
                   </div>
+                  <button
+                    type="button"
+                    className={styles.addUrlBtn}
+                    onClick={handleAddUrl}
+                  >
+                    Use URL
+                  </button>
                 </div>
 
-                <div className={styles.fieldGroup} style={{ marginBottom: "0.8rem" }}>
-                  <label className={styles.label}><span className={styles.labelIcon}>✦</span>Badge Year</label>
-                  <p className={styles.fieldHint}>Small badge overlaid on the image (e.g. Est. 2005)</p>
-                  <div className={`${styles.inputWrap} ${form.imgBadgeYear ? styles.inputSuccess : ""}`}>
-                    <input type="text" className={styles.input}
-                      placeholder="e.g. Est. 2005"
-                      value={form.imgBadgeYear} maxLength={20}
-                      onChange={(e) => set("imgBadgeYear", e.target.value)} />
-                  </div>
-                </div>
+                {/* Selected file name indicator */}
+                {imageFile && (
+                  <p
+                    style={{
+                      fontFamily: "'Cormorant Garamond', serif",
+                      fontSize: "0.82rem",
+                      color: "#4a8c2a",
+                      fontStyle: "italic",
+                      margin: "0.2rem 0 0",
+                    }}
+                  >
+                    ✓ {imageFile.name}
+                  </p>
+                )}
 
-                <div className={styles.fieldGroup} style={{ marginBottom: 0 }}>
-                  <label className={styles.label}><span className={styles.labelIcon}>✦</span>Image Blockquote</label>
-                  <p className={styles.fieldHint}>Short quote displayed below the image with quotation marks</p>
-                  <div className={`${styles.inputWrap} ${form.imgQuote ? styles.inputSuccess : ""}`}>
-                    <input type="text" className={styles.input}
-                      placeholder="e.g. Where Ancient Yoga Lives & Transforms Lives"
-                      value={form.imgQuote} maxLength={100}
-                      onChange={(e) => set("imgQuote", e.target.value)} />
-                    <span className={styles.charCount}>{form.imgQuote.length}/100</span>
+                {/* Meta Fields */}
+                <div className={styles.imageMetaFields}>
+                  {/* Alt Text */}
+                  <div
+                    className={styles.fieldGroup}
+                    style={{ marginBottom: "0.8rem" }}
+                  >
+                    <label className={styles.label}>
+                      <span className={styles.labelIcon}>✦</span>
+                      Image Alt Text
+                    </label>
+                    <p className={styles.fieldHint}>
+                      Accessibility & SEO description
+                    </p>
+                    <div className={styles.inputWrap}>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        placeholder="e.g. AYM Yoga School certified student"
+                        maxLength={150}
+                        {...register("imageAlt")}
+                      />
+                    </div>
                   </div>
-                  {form.imgQuote && (
-                    <div className={styles.quotePreview}>&ldquo;{form.imgQuote}&rdquo;</div>
-                  )}
+
+                  {/* Badge Year */}
+                  <div
+                    className={styles.fieldGroup}
+                    style={{ marginBottom: "0.8rem" }}
+                  >
+                    <label className={styles.label}>
+                      <span className={styles.labelIcon}>✦</span>
+                      Badge Year
+                    </label>
+                    <p className={styles.fieldHint}>
+                      Small badge overlaid on the image (e.g. Est. 2005)
+                    </p>
+                    <div className={styles.inputWrap}>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        placeholder="e.g. Est. 2005"
+                        maxLength={20}
+                        {...register("imgBadgeYear")}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Image Quote */}
+                  <div
+                    className={styles.fieldGroup}
+                    style={{ marginBottom: 0 }}
+                  >
+                    <label className={styles.label}>
+                      <span className={styles.labelIcon}>✦</span>
+                      Image Blockquote
+                    </label>
+                    <p className={styles.fieldHint}>
+                      Short quote displayed below the image
+                    </p>
+                    <div className={styles.inputWrap}>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        placeholder="e.g. Where Ancient Yoga Lives & Transforms Lives"
+                        maxLength={100}
+                        {...register("imgQuote")}
+                      />
+                    </div>
+                    {watchedImgQuote && (
+                      <div className={styles.quotePreview}>
+                        &ldquo;{watchedImgQuote}&rdquo;
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
+          <div className={styles.formDivider} />
+
+          {/* ════════════════════════════════
+              3. SIDE FEATURES
+          ════════════════════════════════ */}
+          <FeatureBuilder
+            group="sideFeatures"
+            label="Side Features"
+            symbol="🔷"
+            fields={sideFields}
+            onAppend={() => appendSide({ title: "", desc: "" })}
+            onRemove={removeSide}
+          />
+
+          <div className={styles.formDivider} />
+
+          {/* ════════════════════════════════
+              4. BOTTOM FEATURES
+          ════════════════════════════════ */}
+          <FeatureBuilder
+            group="bottomFeatures"
+            label="Bottom Features"
+            symbol="🔲"
+            fields={bottomFields}
+            onAppend={() => appendBottom({ title: "", desc: "" })}
+            onRemove={removeBottom}
+          />
+
+          <div className={styles.formDivider} />
+
+          {/* Form Actions */}
+          <div className={styles.formActions}>
+            <Link
+              href="/admin/dashboard/whyaymschool"
+              className={styles.cancelBtn}
+            >
+              ← Cancel
+            </Link>
+            <button
+              type="submit"
+              className={`${styles.submitBtn} ${
+                isSubmitting ? styles.submitBtnLoading : ""
+              }`}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className={styles.spinner} /> Saving…
+                </>
+              ) : (
+                <>
+                  <span>✦</span> Save Section
+                </>
+              )}
+            </button>
+          </div>
         </div>
-
-        <div className={styles.formDivider} />
-
-        {/* ══ 3. SIDE FEATURES (right column) ══ */}
-        <FeatureBuilder group="sideFeatures" label="Side Features" symbol="🔷" />
-
-        <div className={styles.formDivider} />
-
-        {/* ══ 4. BOTTOM FEATURES ══ */}
-        <FeatureBuilder group="bottomFeatures" label="Bottom Features" symbol="🔲" />
-
-        <div className={styles.formDivider} />
-
-        {/* Form Actions */}
-        <div className={styles.formActions}>
-          <Link href="/admin/dashboard/whyaym" className={styles.cancelBtn}>← Cancel</Link>
-          <button type="button"
-            className={`${styles.submitBtn} ${isSubmitting ? styles.submitBtnLoading : ""}`}
-            onClick={handleSubmit} disabled={isSubmitting}
-          >
-            {isSubmitting ? <><span className={styles.spinner} /> Saving…</> : <><span>✦</span> Save Section</>}
-          </button>
-        </div>
-
-      </div>
+      </form>
     </div>
   );
 }

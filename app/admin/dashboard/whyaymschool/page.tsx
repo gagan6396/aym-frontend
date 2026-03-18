@@ -1,28 +1,31 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import api from "@/lib/api";
 import styles from "@/assets/style/Admin/dashboard/whyaymschool/Whyaym.module.css";
-// import api from "@/lib/api";
 
-/* ── Types ── */
+/* ══════════════════════════════════════════════
+   TYPES
+══════════════════════════════════════════════ */
 interface WhyAYMRecord {
-  id: string;
+  _id: string;
   superTitle: string;
   mainTitle: string;
   introPara: string;
-  /** alt text of the hero image */
   imageAlt: string;
-  /** URL/path of hero image */
   imageSrc: string;
   imgBadgeYear: string;
   imgQuote: string;
-  sideFeatureCount: number;
-  bottomFeatureCount: number;
-  status: "Active" | "Inactive";
-  order: number;
+  sideFeatures: { title: string; desc: string }[];
+  bottomFeatures: { title: string; desc: string }[];
+  createdAt: string;
+  updatedAt: string;
 }
 
+/* ══════════════════════════════════════════════
+   BREAKPOINT HOOK
+══════════════════════════════════════════════ */
 function useBreakpoint() {
   const [width, setWidth] = useState<number>(
     typeof window !== "undefined" ? window.innerWidth : 1024
@@ -32,296 +35,441 @@ function useBreakpoint() {
     window.addEventListener("resize", h);
     return () => window.removeEventListener("resize", h);
   }, []);
-  return { isMobile: width < 480, isTablet: width >= 480 && width < 768, width };
+  return {
+    isMobile: width < 480,
+    isTablet: width >= 480 && width < 768,
+    width,
+  };
 }
 
-const MOCK: WhyAYMRecord[] = [
-  {
-    id: "1",
-    superTitle: "Yoga Teacher Training in Rishikesh",
-    mainTitle: "What Makes AYM Yoga School Different from Other Yoga Schools in Rishikesh, India?",
-    introPara: "Namaste, yoga lovers! AYM Yoga School stands out among Rishikesh's yoga schools for its commitment to authentic teaching, experienced instructors, and a welcoming environment.",
-    imageSrc: "/assets/images/certification-yoga-course-in-rishikesh-india.jpg",
-    imageAlt: "AYM Yoga School certified student",
-    imgBadgeYear: "Est. 2005",
-    imgQuote: "Where Ancient Yoga Lives & Transforms Lives",
-    sideFeatureCount: 4,
-    bottomFeatureCount: 4,
-    status: "Active",
-    order: 1,
-  },
-];
-
+/* ══════════════════════════════════════════════
+   COMPONENT
+══════════════════════════════════════════════ */
 export default function WhyAYMListPage() {
-  const [records, setRecords] = useState<WhyAYMRecord[]>([]);
+  const [record, setRecord] = useState<WhyAYMRecord | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [deleteModal, setDeleteModal] = useState<string | null>(null);
-  const [savedToast, setSavedToast] = useState(false);
-  const { isMobile, isTablet, width } = useBreakpoint();
-  const dragIndex = useRef<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    // const res = await api.get("/why-aym");
-    // setRecords(res.data.data);
-    setRecords(MOCK);
+  const { isMobile, isTablet, width } = useBreakpoint();
+
+  /* ── Toast helper ── */
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  };
+
+  /* ══════════════════════════════════════════════
+     FETCH  →  GET /why-aym/get-all-why-aym
+     Backend returns single object (findOne)
+  ══════════════════════════════════════════════ */
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setApiError(null);
+
+      const res = await api.get("/why-aym/get-all-why-aym");
+      /* Backend: { success: true, data: object | null } */
+      setRecord(res.data.data || null);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to load data.";
+      setApiError(msg);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  /* ── Drag reorder ── */
-  const handleDragStart = (i: number) => { dragIndex.current = i; };
-  const handleDragEnter = (i: number) => {
-    if (dragIndex.current === null || dragIndex.current === i) return;
-    const arr = [...records];
-    const [moved] = arr.splice(dragIndex.current, 1);
-    arr.splice(i, 0, moved);
-    dragIndex.current = i;
-    setRecords(arr.map((r, idx) => ({ ...r, order: idx + 1 })));
-  };
-  const handleDragEnd = () => {
-    dragIndex.current = null;
-    setSavedToast(true);
-    setTimeout(() => setSavedToast(false), 2500);
-  };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  const moveUp = (i: number) => {
-    if (i === 0) return;
-    const arr = [...records];
-    [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
-    setRecords(arr.map((r, idx) => ({ ...r, order: idx + 1 })));
-  };
-  const moveDown = (i: number) => {
-    if (i === records.length - 1) return;
-    const arr = [...records];
-    [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
-    setRecords(arr.map((r, idx) => ({ ...r, order: idx + 1 })));
-  };
-
-  const toggleStatus = (id: string) =>
-    setRecords(records.map((r) => r.id === id ? { ...r, status: r.status === "Active" ? "Inactive" : "Active" } : r));
-
+  /* ══════════════════════════════════════════════
+     DELETE  →  DELETE /why-aym/delete-why-aym/:id
+  ══════════════════════════════════════════════ */
   const handleDelete = async () => {
-    // await api.delete(`/why-aym/${deleteModal}`);
-    setRecords(records.filter((r) => r.id !== deleteModal).map((r, i) => ({ ...r, order: i + 1 })));
-    setDeleteModal(null);
+    if (!deleteModal) return;
+    try {
+      setIsDeleting(true);
+      await api.delete(`/why-aym/delete-why-aym/${deleteModal}`);
+      setRecord(null);
+      setDeleteModal(null);
+      showToast("✦ Section deleted successfully");
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to delete.";
+      setApiError(msg);
+      setDeleteModal(null);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
-  /* ── Sub-components ── */
-  const Status = ({ r }: { r: WhyAYMRecord }) => (
-    <button
-      className={`${styles.statusBadge} ${r.status === "Active" ? styles.statusActive : styles.statusInactive}`}
-      onClick={() => toggleStatus(r.id)}
-    >
-      <span className={styles.statusDot} />{r.status}
-    </button>
-  );
+  /* ══════════════════════════════════════════════
+     IMAGE URL HELPER
+     DB mein /uploads/... stored hai → full URL banao
+  ══════════════════════════════════════════════ */
+  const getImageUrl = (src: string) => {
+    if (!src) return "";
+    if (src.startsWith("http")) return src;
+    return `${process.env.NEXT_PUBLIC_API_URL}${src}`;
+  };
 
-  const Arrows = ({ i }: { i: number }) => (
-    <div className={styles.arrowGroup}>
-      <button className={styles.arrowBtn} onClick={() => moveUp(i)} disabled={i === 0}>▲</button>
-      <button className={styles.arrowBtn} onClick={() => moveDown(i)} disabled={i === records.length - 1}>▼</button>
-    </div>
-  );
-
+  /* ══════════════════════════════════════════════
+     SUB-COMPONENTS
+  ══════════════════════════════════════════════ */
   const Actions = ({ r }: { r: WhyAYMRecord }) => (
     <div className={styles.actionBtns}>
-      <Link href={`whyaym/edit/${r.id}`} className={styles.editBtn}>
-        <span>✎</span><span className={styles.btnLabel}> Edit</span>
+      <Link
+        href={`/admin/dashboard/whyaymschool/${r._id}`}
+        className={styles.editBtn}
+      >
+        <span>✎</span>
+        <span className={styles.btnLabel}> Edit</span>
       </Link>
-      <button className={styles.deleteBtn} onClick={() => setDeleteModal(r.id)}>
-        <span>✕</span><span className={styles.btnLabel}> Delete</span>
+      <button
+        className={styles.deleteBtn}
+        onClick={() => setDeleteModal(r._id)}
+      >
+        <span>✕</span>
+        <span className={styles.btnLabel}> Delete</span>
       </button>
     </div>
   );
 
-  /* ── Mobile Cards ── */
-  const MobileCards = () => (
-    <div className={styles.cardList}>
-      {records.map((r, i) => (
-        <div
-          key={r.id} className={styles.card} draggable
-          onDragStart={() => handleDragStart(i)}
-          onDragEnter={() => handleDragEnter(i)}
-          onDragEnd={handleDragEnd}
-          onDragOver={(e) => e.preventDefault()}
-        >
-          <div className={styles.cardHeader}>
-            <div className={styles.cardOrderBlock}>
-              <span className={styles.orderBadge}>{r.order}</span>
-              <Arrows i={i} />
-            </div>
-            <div className={styles.cardBody}>
-              <p className={styles.blockLabel}>{r.superTitle}</p>
-              <p className={styles.sectionHeading}>{r.mainTitle}</p>
-              {r.imageSrc && (
-                <div className={styles.cardThumbRow}>
-                  <img src={r.imageSrc} alt={r.imageAlt} className={styles.cardThumb}
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                </div>
-              )}
-              <div className={styles.cardMeta}>
-                <span className={styles.metaChip}>🔷 {r.sideFeatureCount} Side</span>
-                <span className={styles.metaChip}>🔲 {r.bottomFeatureCount} Bottom</span>
-              </div>
-              <div className={styles.cardTags}><Status r={r} /></div>
-            </div>
-            <span className={styles.dragHandle}>⠿</span>
-          </div>
-          <div className={styles.cardFooter}><Actions r={r} /></div>
+  /* ── Loading Screen ── */
+  if (isLoading) {
+    return (
+      <div className={styles.successScreen}>
+        <div className={styles.successCard}>
+          <div className={styles.successOm}>ॐ</div>
+          <p className={styles.successText}>Loading…</p>
         </div>
-      ))}
+      </div>
+    );
+  }
+
+  /* ── Mobile Card ── */
+  const MobileCard = ({ r }: { r: WhyAYMRecord }) => (
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <div className={styles.cardBody}>
+          <p className={styles.blockLabel}>{r.superTitle}</p>
+          {/* Main Title */}
+          <p
+            className={styles.sectionHeading}
+            dangerouslySetInnerHTML={{ __html: r.mainTitle }}
+          />
+          {/* Intro Para */}
+          <p
+            className={styles.paraPreview}
+            dangerouslySetInnerHTML={{ __html: r.introPara }}
+          />
+          {r.imageSrc && (
+            <div className={styles.cardThumbRow}>
+              <img
+                src={getImageUrl(r.imageSrc)}
+                alt={r.imageAlt}
+                className={styles.cardThumb}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            </div>
+          )}
+          <div className={styles.cardMeta}>
+            <span className={styles.metaChip}>
+              🔷 {r.sideFeatures?.length ?? 0} Side
+            </span>
+            <span className={styles.metaChip}>
+              🔲 {r.bottomFeatures?.length ?? 0} Bottom
+            </span>
+            {r.imgBadgeYear && (
+              <span className={styles.metaChip}>{r.imgBadgeYear}</span>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className={styles.cardFooter}>
+        <Actions r={r} />
+      </div>
     </div>
   );
 
   /* ── Tablet Table ── */
-  const TabletTable = () => (
+  const TabletTable = ({ r }: { r: WhyAYMRecord }) => (
     <div className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
-            <th style={{ width: 52 }}>#</th>
-            <th>Super Title / Main Title</th>
-            <th style={{ width: 100 }}>Features</th>
-            <th style={{ width: 100 }}>Status</th>
-            <th style={{ width: 130 }}>Actions</th>
+            <th style={{ width: 160 }}>Super Title</th>
+            <th>Main Title</th>
+            <th>Intro Para</th>
+            <th style={{ width: 110 }}>Features</th>
+            <th style={{ width: 140 }}>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {records.map((r, i) => (
-            <tr key={r.id} className={styles.row} draggable
-              onDragStart={() => handleDragStart(i)}
-              onDragEnter={() => handleDragEnter(i)}
-              onDragEnd={handleDragEnd}
-              onDragOver={(e) => e.preventDefault()}
-            >
-              <td className={styles.tdOrder}>
-                <span className={styles.orderBadge}>{r.order}</span>
-                <Arrows i={i} />
-              </td>
-              <td>
-                <p className={styles.blockLabel}>{r.superTitle}</p>
-                <p className={styles.sectionHeading}>{r.mainTitle}</p>
-                <p className={styles.paraPreview}>{r.introPara}</p>
-              </td>
-              <td className={styles.tdCenter}>
-                <div className={styles.metaStack}>
-                  <span className={styles.metaChip}>🔷 {r.sideFeatureCount}</span>
-                  <span className={styles.metaChip}>🔲 {r.bottomFeatureCount}</span>
-                </div>
-              </td>
-              <td className={styles.tdCenter}><Status r={r} /></td>
-              <td className={styles.tdCenter}><Actions r={r} /></td>
-            </tr>
-          ))}
+          <tr className={styles.row}>
+            <td>
+              <p className={styles.blockLabel}>{r.superTitle}</p>
+            </td>
+            <td>
+              <p
+                className={styles.sectionHeading}
+                dangerouslySetInnerHTML={{ __html: r.mainTitle }}
+              />
+            </td>
+            <td>
+              <p
+                className={styles.paraPreview}
+                dangerouslySetInnerHTML={{ __html: r.introPara }}
+              />
+            </td>
+            <td className={styles.tdCenter}>
+              <div className={styles.metaStack}>
+                <span className={styles.metaChip}>
+                  🔷 {r.sideFeatures?.length ?? 0}
+                </span>
+                <span className={styles.metaChip}>
+                  🔲 {r.bottomFeatures?.length ?? 0}
+                </span>
+              </div>
+            </td>
+            <td className={styles.tdCenter}>
+              <Actions r={r} />
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
   );
 
   /* ── Desktop Table ── */
-  const DesktopTable = () => (
+  const DesktopTable = ({ r }: { r: WhyAYMRecord }) => (
     <div className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
-            <th style={{ width: 52 }}>#</th>
-            <th style={{ width: 48 }}></th>
             <th style={{ width: 60 }}>Image</th>
-            <th style={{ width: 180 }}>Super Title</th>
-            <th>Main Title</th>
-            {width >= 1024 && <th style={{ width: 130 }}>Features</th>}
-            {width >= 1024 && <th style={{ width: 160 }}>Image Quote</th>}
-            <th style={{ width: 110 }}>Status</th>
+            <th style={{ width: 160 }}>Super Title</th>
+            <th style={{ width: 220 }}>Main Title</th>
+            <th>Intro Para</th>
+            {width >= 1024 && (
+              <th style={{ width: 130 }}>Features</th>
+            )}
+            {width >= 1024 && (
+              <th style={{ width: 160 }}>Image Quote</th>
+            )}
+            {width >= 1024 && (
+              <th style={{ width: 100 }}>Badge Year</th>
+            )}
             <th style={{ width: 160 }}>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {records.map((r, i) => (
-            <tr key={r.id} className={styles.row} draggable
-              onDragStart={() => handleDragStart(i)}
-              onDragEnter={() => handleDragEnter(i)}
-              onDragEnd={handleDragEnd}
-              onDragOver={(e) => e.preventDefault()}
-            >
+          <tr className={styles.row}>
+            <td className={styles.tdCenter}>
+              {r.imageSrc && (
+                <img
+                  src={getImageUrl(r.imageSrc)}
+                  alt={r.imageAlt}
+                  className={styles.thumbTiny}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              )}
+            </td>
+            <td>
+              <p className={styles.blockLabel}>{r.superTitle}</p>
+            </td>
+            <td>
+              <p
+                className={styles.sectionHeading}
+                dangerouslySetInnerHTML={{ __html: r.mainTitle }}
+              />
+            </td>
+            <td>
+              <p
+                className={styles.paraPreview}
+                dangerouslySetInnerHTML={{ __html: r.introPara }}
+              />
+            </td>
+            {width >= 1024 && (
               <td className={styles.tdCenter}>
-                <span className={styles.orderBadge}>{r.order}</span>
-              </td>
-              <td>
-                <div className={styles.dragGroup}>
-                  <span className={styles.dragHandle}>⠿</span>
-                  <Arrows i={i} />
+                <div className={styles.metaStack}>
+                  <span className={styles.metaChip}>
+                    🔷 {r.sideFeatures?.length ?? 0} Side
+                  </span>
+                  <span className={styles.metaChip}>
+                    🔲 {r.bottomFeatures?.length ?? 0} Bottom
+                  </span>
                 </div>
               </td>
-              <td className={styles.tdCenter}>
-                {r.imageSrc && (
-                  <img src={r.imageSrc} alt={r.imageAlt} className={styles.thumbTiny}
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+            )}
+            {width >= 1024 && (
+              <td>
+                {r.imgQuote && (
+                  <p className={styles.paraPreview}>
+                    &ldquo;{r.imgQuote}&rdquo;
+                  </p>
                 )}
               </td>
-              <td><p className={styles.blockLabel}>{r.superTitle}</p></td>
-              <td>
-                <p className={styles.sectionHeading}>{r.mainTitle}</p>
-                <p className={styles.paraPreview}>{r.introPara}</p>
+            )}
+            {width >= 1024 && (
+              <td className={styles.tdCenter}>
+                {r.imgBadgeYear && (
+                  <span className={styles.metaChip}>{r.imgBadgeYear}</span>
+                )}
               </td>
-              {width >= 1024 && (
-                <td className={styles.tdCenter}>
-                  <div className={styles.metaStack}>
-                    <span className={styles.metaChip}>🔷 {r.sideFeatureCount} Side</span>
-                    <span className={styles.metaChip}>🔲 {r.bottomFeatureCount} Bottom</span>
-                  </div>
-                </td>
-              )}
-              {width >= 1024 && (
-                <td><p className={styles.paraPreview}>&ldquo;{r.imgQuote}&rdquo;</p></td>
-              )}
-              <td className={styles.tdCenter}><Status r={r} /></td>
-              <td className={styles.tdCenter}><Actions r={r} /></td>
-            </tr>
-          ))}
+            )}
+            <td className={styles.tdCenter}>
+              <Actions r={r} />
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
   );
 
+  /* ══════════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════════ */
   return (
     <div className={styles.page}>
-      {savedToast && <div className={styles.toast}>✦ Order updated successfully</div>}
 
+      {/* Toast */}
+      {toast && <div className={styles.toast}>{toast}</div>}
+
+      {/* Page Header */}
       <div className={styles.pageHeader}>
         <div className={styles.pageHeaderLeft}>
           <h1 className={styles.pageTitle}>Why AYM Section</h1>
           <p className={styles.pageSubtitle}>
-            {isMobile ? "Drag cards · tap arrows to reorder" : "Drag rows to reorder · click status to toggle"}
+            {record
+              ? "Section exists — edit or delete below"
+              : "No section yet — add one to get started"}
           </p>
         </div>
-        <Link href="/admin/dashboard/whyaymschool/add-new" className={styles.addBtn}>
-          <span className={styles.addPlus}>+</span>
-          <span className={styles.addLabel}>Add Section</span>
-        </Link>
+
+        {/* Add button sirf tab dikhao jab record nahi hai
+            (backend ek hi record allow karta hai) */}
+        {!record && (
+          <Link
+            href="/admin/dashboard/whyaymschool/add-new"
+            className={styles.addBtn}
+          >
+            <span className={styles.addPlus}>+</span>
+            <span className={styles.addLabel}>Add Section</span>
+          </Link>
+        )}
       </div>
 
+      {/* Ornament */}
       <div className={styles.ornament}>
-        <span>❧</span><div className={styles.ornamentLine} />
-        <span>ॐ</span><div className={styles.ornamentLine} /><span>❧</span>
+        <span>❧</span>
+        <div className={styles.ornamentLine} />
+        <span>ॐ</span>
+        <div className={styles.ornamentLine} />
+        <span>❧</span>
       </div>
 
-      {isMobile && <MobileCards />}
-      {isTablet && <TabletTable />}
-      {!isMobile && !isTablet && <DesktopTable />}
-
-      {records.length === 0 && (
-        <div className={styles.empty}>
-          <span className={styles.emptyOm}>ॐ</span>
-          <p>No records found. Add your first Why AYM section.</p>
+      {/* ── API Error Banner ── */}
+      {apiError && (
+        <div
+          style={{
+            background: "rgba(196,74,0,0.08)",
+            border: "1.5px solid #c44a00",
+            borderRadius: "10px",
+            padding: "0.85rem 1.2rem",
+            marginBottom: "1.2rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+          }}
+        >
+          <span style={{ fontSize: "1.1rem" }}>⚠</span>
+          <p
+            style={{
+              margin: 0,
+              fontFamily: "'Cormorant Garamond', serif",
+              fontSize: "0.95rem",
+              color: "#c44a00",
+              fontStyle: "italic",
+            }}
+          >
+            {apiError}
+          </p>
+          <button
+            type="button"
+            onClick={() => setApiError(null)}
+            style={{
+              marginLeft: "auto",
+              background: "none",
+              border: "none",
+              color: "#c44a00",
+              cursor: "pointer",
+              fontSize: "1rem",
+              padding: "0",
+            }}
+          >
+            ✕
+          </button>
         </div>
       )}
 
+      {/* ── Content ── */}
+      {record ? (
+        <>
+          {isMobile && <MobileCard r={record} />}
+          {isTablet && <TabletTable r={record} />}
+          {!isMobile && !isTablet && <DesktopTable r={record} />}
+        </>
+      ) : (
+        <div className={styles.empty}>
+          <span className={styles.emptyOm}>ॐ</span>
+          <p>No Why AYM section found. Add your first section.</p>
+        </div>
+      )}
+
+      {/* ── Delete Confirm Modal ── */}
       {deleteModal !== null && (
-        <div className={styles.modalOverlay} onClick={() => setDeleteModal(null)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={styles.modalOverlay}
+          onClick={() => !isDeleting && setDeleteModal(null)}
+        >
+          <div
+            className={styles.modal}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className={styles.modalOm}>ॐ</div>
             <h3 className={styles.modalTitle}>Confirm Deletion</h3>
-            <p className={styles.modalText}>Delete this Why AYM section? All features and image data will be removed.</p>
+            <p className={styles.modalText}>
+              Delete this Why AYM section? All features and image data will
+              be removed permanently.
+            </p>
             <div className={styles.modalActions}>
-              <button className={styles.modalCancel} onClick={() => setDeleteModal(null)}>Cancel</button>
-              <button className={styles.modalConfirm} onClick={handleDelete}>Delete</button>
+              <button
+                className={styles.modalCancel}
+                onClick={() => setDeleteModal(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.modalConfirm}
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting…" : "Delete"}
+              </button>
             </div>
           </div>
         </div>
