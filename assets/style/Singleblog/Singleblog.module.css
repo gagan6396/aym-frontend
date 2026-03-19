@@ -811,3 +811,21 @@
   .gridTwo,
   .gridThree { grid-template-columns: 1fr; }
 }
+
+.gridWide {
+  display: grid;
+  grid-template-columns: 1fr; /* full width single image */
+  gap: 1rem;
+}
+
+.gridTwo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.gridThree {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}

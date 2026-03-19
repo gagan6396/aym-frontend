@@ -17,18 +17,31 @@ interface SingleBlogProps {
 
 /* ─────────────────────────────────────────────────────────
    IMAGE URL HELPER
-   Backend se aane wale relative paths ko absolute banata hai
-   "/uploads/abc.jpg" → "http://localhost:5000/uploads/abc.jpg"
-   Already absolute URLs untouched rehte hain
 ───────────────────────────────────────────────────────── */
-const ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? ""; // "http://localhost:5000"
+const ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 function resolveImg(src: string): string {
-  if (!src) return "/placeholder.jpg"; // fallback
+  if (!src) return "/placeholder.jpg";
   if (src.startsWith("http://") || src.startsWith("https://")) return src;
-  if (src.startsWith("blob:")) return "/placeholder.jpg"; // safety
-  // relative path — prepend backend origin
+  if (src.startsWith("blob:")) return "/placeholder.jpg";
   return `${ORIGIN}${src.startsWith("/") ? "" : "/"}${src}`;
+}
+
+/* ─────────────────────────────────────────────────────────
+   IMAGE LAYOUT → CSS CLASS
+   Admin mein jo layout select kiya wahi CSS class apply hogi
+───────────────────────────────────────────────────────── */
+type ImageLayout = "single" | "two-col" | "three-col" | "wide";
+
+function getLayoutClass(layout: ImageLayout | undefined, count: number): string {
+  if (layout === "single")    return styles.gridOne;
+  if (layout === "two-col")   return styles.gridTwo;
+  if (layout === "three-col") return styles.gridThree;
+  if (layout === "wide")      return styles.gridWide;
+  // fallback for old blogs without imageLayout
+  if (count === 1) return styles.gridOne;
+  if (count === 2) return styles.gridTwo;
+  return styles.gridThree;
 }
 
 /* ─── SVG Ornament ───────────────────────────────────── */
@@ -60,39 +73,45 @@ const OmDivider = () => (
 );
 
 /* ─── Article Image Grid ─────────────────────────────── */
-const ArticleImages = ({ images }: { images: BlogImage[] }) => (
-  <div
-    className={[
-      styles.articleImgGrid,
-      images.length === 1 ? styles.gridOne :
-      images.length === 2 ? styles.gridTwo :
-      styles.gridThree,
-    ].join(" ")}
-  >
-    {images.map((img, i) => {
-      const resolvedSrc = resolveImg(img.src); // ✅ FIX: relative → absolute
+const ArticleImages = ({
+  images,
+  imageLayout,
+}: {
+  images: BlogImage[];
+  imageLayout?: ImageLayout; // ✅ layout prop accept karta hai
+}) => {
+  const layoutClass = getLayoutClass(imageLayout, images.length);
 
-      return (
-        <figure key={i} className={styles.articleImgFigure}>
-          <div className={styles.articleImgWrap}>
-            <Image
-              src={resolvedSrc}
-              alt={img.caption || "Blog image"}
-              fill
-              sizes="(max-width:600px) 100vw, (max-width:900px) 50vw, 33vw"
-              className={styles.articleImg}
-              unoptimized={resolvedSrc.includes("localhost")} // ✅ localhost images skip optimization
-            />
-            <div className={styles.articleImgSheen} />
-          </div>
-          {img.caption && (
-            <figcaption className={styles.articleImgCaption}>{img.caption}</figcaption>
-          )}
-        </figure>
-      );
-    })}
-  </div>
-);
+  return (
+    <div className={`${styles.articleImgGrid} ${layoutClass}`}>
+      {images.map((img, i) => {
+        const resolvedSrc = resolveImg(img.src);
+        return (
+          <figure key={i} className={styles.articleImgFigure}>
+            <div className={styles.articleImgWrap}>
+              <Image
+                src={resolvedSrc}
+                alt={img.caption || "Blog image"}
+                fill
+                sizes={
+                  imageLayout === "single" || imageLayout === "wide"
+                    ? "100vw"
+                    : "(max-width:600px) 100vw, (max-width:900px) 50vw, 33vw"
+                }
+                className={styles.articleImg}
+                unoptimized={resolvedSrc.includes("localhost")}
+              />
+              <div className={styles.articleImgSheen} />
+            </div>
+            {img.caption && (
+              <figcaption className={styles.articleImgCaption}>{img.caption}</figcaption>
+            )}
+          </figure>
+        );
+      })}
+    </div>
+  );
+};
 
 /* ─── Rich Content Renderer ──────────────────────────── */
 const RenderSections = ({ sections }: { sections: BlogSection[] }) => (
@@ -106,9 +125,14 @@ const RenderSections = ({ sections }: { sections: BlogSection[] }) => (
         case "paragraph":
           return <p key={i} className={styles.contentPara}>{s.text}</p>;
         case "images":
-          return s.images && s.images.length > 0
-            ? <ArticleImages key={i} images={s.images} />
-            : null;
+          return s.images && s.images.length > 0 ? (
+            // ✅ imageLayout pass karo — yahi fix hai
+            <ArticleImages
+              key={i}
+              images={s.images}
+              imageLayout={s.imageLayout as ImageLayout}
+            />
+          ) : null;
         case "divider":
           return <OmDivider key={i} />;
         default:
@@ -120,8 +144,6 @@ const RenderSections = ({ sections }: { sections: BlogSection[] }) => (
 
 /* ─── Main Component ─────────────────────────────────── */
 export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }: SingleBlogProps) {
-
-  // ✅ Hero image bhi resolve karo (cover image)
   const heroImage = resolveImg(blog.image);
 
   return (
@@ -137,18 +159,12 @@ export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }
             priority
             sizes="100vw"
             className={styles.heroImg}
-            unoptimized={heroImage.includes("localhost")} // ✅ FIX
+            unoptimized={heroImage.includes("localhost")}
           />
           <div className={styles.heroOverlay} />
         </div>
 
-        {/* Rotating mandala */}
-        <svg
-          className={styles.heroMandala}
-          viewBox="0 0 300 300"
-          fill="none"
-          aria-hidden="true"
-        >
+        <svg className={styles.heroMandala} viewBox="0 0 300 300" fill="none" aria-hidden="true">
           {[0,30,60,90,120,150,180,210,240,270,300,330].map((deg, i) => {
             const rad = (deg * Math.PI) / 180;
             return (
@@ -179,7 +195,6 @@ export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }
         </svg>
 
         <div className={styles.heroContent}>
-          {/* Breadcrumb */}
           <nav className={styles.breadcrumb} aria-label="Breadcrumb">
             <Link href="/" className={styles.breadLink}>Home</Link>
             <span className={styles.breadSep}>›</span>
@@ -213,7 +228,6 @@ export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }
           </div>
         </div>
 
-        {/* Wave cutout */}
         <svg className={styles.heroWave} viewBox="0 0 1440 60" preserveAspectRatio="none" fill="none">
           <path d="M0,60 L0,30 Q360,0 720,30 Q1080,60 1440,30 L1440,60 Z" fill="#fdf6ec" />
         </svg>
@@ -221,17 +235,11 @@ export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }
 
       {/* ══════════ BODY ══════════ */}
       <div className={styles.layout}>
-
-        {/* ── Article ── */}
         <article className={styles.article}>
           <OrnamentsTop />
-
-          {/* Lead excerpt */}
           <p className={styles.lead}>{blog.excerpt}</p>
-
           <OmDivider />
 
-          {/* Rich content sections */}
           <div className={styles.content}>
             {blog.content && blog.content.length > 0 ? (
               <RenderSections sections={blog.content} />
@@ -244,7 +252,6 @@ export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }
 
           <OmDivider />
 
-          {/* Tags */}
           {blog.tags && blog.tags.length > 0 && (
             <div className={styles.articleTags}>
               <span className={styles.tagsLabel}>
@@ -260,7 +267,6 @@ export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }
             </div>
           )}
 
-          {/* Back button */}
           <div className={styles.backRow}>
             <Link href="/aym-yoga-blog" className={styles.backBtn}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -274,7 +280,6 @@ export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }
         {/* ── Sidebar ── */}
         <aside className={styles.sidebar}>
 
-          {/* Recent Posts Widget */}
           {recentPosts.length > 0 && (
             <div className={styles.sideWidget}>
               <div className={styles.sideWidgetHeader}>
@@ -283,19 +288,14 @@ export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }
               </div>
               <ul className={styles.recentList}>
                 {recentPosts.map(post => {
-                  const postImg = resolveImg(post.image); // ✅ FIX: sidebar images bhi resolve
+                  const postImg = resolveImg(post.image);
                   return (
                     <li key={post.id} className={styles.recentItem}>
                       <Link href={`/aym-yoga-blog/${post.slug}`} className={styles.recentLink}>
                         <div className={styles.recentImgWrap}>
-                          <Image
-                            src={postImg}
-                            alt={post.title}
-                            fill
-                            sizes="72px"
+                          <Image src={postImg} alt={post.title} fill sizes="72px"
                             className={styles.recentImg}
-                            unoptimized={postImg.includes("localhost")}
-                          />
+                            unoptimized={postImg.includes("localhost")} />
                           <div className={styles.recentImgSheen} />
                         </div>
                         <div className={styles.recentInfo}>
@@ -324,7 +324,6 @@ export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }
             </div>
           )}
 
-          {/* Related Posts */}
           {relatedPosts.length > 0 && (
             <div className={styles.sideWidget}>
               <div className={styles.sideWidgetHeader}>
@@ -333,19 +332,14 @@ export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }
               </div>
               <ul className={styles.relatedList}>
                 {relatedPosts.map(post => {
-                  const relImg = resolveImg(post.image); // ✅ FIX
+                  const relImg = resolveImg(post.image);
                   return (
                     <li key={post.id} className={styles.relatedItem}>
                       <Link href={`/aym-yoga-blog/${post.slug}`} className={styles.relatedLink}>
                         <div className={styles.relatedImgWrap}>
-                          <Image
-                            src={relImg}
-                            alt={post.title}
-                            fill
-                            sizes="56px"
+                          <Image src={relImg} alt={post.title} fill sizes="56px"
                             className={styles.relatedImg}
-                            unoptimized={relImg.includes("localhost")}
-                          />
+                            unoptimized={relImg.includes("localhost")} />
                         </div>
                         <div className={styles.relatedInfo}>
                           <p className={styles.relatedTitle}>{post.title}</p>
@@ -359,15 +353,13 @@ export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }
             </div>
           )}
 
-          {/* CTA Widget */}
           <div className={styles.sideCtaWidget}>
             <div className={styles.ctaMandalaBg} aria-hidden="true">
               <svg viewBox="0 0 200 200" fill="none" width="100%" height="100%">
                 {[95, 75, 55, 35].map((r, i) => (
                   <circle key={i} cx="100" cy="100" r={r}
                     stroke="rgba(255,255,255,0.15)" strokeWidth="0.8"
-                    strokeDasharray={i % 2 === 0 ? "3 3" : "none"}
-                  />
+                    strokeDasharray={i % 2 === 0 ? "3 3" : "none"} />
                 ))}
                 <text x="100" y="110" textAnchor="middle" fontSize="36"
                   fill="rgba(255,255,255,0.25)" fontFamily="serif">ॐ</text>
@@ -375,14 +367,11 @@ export default function SingleBlog({ blog, relatedPosts = [], recentPosts = [] }
             </div>
             <div className={styles.ctaContent}>
               <h4 className={styles.ctaTitle}>Start Your Yoga Journey</h4>
-              <p className={styles.ctaText}>
-                Join AYM Yoga School's world-class teacher training programs
-              </p>
+              <p className={styles.ctaText}>Join AYM Yoga School's world-class teacher training programs</p>
               <Link href="/register" className={styles.ctaBtn}>Enquire Now</Link>
             </div>
           </div>
 
-          {/* Upcoming Batches */}
           <div className={styles.sideWidget}>
             <div className={styles.sideWidgetHeader}>
               <span className={styles.sideOm}>ॐ</span>
