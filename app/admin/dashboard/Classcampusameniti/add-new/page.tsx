@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -44,7 +44,14 @@ interface SingleImageProps {
   onRemove: () => void;
 }
 
-function SingleImageUpload({ preview, badge, hint, error, onSelect, onRemove }: SingleImageProps) {
+function SingleImageUpload({
+  preview,
+  badge,
+  hint,
+  error,
+  onSelect,
+  onRemove,
+}: SingleImageProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -54,7 +61,11 @@ function SingleImageUpload({ preview, badge, hint, error, onSelect, onRemove }: 
 
   return (
     <div>
-      <div className={`${styles.imageUploadZone} ${preview ? styles.hasImage : ""} ${error ? styles.inputError : ""}`}>
+      <div
+        className={`${styles.imageUploadZone} ${preview ? styles.hasImage : ""} ${
+          error ? styles.inputError : ""
+        }`}
+      >
         {!preview ? (
           <>
             <input type="file" accept="image/*" onChange={handleChange} />
@@ -70,10 +81,23 @@ function SingleImageUpload({ preview, badge, hint, error, onSelect, onRemove }: 
             <img src={preview} alt="preview" className={styles.imagePreview} />
             <div className={styles.imagePreviewOverlay}>
               <span className={styles.imagePreviewAction}>✎ Change</span>
-              <input type="file" accept="image/*" className={styles.imagePreviewOverlayInput} onChange={handleChange} />
+              <input
+                type="file"
+                accept="image/*"
+                className={styles.imagePreviewOverlayInput}
+                onChange={handleChange}
+              />
             </div>
-            <button type="button" className={styles.removeImageBtn}
-              onClick={(e) => { e.stopPropagation(); onRemove(); }}>✕</button>
+            <button
+              type="button"
+              className={styles.removeImageBtn}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+            >
+              ✕
+            </button>
           </div>
         )}
       </div>
@@ -83,26 +107,119 @@ function SingleImageUpload({ preview, badge, hint, error, onSelect, onRemove }: 
 }
 
 /* ─────────────────────────────────────────
-   Jodit config (stable reference)
+   Jodit config — defined OUTSIDE component
+   so the object reference is stable across
+   renders and Jodit never re-mounts.
+
+   ✅ Same rich toolbar as AddHomeAboutPage:
+      source, bold, italic, underline,
+      font, fontsize, brush (text color),
+      paragraph, align, ul, ol, link,
+      undo, redo, cut, copy, paste
+
+   `as any` silences TS errors on placeholder
+   and other unlisted Jodit props.
 ───────────────────────────────────────── */
 const joditConfig = {
   readonly: false,
-  height: 220,
+  toolbar: true,
+  spellcheck: true,
+  language: "en",
+  toolbarButtonSize: "medium",
   toolbarAdaptive: false,
+  showCharsCounter: true,
+  showWordsCounter: true,
+  showXPathInStatusbar: false,
+  askBeforePasteHTML: false,
+  askBeforePasteFromWord: false,
+  defaultActionOnPaste: "insert_clear_html",
+  enableDragAndDropFileToEditor: false,
   buttons: [
+    "source", "|",
     "bold", "italic", "underline", "strikethrough", "|",
-    "ul", "ol", "|",
-    "outdent", "indent", "|",
-    "font", "fontsize", "paragraph", "|",
-    "superscript", "subscript", "|",
-    "align", "|",
+    "font", "fontsize", "brush", "|",
+    "paragraph", "align", "|",
+    "ul", "ol", "outdent", "indent", "|",
+    "link", "|",
     "undo", "redo", "|",
-    "hr", "eraser", "copyformat", "|",
-    "fullsize",
+    "selectall", "cut", "copy", "paste",
   ],
-  style: { fontFamily: "inherit", fontSize: "14px" },
+  uploader: {
+    insertImageAsBase64URI: true,
+  },
+  height: 220,
+  colors: {
+    picks: [
+      "#000000", "#888888", "#ffffff", "#ff0000", "#00ff00", "#0000ff",
+      "#ffff00", "#ff00ff", "#00ffff", "#ff9900", "#9900ff", "#ff6600",
+    ],
+  },
   placeholder: "",
-};
+} as any;
+
+/* ─────────────────────────────────────────
+   Helper — is the HTML actually empty?
+───────────────────────────────────────── */
+function isEditorEmpty(html: string): boolean {
+  return html.replace(/<[^>]*>/g, "").trim() === "";
+}
+
+/* ─────────────────────────────────────────
+   Reusable JoditField component
+   KEY FIX: No `value` prop passed to JoditEditor.
+   Content stored in ref via onChange.
+   Prevents Jodit re-mounting on React re-render
+   which was causing paste/typed text to vanish.
+───────────────────────────────────────── */
+interface JoditFieldProps {
+  label: string;
+  hint?: string;
+  contentRef: React.MutableRefObject<string>;
+  error?: string;
+  onClearError: () => void;
+  placeholder?: string;
+  height?: number;
+}
+
+function JoditField({
+  label,
+  hint,
+  contentRef,
+  error,
+  onClearError,
+  placeholder = "Start typing here...",
+  height = 220,
+}: JoditFieldProps) {
+  const config = {
+    ...joditConfig,
+    placeholder,
+    height,
+  };
+
+  return (
+    <div className={styles.fieldGroup}>
+      <label className={styles.label}>
+        <span className={styles.labelIcon}>✦</span>
+        {label}
+        <span className={styles.required}>*</span>
+      </label>
+      {hint && <p className={styles.fieldHint}>{hint}</p>}
+      <div
+        className={error ? styles.inputError : ""}
+        style={{ borderRadius: 8, overflow: "hidden" }}
+      >
+        <JoditEditor
+          config={config}
+          onChange={(val) => {
+            contentRef.current = val;
+            if (!isEditorEmpty(val)) onClearError();
+          }}
+        />
+      </div>
+      {error && <p className={styles.errorMsg}>⚠ {error}</p>}
+    </div>
+  );
+}
 
 /* ─────────────────────────────────────────
    Main Page
@@ -110,20 +227,30 @@ const joditConfig = {
 export default function AddClassCampusAmenitiesPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted]       = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-  // ── Image states (outside RHF — file inputs are uncontrolled) ──
-  const [classSizeImageFile, setClassSizeImageFile]       = useState<File | null>(null);
+  // ── Image states ──
+  const [classSizeImageFile, setClassSizeImageFile] = useState<File | null>(null);
   const [classSizeImagePreview, setClassSizeImagePreview] = useState("");
-  const [classSizeImageError, setClassSizeImageError]     = useState("");
+  const [classSizeImageError, setClassSizeImageError] = useState("");
 
-  const [campusImageFile, setCampusImageFile]       = useState<File | null>(null);
+  const [campusImageFile, setCampusImageFile] = useState<File | null>(null);
   const [campusImagePreview, setCampusImagePreview] = useState("");
-  const [campusImageError, setCampusImageError]     = useState("");
+  const [campusImageError, setCampusImageError] = useState("");
 
-  const [amenityImageFile, setAmenityImageFile]       = useState<File | null>(null);
+  const [amenityImageFile, setAmenityImageFile] = useState<File | null>(null);
   const [amenityImagePreview, setAmenityImagePreview] = useState("");
-  const [amenityImageError, setAmenityImageError]     = useState("");
+  const [amenityImageError, setAmenityImageError] = useState("");
+
+  // ── Jodit content refs ──
+  const classSizeParaRef = useRef<string>("");
+  const campusParaRef    = useRef<string>("");
+  const amenitiesParaRef = useRef<string>("");
+
+  // ── Validation error states for rich-text fields ──
+  const [classSizeParaError, setClassSizeParaError] = useState("");
+  const [campusParaError,    setCampusParaError]    = useState("");
+  const [amenitiesParaError, setAmenitiesParaError] = useState("");
 
   /* ── react-hook-form ── */
   const {
@@ -152,7 +279,6 @@ export default function AddClassCampusAmenitiesPage() {
     },
   });
 
-  // Watch values needed for char counts + amenity list UI
   const amenities           = watch("amenities");
   const classSizeSuperLabel  = watch("classSizeSuperLabel");
   const classSizeTitle       = watch("classSizeTitle");
@@ -182,19 +308,51 @@ export default function AddClassCampusAmenitiesPage() {
 
   /* ── Submit ── */
   const onSubmit = async (data: FormData) => {
-    // Images are outside RHF — validate manually
+    // Validate rich-text fields from refs
+    let hasRichTextError = false;
+
+    if (isEditorEmpty(classSizeParaRef.current)) {
+      setClassSizeParaError("Paragraph is required");
+      hasRichTextError = true;
+    } else {
+      setClassSizeParaError("");
+    }
+
+    if (isEditorEmpty(campusParaRef.current)) {
+      setCampusParaError("Paragraph is required");
+      hasRichTextError = true;
+    } else {
+      setCampusParaError("");
+    }
+
+    if (isEditorEmpty(amenitiesParaRef.current)) {
+      setAmenitiesParaError("Main paragraph is required");
+      hasRichTextError = true;
+    } else {
+      setAmenitiesParaError("");
+    }
+
+    // Validate images
     let hasImgError = false;
     if (!classSizeImageFile) { setClassSizeImageError("Class size image is required"); hasImgError = true; }
     if (!campusImageFile)    { setCampusImageError("Campus photo is required");        hasImgError = true; }
     if (!amenityImageFile)   { setAmenityImageError("Amenity room image is required"); hasImgError = true; }
-    if (hasImgError) return;
+
+    if (hasRichTextError || hasImgError) return;
 
     try {
       setIsSubmitting(true);
 
       const fd = new FormData();
 
-      Object.entries(data).forEach(([key, value]) => {
+      const {
+        classSizePara: _a,
+        campusPara: _b,
+        amenitiesMainPara: _c,
+        ...rhfData
+      } = data;
+
+      Object.entries(rhfData).forEach(([key, value]) => {
         if (Array.isArray(value)) {
           value.forEach((item) => fd.append(key, item));
         } else {
@@ -202,9 +360,15 @@ export default function AddClassCampusAmenitiesPage() {
         }
       });
 
+      // Rich-text content from refs
+      fd.append("classSizePara",     classSizeParaRef.current);
+      fd.append("campusPara",        campusParaRef.current);
+      fd.append("amenitiesMainPara", amenitiesParaRef.current);
+
+      // Images
       fd.append("classSizeImage", classSizeImageFile!);
-      fd.append("campusImage_0", campusImageFile!);
-      fd.append("amenityImage", amenityImageFile!);
+      fd.append("campusImage_0",  campusImageFile!);
+      fd.append("amenityImage",   amenityImageFile!);
 
       await api.post("/class-campus-amenities/create", fd, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -212,7 +376,6 @@ export default function AddClassCampusAmenitiesPage() {
 
       setSubmitted(true);
       setTimeout(() => router.push("/admin/dashboard/Classcampusameniti"), 1500);
-
     } catch (error: any) {
       alert(error?.response?.data?.message || error?.message || "Something went wrong");
     } finally {
@@ -235,10 +398,11 @@ export default function AddClassCampusAmenitiesPage() {
 
   return (
     <div className={styles.page}>
-
       <div className={styles.breadcrumb}>
-        <button className={styles.breadcrumbLink}
-          onClick={() => router.push("/admin/dashboard/Classcampusameniti")}>
+        <button
+          className={styles.breadcrumbLink}
+          onClick={() => router.push("/admin/dashboard/Classcampusameniti")}
+        >
           Class, Campus & Amenities
         </button>
         <span className={styles.breadcrumbSep}>›</span>
@@ -253,8 +417,11 @@ export default function AddClassCampusAmenitiesPage() {
       </div>
 
       <div className={styles.ornament}>
-        <span>❧</span><div className={styles.ornamentLine} />
-        <span>ॐ</span><div className={styles.ornamentLine} /><span>❧</span>
+        <span>❧</span>
+        <div className={styles.ornamentLine} />
+        <span>ॐ</span>
+        <div className={styles.ornamentLine} />
+        <span>❧</span>
       </div>
 
       <div className={styles.formCard}>
@@ -268,34 +435,69 @@ export default function AddClassCampusAmenitiesPage() {
             <h3 className={styles.sectionTitle}>AYM Class Size Block</h3>
           </div>
 
+          {/* Super Label */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Super Label<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Small label above the title (e.g. Small Batches · Personal Attention)</p>
-            <div className={`${styles.inputWrap} ${errors.classSizeSuperLabel ? styles.inputError : ""} ${classSizeSuperLabel && !errors.classSizeSuperLabel ? styles.inputSuccess : ""}`}>
-              <input type="text" className={styles.input} placeholder="e.g. Small Batches · Personal Attention"
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Super Label
+              <span className={styles.required}>*</span>
+            </label>
+            <p className={styles.fieldHint}>
+              Small label above the title (e.g. Small Batches · Personal Attention)
+            </p>
+            <div
+              className={`${styles.inputWrap} ${errors.classSizeSuperLabel ? styles.inputError : ""} ${
+                classSizeSuperLabel && !errors.classSizeSuperLabel ? styles.inputSuccess : ""
+              }`}
+            >
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="e.g. Small Batches · Personal Attention"
                 maxLength={80}
-                {...register("classSizeSuperLabel", { required: "Super label is required" })} />
+                {...register("classSizeSuperLabel", { required: "Super label is required" })}
+              />
               <span className={styles.charCount}>{classSizeSuperLabel?.length ?? 0}/80</span>
             </div>
-            {errors.classSizeSuperLabel && <p className={styles.errorMsg}>⚠ {errors.classSizeSuperLabel.message}</p>}
+            {errors.classSizeSuperLabel && (
+              <p className={styles.errorMsg}>⚠ {errors.classSizeSuperLabel.message}</p>
+            )}
           </div>
 
+          {/* Block Title */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Block Title<span className={styles.required}>*</span></label>
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Block Title
+              <span className={styles.required}>*</span>
+            </label>
             <p className={styles.fieldHint}>Main heading for this block</p>
-            <div className={`${styles.inputWrap} ${errors.classSizeTitle ? styles.inputError : ""} ${classSizeTitle && !errors.classSizeTitle ? styles.inputSuccess : ""}`}>
-              <input type="text" className={styles.input} placeholder="e.g. AYM CLASS SIZE"
+            <div
+              className={`${styles.inputWrap} ${errors.classSizeTitle ? styles.inputError : ""} ${
+                classSizeTitle && !errors.classSizeTitle ? styles.inputSuccess : ""
+              }`}
+            >
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="e.g. AYM CLASS SIZE"
                 maxLength={60}
-                {...register("classSizeTitle", { required: "Title is required" })} />
+                {...register("classSizeTitle", { required: "Title is required" })}
+              />
               <span className={styles.charCount}>{classSizeTitle?.length ?? 0}/60</span>
             </div>
-            {errors.classSizeTitle && <p className={styles.errorMsg}>⚠ {errors.classSizeTitle.message}</p>}
+            {errors.classSizeTitle && (
+              <p className={styles.errorMsg}>⚠ {errors.classSizeTitle.message}</p>
+            )}
           </div>
 
-          {/* ── Class Size Image ── */}
+          {/* Class Size Image */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Class Group Photo<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Main image in the class size block — the script overlay text appears on top of this image</p>
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Class Group Photo
+              <span className={styles.required}>*</span>
+            </label>
+            <p className={styles.fieldHint}>
+              Main image in the class size block — the script overlay text appears on top of this image
+            </p>
             <SingleImageUpload
               preview={classSizeImagePreview}
               badge="AYM Class Group Photo"
@@ -310,46 +512,72 @@ export default function AddClassCampusAmenitiesPage() {
             />
           </div>
 
+          {/* Image Overlay Text */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Image Overlay Text<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Script text shown as overlay on the class image (e.g. Welcome to AYM Family)</p>
-            <div className={`${styles.inputWrap} ${errors.classSizeWelcomeText ? styles.inputError : ""} ${classSizeWelcomeText && !errors.classSizeWelcomeText ? styles.inputSuccess : ""}`}>
-              <input type="text" className={styles.input} placeholder="e.g. Welcome to AYM Family"
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Image Overlay Text
+              <span className={styles.required}>*</span>
+            </label>
+            <p className={styles.fieldHint}>
+              Script text shown as overlay on the class image (e.g. Welcome to AYM Family)
+            </p>
+            <div
+              className={`${styles.inputWrap} ${errors.classSizeWelcomeText ? styles.inputError : ""} ${
+                classSizeWelcomeText && !errors.classSizeWelcomeText ? styles.inputSuccess : ""
+              }`}
+            >
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="e.g. Welcome to AYM Family"
                 maxLength={60}
-                {...register("classSizeWelcomeText", { required: "Overlay text is required" })} />
+                {...register("classSizeWelcomeText", { required: "Overlay text is required" })}
+              />
               <span className={styles.charCount}>{classSizeWelcomeText?.length ?? 0}/60</span>
             </div>
-            {errors.classSizeWelcomeText && <p className={styles.errorMsg}>⚠ {errors.classSizeWelcomeText.message}</p>}
+            {errors.classSizeWelcomeText && (
+              <p className={styles.errorMsg}>⚠ {errors.classSizeWelcomeText.message}</p>
+            )}
           </div>
 
+          {/* Highlight Text */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Highlight Text<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Bold highlighted word/phrase inside the paragraph (e.g. 25 students)</p>
-            <div className={`${styles.inputWrap} ${errors.classSizeHighlight ? styles.inputError : ""} ${classSizeHighlight && !errors.classSizeHighlight ? styles.inputSuccess : ""}`}>
-              <input type="text" className={styles.input} placeholder="e.g. 25 students"
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Highlight Text
+              <span className={styles.required}>*</span>
+            </label>
+            <p className={styles.fieldHint}>
+              Bold highlighted word/phrase inside the paragraph (e.g. 25 students)
+            </p>
+            <div
+              className={`${styles.inputWrap} ${errors.classSizeHighlight ? styles.inputError : ""} ${
+                classSizeHighlight && !errors.classSizeHighlight ? styles.inputSuccess : ""
+              }`}
+            >
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="e.g. 25 students"
                 maxLength={40}
-                {...register("classSizeHighlight", { required: "Highlight text is required" })} />
+                {...register("classSizeHighlight", { required: "Highlight text is required" })}
+              />
               <span className={styles.charCount}>{classSizeHighlight?.length ?? 0}/40</span>
             </div>
-            {errors.classSizeHighlight && <p className={styles.errorMsg}>⚠ {errors.classSizeHighlight.message}</p>}
+            {errors.classSizeHighlight && (
+              <p className={styles.errorMsg}>⚠ {errors.classSizeHighlight.message}</p>
+            )}
           </div>
 
-          {/* ── JoditEditor: classSizePara ── */}
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Description Paragraph<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Full description about the class size policy</p>
-            <div className={errors.classSizePara ? styles.inputError : ""} style={{ borderRadius: 8, overflow: "hidden" }}>
-              <JoditEditor
-                value={watch("classSizePara")}
-                config={{ ...joditConfig, placeholder: "e.g. At AYM, only 25 students are admitted in one batch…" }}
-                onBlur={(val) => setValue("classSizePara", val, { shouldValidate: true })}
-              />
-            </div>
-            <input type="hidden" {...register("classSizePara", {
-              validate: (v) => v.replace(/<[^>]*>/g, "").trim() !== "" || "Paragraph is required",
-            })} />
-            {errors.classSizePara && <p className={styles.errorMsg}>⚠ {errors.classSizePara.message}</p>}
-          </div>
+          {/* JoditField: classSizePara */}
+          <JoditField
+            label="Description Paragraph"
+            hint="Full description about the class size policy"
+            contentRef={classSizeParaRef}
+            error={classSizeParaError}
+            onClearError={() => setClassSizeParaError("")}
+            placeholder="e.g. At AYM, only 25 students are admitted in one batch…"
+            height={250}
+          />
         </div>
 
         <div className={styles.formDivider} />
@@ -363,33 +591,66 @@ export default function AddClassCampusAmenitiesPage() {
             <h3 className={styles.sectionTitle}>AYM Yoga Campus Block</h3>
           </div>
 
+          {/* Super Label */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Super Label<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Small label above the title (e.g. 5000 sq.mts. · Rishikesh)</p>
-            <div className={`${styles.inputWrap} ${errors.campusSuperLabel ? styles.inputError : ""} ${campusSuperLabel && !errors.campusSuperLabel ? styles.inputSuccess : ""}`}>
-              <input type="text" className={styles.input} placeholder="e.g. 5000 sq.mts. · Rishikesh"
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Super Label
+              <span className={styles.required}>*</span>
+            </label>
+            <p className={styles.fieldHint}>
+              Small label above the title (e.g. 5000 sq.mts. · Rishikesh)
+            </p>
+            <div
+              className={`${styles.inputWrap} ${errors.campusSuperLabel ? styles.inputError : ""} ${
+                campusSuperLabel && !errors.campusSuperLabel ? styles.inputSuccess : ""
+              }`}
+            >
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="e.g. 5000 sq.mts. · Rishikesh"
                 maxLength={80}
-                {...register("campusSuperLabel", { required: "Super label is required" })} />
+                {...register("campusSuperLabel", { required: "Super label is required" })}
+              />
               <span className={styles.charCount}>{campusSuperLabel?.length ?? 0}/80</span>
             </div>
-            {errors.campusSuperLabel && <p className={styles.errorMsg}>⚠ {errors.campusSuperLabel.message}</p>}
+            {errors.campusSuperLabel && (
+              <p className={styles.errorMsg}>⚠ {errors.campusSuperLabel.message}</p>
+            )}
           </div>
 
+          {/* Block Title */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Block Title<span className={styles.required}>*</span></label>
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Block Title
+              <span className={styles.required}>*</span>
+            </label>
             <p className={styles.fieldHint}>Main heading for the campus block</p>
-            <div className={`${styles.inputWrap} ${errors.campusTitle ? styles.inputError : ""} ${campusTitle && !errors.campusTitle ? styles.inputSuccess : ""}`}>
-              <input type="text" className={styles.input} placeholder="e.g. AYM YOGA CAMPUS"
+            <div
+              className={`${styles.inputWrap} ${errors.campusTitle ? styles.inputError : ""} ${
+                campusTitle && !errors.campusTitle ? styles.inputSuccess : ""
+              }`}
+            >
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="e.g. AYM YOGA CAMPUS"
                 maxLength={60}
-                {...register("campusTitle", { required: "Title is required" })} />
+                {...register("campusTitle", { required: "Title is required" })}
+              />
               <span className={styles.charCount}>{campusTitle?.length ?? 0}/60</span>
             </div>
-            {errors.campusTitle && <p className={styles.errorMsg}>⚠ {errors.campusTitle.message}</p>}
+            {errors.campusTitle && (
+              <p className={styles.errorMsg}>⚠ {errors.campusTitle.message}</p>
+            )}
           </div>
 
-          {/* ── Campus Photo — single image ── */}
+          {/* Campus Photo */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Campus Photo<span className={styles.required}>*</span></label>
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Campus Photo
+              <span className={styles.required}>*</span>
+            </label>
             <p className={styles.fieldHint}>Main campus image shown in the campus block</p>
             <SingleImageUpload
               preview={campusImagePreview}
@@ -405,34 +666,42 @@ export default function AddClassCampusAmenitiesPage() {
             />
           </div>
 
+          {/* Highlight Text */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Highlight Text<span className={styles.required}>*</span></label>
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Highlight Text
+              <span className={styles.required}>*</span>
+            </label>
             <p className={styles.fieldHint}>Bold text inside the paragraph (e.g. 5000 sq.mts.)</p>
-            <div className={`${styles.inputWrap} ${errors.campusHighlight ? styles.inputError : ""} ${campusHighlight && !errors.campusHighlight ? styles.inputSuccess : ""}`}>
-              <input type="text" className={styles.input} placeholder="e.g. 5000 sq.mts."
+            <div
+              className={`${styles.inputWrap} ${errors.campusHighlight ? styles.inputError : ""} ${
+                campusHighlight && !errors.campusHighlight ? styles.inputSuccess : ""
+              }`}
+            >
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="e.g. 5000 sq.mts."
                 maxLength={40}
-                {...register("campusHighlight", { required: "Highlight text is required" })} />
+                {...register("campusHighlight", { required: "Highlight text is required" })}
+              />
               <span className={styles.charCount}>{campusHighlight?.length ?? 0}/40</span>
             </div>
-            {errors.campusHighlight && <p className={styles.errorMsg}>⚠ {errors.campusHighlight.message}</p>}
+            {errors.campusHighlight && (
+              <p className={styles.errorMsg}>⚠ {errors.campusHighlight.message}</p>
+            )}
           </div>
 
-          {/* ── JoditEditor: campusPara ── */}
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Description Paragraph<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Full description about the campus</p>
-            <div className={errors.campusPara ? styles.inputError : ""} style={{ borderRadius: 8, overflow: "hidden" }}>
-              <JoditEditor
-                value={watch("campusPara")}
-                config={{ ...joditConfig, placeholder: "e.g. Spread across an expansive 5000 sq.mts., the AYM campus is one of the lushest…" }}
-                onBlur={(val) => setValue("campusPara", val, { shouldValidate: true })}
-              />
-            </div>
-            <input type="hidden" {...register("campusPara", {
-              validate: (v) => v.replace(/<[^>]*>/g, "").trim() !== "" || "Paragraph is required",
-            })} />
-            {errors.campusPara && <p className={styles.errorMsg}>⚠ {errors.campusPara.message}</p>}
-          </div>
+          {/* JoditField: campusPara */}
+          <JoditField
+            label="Description Paragraph"
+            hint="Full description about the campus"
+            contentRef={campusParaRef}
+            error={campusParaError}
+            onClearError={() => setCampusParaError("")}
+            placeholder="e.g. Spread across an expansive 5000 sq.mts., the AYM campus is one of the lushest…"
+            height={250}
+          />
         </div>
 
         <div className={styles.formDivider} />
@@ -447,62 +716,105 @@ export default function AddClassCampusAmenitiesPage() {
             <span className={styles.sectionBadge}>{amenities.length}/10</span>
           </div>
 
+          {/* Super Label */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Super Label<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Small label above the title (e.g. Comfort · Nature · Serenity)</p>
-            <div className={`${styles.inputWrap} ${errors.amenitiesSuperLabel ? styles.inputError : ""} ${amenitiesSuperLabel && !errors.amenitiesSuperLabel ? styles.inputSuccess : ""}`}>
-              <input type="text" className={styles.input} placeholder="e.g. Comfort · Nature · Serenity"
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Super Label
+              <span className={styles.required}>*</span>
+            </label>
+            <p className={styles.fieldHint}>
+              Small label above the title (e.g. Comfort · Nature · Serenity)
+            </p>
+            <div
+              className={`${styles.inputWrap} ${errors.amenitiesSuperLabel ? styles.inputError : ""} ${
+                amenitiesSuperLabel && !errors.amenitiesSuperLabel ? styles.inputSuccess : ""
+              }`}
+            >
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="e.g. Comfort · Nature · Serenity"
                 maxLength={80}
-                {...register("amenitiesSuperLabel", { required: "Super label is required" })} />
+                {...register("amenitiesSuperLabel", { required: "Super label is required" })}
+              />
               <span className={styles.charCount}>{amenitiesSuperLabel?.length ?? 0}/80</span>
             </div>
-            {errors.amenitiesSuperLabel && <p className={styles.errorMsg}>⚠ {errors.amenitiesSuperLabel.message}</p>}
+            {errors.amenitiesSuperLabel && (
+              <p className={styles.errorMsg}>⚠ {errors.amenitiesSuperLabel.message}</p>
+            )}
           </div>
 
+          {/* Block Title */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Block Title<span className={styles.required}>*</span></label>
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Block Title
+              <span className={styles.required}>*</span>
+            </label>
             <p className={styles.fieldHint}>Main heading for the amenities block</p>
-            <div className={`${styles.inputWrap} ${errors.amenitiesTitle ? styles.inputError : ""} ${amenitiesTitle && !errors.amenitiesTitle ? styles.inputSuccess : ""}`}>
-              <input type="text" className={styles.input} placeholder="e.g. AMENITIES"
+            <div
+              className={`${styles.inputWrap} ${errors.amenitiesTitle ? styles.inputError : ""} ${
+                amenitiesTitle && !errors.amenitiesTitle ? styles.inputSuccess : ""
+              }`}
+            >
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="e.g. AMENITIES"
                 maxLength={60}
-                {...register("amenitiesTitle", { required: "Title is required" })} />
+                {...register("amenitiesTitle", { required: "Title is required" })}
+              />
               <span className={styles.charCount}>{amenitiesTitle?.length ?? 0}/60</span>
             </div>
-            {errors.amenitiesTitle && <p className={styles.errorMsg}>⚠ {errors.amenitiesTitle.message}</p>}
+            {errors.amenitiesTitle && (
+              <p className={styles.errorMsg}>⚠ {errors.amenitiesTitle.message}</p>
+            )}
           </div>
 
-          {/* ── JoditEditor: amenitiesMainPara ── */}
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Main Paragraph<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>First paragraph about accommodation and rooms</p>
-            <div className={errors.amenitiesMainPara ? styles.inputError : ""} style={{ borderRadius: 8, overflow: "hidden" }}>
-              <JoditEditor
-                value={watch("amenitiesMainPara")}
-                config={{ ...joditConfig, placeholder: "e.g. Students have fully furnished rooms amid lush gardens…" }}
-                onBlur={(val) => setValue("amenitiesMainPara", val, { shouldValidate: true })}
-              />
-            </div>
-            <input type="hidden" {...register("amenitiesMainPara", {
-              validate: (v) => v.replace(/<[^>]*>/g, "").trim() !== "" || "Main paragraph is required",
-            })} />
-            {errors.amenitiesMainPara && <p className={styles.errorMsg}>⚠ {errors.amenitiesMainPara.message}</p>}
-          </div>
+          {/* JoditField: amenitiesMainPara */}
+          <JoditField
+            label="Main Paragraph"
+            hint="First paragraph about accommodation and rooms"
+            contentRef={amenitiesParaRef}
+            error={amenitiesParaError}
+            onClearError={() => setAmenitiesParaError("")}
+            placeholder="e.g. Students have fully furnished rooms amid lush gardens…"
+            height={250}
+          />
 
+          {/* List Intro Label */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>List Intro Label</label>
-            <p className={styles.fieldHint}>Text shown before the amenity list (e.g. Other amenities include:)</p>
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>List Intro Label
+            </label>
+            <p className={styles.fieldHint}>
+              Text shown before the amenity list (e.g. Other amenities include:)
+            </p>
             <div className={styles.inputWrap}>
-              <input type="text" className={styles.input} placeholder="e.g. Other amenities include:"
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="e.g. Other amenities include:"
                 maxLength={80}
-                {...register("amenitiesSubLabel")} />
+                {...register("amenitiesSubLabel")}
+              />
               <span className={styles.charCount}>{amenitiesSubLabel?.length ?? 0}/80</span>
             </div>
           </div>
 
+          {/* Amenities List */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Amenities List<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Each item appears with an ॐ bullet in the frontend (max 10)</p>
-            {errors.amenities && <p className={styles.errorMsg} style={{ marginBottom: "0.8rem" }}>⚠ All amenity fields must be filled</p>}
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Amenities List
+              <span className={styles.required}>*</span>
+            </label>
+            <p className={styles.fieldHint}>
+              Each item appears with an ॐ bullet in the frontend (max 10)
+            </p>
+            {errors.amenities && (
+              <p className={styles.errorMsg} style={{ marginBottom: "0.8rem" }}>
+                ⚠ All amenity fields must be filled
+              </p>
+            )}
             <div className={styles.amenityList}>
               {amenities.map((item, i) => (
                 <div key={i} className={styles.amenityRow}>
@@ -511,39 +823,66 @@ export default function AddClassCampusAmenitiesPage() {
                     <input
                       type="text"
                       className={styles.input}
-                      placeholder={`e.g. ${["Accommodation ( Private / Shared / Dormitory )", "Spacious yoga hall", "Free Wi-Fi", "Lush Garden area", "Hot / Cold water 24x7"][i] ?? "Add amenity"}`}
+                      placeholder={`e.g. ${
+                        [
+                          "Accommodation ( Private / Shared / Dormitory )",
+                          "Spacious yoga hall",
+                          "Free Wi-Fi",
+                          "Lush Garden area",
+                          "Hot / Cold water 24x7",
+                        ][i] ?? "Add amenity"
+                      }`}
                       value={item}
                       maxLength={100}
                       onChange={(e) => updateAmenity(i, e.target.value)}
                     />
                   </div>
-                  <button type="button" className={styles.removeAmenityBtn}
-                    onClick={() => removeAmenity(i)} disabled={amenities.length <= 1}>✕</button>
+                  <button
+                    type="button"
+                    className={styles.removeAmenityBtn}
+                    onClick={() => removeAmenity(i)}
+                    disabled={amenities.length <= 1}
+                  >
+                    ✕
+                  </button>
                 </div>
               ))}
             </div>
-            {/* Hidden field so RHF validates amenities array */}
-            <input type="hidden" {...register("amenities", {
-              validate: (v) => v.every((a) => a.trim() !== "") || "All amenity fields must be filled",
-            })} />
+            <input
+              type="hidden"
+              {...register("amenities", {
+                validate: (v) =>
+                  v.every((a) => a.trim() !== "") || "All amenity fields must be filled",
+              })}
+            />
             {amenities.length < 10 && (
-              <button type="button" className={styles.addAmenityBtn} onClick={addAmenity}>+ Add Amenity</button>
+              <button type="button" className={styles.addAmenityBtn} onClick={addAmenity}>
+                + Add Amenity
+              </button>
             )}
             {amenities.some((a) => a.trim()) && (
               <div className={styles.amenityPreview}>
-                {amenities.filter((a) => a.trim()).map((a, i) => (
-                  <span key={i} className={styles.amenityChip}>
-                    <span className={styles.amenityChipOm}>ॐ</span>{a}
-                  </span>
-                ))}
+                {amenities
+                  .filter((a) => a.trim())
+                  .map((a, i) => (
+                    <span key={i} className={styles.amenityChip}>
+                      <span className={styles.amenityChipOm}>ॐ</span>
+                      {a}
+                    </span>
+                  ))}
               </div>
             )}
           </div>
 
-          {/* ── Amenity Room Image ── */}
+          {/* Amenity Room Image */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Amenity Mosaic / Room Image<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Right-side image shown alongside the amenities list (e.g. furnished room / shared room photo)</p>
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Amenity Mosaic / Room Image
+              <span className={styles.required}>*</span>
+            </label>
+            <p className={styles.fieldHint}>
+              Right-side image shown alongside the amenities list
+            </p>
             <SingleImageUpload
               preview={amenityImagePreview}
               badge="Furnished Rooms"
@@ -558,14 +897,22 @@ export default function AddClassCampusAmenitiesPage() {
             />
           </div>
 
-          {/* Mosaic Tag */}
+          {/* Image Tag Label */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Image Tag Label</label>
-            <p className={styles.fieldHint}>Text tag shown as an overlay on the room image (e.g. Furnished Rooms)</p>
+            <label className={styles.label}>
+              <span className={styles.labelIcon}>✦</span>Image Tag Label
+            </label>
+            <p className={styles.fieldHint}>
+              Text tag shown as an overlay on the room image (e.g. Furnished Rooms)
+            </p>
             <div className={styles.inputWrap}>
-              <input type="text" className={styles.input} placeholder="e.g. Furnished Rooms"
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="e.g. Furnished Rooms"
                 maxLength={40}
-                {...register("amenityMosaicTag")} />
+                {...register("amenityMosaicTag")}
+              />
               <span className={styles.charCount}>{amenityMosaicTag?.length ?? 0}/40</span>
             </div>
           </div>
@@ -583,10 +930,13 @@ export default function AddClassCampusAmenitiesPage() {
             onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
           >
-            {isSubmitting ? <><span className={styles.spinner} /> Saving…</> : <><span>✦</span> Save Section</>}
+            {isSubmitting ? (
+              <><span className={styles.spinner} /> Saving…</>
+            ) : (
+              <><span>✦</span> Save Section</>
+            )}
           </button>
         </div>
-
       </div>
     </div>
   );

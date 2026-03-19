@@ -20,6 +20,7 @@ interface Founder {
 
 export default function FounderListPage() {
   const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
   const [founder, setFounder] = useState<Founder | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState(false);
@@ -36,17 +37,25 @@ export default function FounderListPage() {
   };
 
   useEffect(() => { fetchFounder(); }, []);
+const handleDelete = async () => {
+  if (deleting) return;
 
-  const handleDelete = async () => {
-    try {
-      await api.delete("/founder/delete-founder");
-      setFounder(null);
-      setDeleteModal(false);
-      toast.success("Founder section deleted successfully");
-    } catch {
-      toast.error("Failed to delete founder");
-    }
-  };
+  try {
+    setDeleting(true);
+
+    if (!founder?._id) return;
+
+    await api.delete(`/founder/delete-founder/${founder._id}`);
+
+    setFounder(null);
+    setDeleteModal(false);
+    toast.success("Founder section deleted successfully");
+  } catch {
+    toast.error("Failed to delete founder");
+  } finally {
+    setDeleting(false);
+  }
+};
 
   /* ── Loading ── */
   if (loading) return (
@@ -70,7 +79,7 @@ export default function FounderListPage() {
           </p>
         </div>
         <Link
-          href="/admin/dashboard/teachers/founder/add"
+          href="/admin/our-teachers/founder/add-new"
           className={`${styles.primaryBtn} ${founder ? styles.primaryBtnDisabled : ""}`}
           onClick={(e) => {
             if (founder) {
@@ -96,7 +105,7 @@ export default function FounderListPage() {
           <p className={styles.emptyText}>
             No founder section found. Add one to display it on the Teachers page.
           </p>
-          <Link href="/admin/our-teachers/founder/add-new" className={styles.emptyBtn}>
+          <Link href="/admin/our-teachers/founder" className={styles.emptyBtn}>
             + Add Founder
           </Link>
         </div>
@@ -108,7 +117,9 @@ export default function FounderListPage() {
 
           {/* Left — Photo */}
           <div className={styles.founderPhotoCol}>
-            <img src={founder.image} alt={founder.name} className={styles.founderPhoto} />
+            <img src={`${process.env.NEXT_PUBLIC_API_URL}${founder.image}`}
+  alt={founder.name}
+  className={styles.founderPhoto} />
             <div className={styles.founderEstBadge}>
               {founder.estYear || "Est. 2005"}
             </div>
@@ -139,12 +150,12 @@ export default function FounderListPage() {
             </div>
 
             <div className={styles.founderCardActions}>
-              <Link
-                href="/admin/dashboard/teachers/founder/edit"
-                className={styles.editBtn}
-              >
-                ✎ Edit Founder
-              </Link>
+             <Link
+  href={`/admin/our-teachers/founder/${founder._id}`}
+  className={styles.editBtn}
+>
+  ✎ Edit Founder
+</Link>
               <button
                 className={styles.deleteBtn}
                 onClick={() => setDeleteModal(true)}

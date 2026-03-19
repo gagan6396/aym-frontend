@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
@@ -83,26 +83,137 @@ function SingleImageUpload({ preview, badge, hint, error, onSelect, onRemove }: 
 }
 
 /* ─────────────────────────────────────────
-   Jodit config (stable reference)
+   Jodit config — OUTSIDE component so the
+   object reference never changes between
+   renders and Jodit never re-mounts.
+
+   ✅ Rich toolbar same as AddHomeAboutPage:
+      source, bold, italic, font, fontsize,
+      brush (text color), paragraph, align,
+      ul, ol, link, undo, redo, paste, etc.
+
+   `as any` silences TS on placeholder etc.
 ───────────────────────────────────────── */
 const joditConfig = {
   readonly: false,
-  height: 220,
+  toolbar: true,
+  spellcheck: true,
+  language: "en",
+  toolbarButtonSize: "medium",
   toolbarAdaptive: false,
+  showCharsCounter: true,
+  showWordsCounter: true,
+  showXPathInStatusbar: false,
+  askBeforePasteHTML: false,
+  askBeforePasteFromWord: false,
+  defaultActionOnPaste: "insert_clear_html",
+  enableDragAndDropFileToEditor: false,
   buttons: [
+    "source", "|",
     "bold", "italic", "underline", "strikethrough", "|",
-    "ul", "ol", "|",
-    "outdent", "indent", "|",
-    "font", "fontsize", "paragraph", "|",
-    "superscript", "subscript", "|",
-    "align", "|",
+    "font", "fontsize", "brush", "|",
+    "paragraph", "align", "|",
+    "ul", "ol", "outdent", "indent", "|",
+    "link", "|",
     "undo", "redo", "|",
-    "hr", "eraser", "copyformat", "|",
-    "fullsize",
+    "selectall", "cut", "copy", "paste",
   ],
-  style: { fontFamily: "inherit", fontSize: "14px" },
+  uploader: { insertImageAsBase64URI: true },
+  height: 220,
+  colors: {
+    picks: [
+      "#000000", "#888888", "#ffffff", "#ff0000", "#00ff00", "#0000ff",
+      "#ffff00", "#ff00ff", "#00ffff", "#ff9900", "#9900ff", "#ff6600",
+    ],
+  },
   placeholder: "",
-};
+} as any;
+
+/* ─────────────────────────────────────────
+   Helper — is the HTML actually empty?
+───────────────────────────────────────── */
+function isEditorEmpty(html: string): boolean {
+  return html.replace(/<[^>]*>/g, "").trim() === "";
+}
+
+/* ─────────────────────────────────────────
+   Reusable JoditField for EDIT forms.
+
+   KEY POINTS:
+   • `initialValue` — pre-populates the editor
+     with existing data loaded from API.
+     We use a `key` prop trick: when
+     `initialValue` changes (after fetch),
+     the component re-mounts with fresh content.
+   • No `value` prop on JoditEditor itself —
+     prevents re-mount on every React render,
+     which was causing paste to break.
+   • contentRef tracks the latest HTML for
+     submit time.
+───────────────────────────────────────── */
+interface JoditFieldProps {
+  label: string;
+  hint?: string;
+  initialValue: string;        // existing data from API
+  contentRef: React.MutableRefObject<string>;
+  error?: string;
+  onClearError: () => void;
+  placeholder?: string;
+  height?: number;
+}
+
+function JoditField({
+  label,
+  hint,
+  initialValue,
+  contentRef,
+  error,
+  onClearError,
+  placeholder = "Start typing here...",
+  height = 220,
+}: JoditFieldProps) {
+  const config = { ...joditConfig, placeholder, height };
+
+  // When initialValue arrives (after API fetch), sync it into the ref
+  // so submit reads the correct value even if the user doesn't type.
+  useEffect(() => {
+    if (initialValue) {
+      contentRef.current = initialValue;
+    }
+  }, [initialValue]);
+
+  return (
+    <div className={styles.fieldGroup}>
+      <label className={styles.label}>
+        <span className={styles.labelIcon}>✦</span>
+        {label}
+        <span className={styles.required}>*</span>
+      </label>
+      {hint && <p className={styles.fieldHint}>{hint}</p>}
+      <div
+        className={error ? styles.inputError : ""}
+        style={{ borderRadius: 8, overflow: "hidden" }}
+      >
+        {/*
+          `key={initialValue}` — forces Jodit to re-mount ONCE when the
+          existing data arrives from the API, so the editor shows the
+          pre-populated HTML. After that it stays stable (no re-mounts).
+          This is the correct pattern for edit forms with rich-text editors.
+        */}
+        <JoditEditor
+          key={initialValue}
+          value={initialValue}
+          config={config}
+          onChange={(val) => {
+            contentRef.current = val;
+            if (!isEditorEmpty(val)) onClearError();
+          }}
+        />
+      </div>
+      {error && <p className={styles.errorMsg}>⚠ {error}</p>}
+    </div>
+  );
+}
 
 /* ─────────────────────────────────────────
    Main Page
@@ -116,7 +227,7 @@ export default function EditClassCampusAmenitiesPage() {
   const [submitted, setSubmitted]       = useState(false);
   const [loading, setLoading]           = useState(true);
 
-  // ── Image states (outside RHF — file inputs are uncontrolled) ──
+  // ── Image states ──
   const [classSizeImageFile, setClassSizeImageFile]       = useState<File | null>(null);
   const [classSizeImagePreview, setClassSizeImagePreview] = useState("");
 
@@ -125,6 +236,21 @@ export default function EditClassCampusAmenitiesPage() {
 
   const [amenityImageFile, setAmenityImageFile]       = useState<File | null>(null);
   const [amenityImagePreview, setAmenityImagePreview] = useState("");
+
+  // ── Jodit initial values (set once after API fetch) ──
+  const [classSizeParaInit,  setClassSizeParaInit]  = useState("");
+  const [campusParaInit,     setCampusParaInit]     = useState("");
+  const [amenitiesParaInit,  setAmenitiesParaInit]  = useState("");
+
+  // ── Jodit content refs (source of truth for submit) ──
+  const classSizeParaRef = useRef<string>("");
+  const campusParaRef    = useRef<string>("");
+  const amenitiesParaRef = useRef<string>("");
+
+  // ── Validation error states for rich-text fields ──
+  const [classSizeParaError,  setClassSizeParaError]  = useState("");
+  const [campusParaError,     setCampusParaError]     = useState("");
+  const [amenitiesParaError,  setAmenitiesParaError]  = useState("");
 
   /* ── react-hook-form ── */
   const {
@@ -154,8 +280,7 @@ export default function EditClassCampusAmenitiesPage() {
     },
   });
 
-  // Watch values needed for char counts + amenity list UI
-  const amenities            = watch("amenities");
+  const amenities           = watch("amenities");
   const classSizeSuperLabel  = watch("classSizeSuperLabel");
   const classSizeTitle       = watch("classSizeTitle");
   const classSizeWelcomeText = watch("classSizeWelcomeText");
@@ -168,14 +293,14 @@ export default function EditClassCampusAmenitiesPage() {
   const amenitiesSubLabel    = watch("amenitiesSubLabel");
   const amenityMosaicTag     = watch("amenityMosaicTag");
 
-  /* ── Fetch existing data → populate via reset() ── */
+  /* ── Fetch existing data ── */
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await api.get(`/class-campus-amenities/${id}`);
         const d   = res.data.data;
 
-        // Populate all RHF fields at once — reset() is the correct way for edit forms
+        // Populate all plain-text RHF fields
         reset({
           classSizeSuperLabel:  d.classSizeSuperLabel  || "",
           classSizeTitle:       d.classSizeTitle       || "",
@@ -194,7 +319,18 @@ export default function EditClassCampusAmenitiesPage() {
           amenityMosaicTag:     d.amenityMosaicTag     || "",
         });
 
-        // Existing image previews from API
+        // Set initial values for Jodit editors
+        // These trigger a one-time re-mount via key={initialValue}
+        setClassSizeParaInit(d.classSizePara  || "");
+        setCampusParaInit(d.campusPara        || "");
+        setAmenitiesParaInit(d.amenitiesMainPara || "");
+
+        // Also pre-fill refs so submit works even without editing
+        classSizeParaRef.current = d.classSizePara    || "";
+        campusParaRef.current    = d.campusPara       || "";
+        amenitiesParaRef.current = d.amenitiesMainPara || "";
+
+        // Existing image previews
         if (d.classSizeImage)    setClassSizeImagePreview(d.classSizeImage);
         if (d.campusImages?.[0]) setCampusImagePreview(d.campusImages[0]);
         if (d.amenityImage)      setAmenityImagePreview(d.amenityImage);
@@ -226,24 +362,60 @@ export default function EditClassCampusAmenitiesPage() {
 
   /* ── Submit ── */
   const onSubmit = async (data: FormData) => {
+    // Validate rich-text fields from refs
+    let hasRichTextError = false;
+
+    if (isEditorEmpty(classSizeParaRef.current)) {
+      setClassSizeParaError("Paragraph is required");
+      hasRichTextError = true;
+    } else {
+      setClassSizeParaError("");
+    }
+
+    if (isEditorEmpty(campusParaRef.current)) {
+      setCampusParaError("Paragraph is required");
+      hasRichTextError = true;
+    } else {
+      setCampusParaError("");
+    }
+
+    if (isEditorEmpty(amenitiesParaRef.current)) {
+      setAmenitiesParaError("Main paragraph is required");
+      hasRichTextError = true;
+    } else {
+      setAmenitiesParaError("");
+    }
+
+    if (hasRichTextError) return;
+
     try {
       setIsSubmitting(true);
 
       const fd = new FormData();
-
-      // id — backend update route needs it
       fd.append("id", id);
 
-      // Text fields
-      Object.entries(data).forEach(([k, v]) => {
+      // Plain-text RHF fields
+      const {
+        classSizePara: _a,
+        campusPara: _b,
+        amenitiesMainPara: _c,
+        ...rhfData
+      } = data;
+
+      Object.entries(rhfData).forEach(([k, v]) => {
         if (Array.isArray(v)) v.forEach((item) => fd.append(k, item));
         else fd.append(k, v as string);
       });
 
-      // New files only — if unchanged, backend keeps existing
+      // Rich-text content from refs
+      fd.append("classSizePara",     classSizeParaRef.current);
+      fd.append("campusPara",        campusParaRef.current);
+      fd.append("amenitiesMainPara", amenitiesParaRef.current);
+
+      // New files only — backend keeps existing if not replaced
       if (classSizeImageFile) fd.append("classSizeImage", classSizeImageFile);
-      if (campusImageFile)    fd.append("campusImage_0", campusImageFile);
-      if (amenityImageFile)   fd.append("amenityImage", amenityImageFile);
+      if (campusImageFile)    fd.append("campusImage_0",  campusImageFile);
+      if (amenityImageFile)   fd.append("amenityImage",   amenityImageFile);
 
       await api.put("/class-campus-amenities/update", fd, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -251,7 +423,6 @@ export default function EditClassCampusAmenitiesPage() {
 
       setSubmitted(true);
       setTimeout(() => router.push("/admin/dashboard/Classcampusameniti"), 1500);
-
     } catch (error: any) {
       alert(error?.response?.data?.message || error?.message || "Failed to update");
     } finally {
@@ -344,9 +515,8 @@ export default function EditClassCampusAmenitiesPage() {
             {errors.classSizeTitle && <p className={styles.errorMsg}>⚠ {errors.classSizeTitle.message}</p>}
           </div>
 
-          {/* ── Class Size Image ── */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Class Group Photo<span className={styles.required}>*</span></label>
+            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Class Group Photo</label>
             <p className={styles.fieldHint}>Click to replace the existing image</p>
             <SingleImageUpload
               preview={classSizeImagePreview}
@@ -381,22 +551,17 @@ export default function EditClassCampusAmenitiesPage() {
             {errors.classSizeHighlight && <p className={styles.errorMsg}>⚠ {errors.classSizeHighlight.message}</p>}
           </div>
 
-          {/* ── JoditEditor: classSizePara ── */}
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Description Paragraph<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Full description about the class size policy</p>
-            <div className={errors.classSizePara ? styles.inputError : ""} style={{ borderRadius: 8, overflow: "hidden" }}>
-              <JoditEditor
-                value={watch("classSizePara")}
-                config={{ ...joditConfig, placeholder: "e.g. At AYM, only 25 students are admitted in one batch…" }}
-                onBlur={(val) => setValue("classSizePara", val, { shouldValidate: true })}
-              />
-            </div>
-            <input type="hidden" {...register("classSizePara", {
-              validate: (v) => v.replace(/<[^>]*>/g, "").trim() !== "" || "Paragraph is required",
-            })} />
-            {errors.classSizePara && <p className={styles.errorMsg}>⚠ {errors.classSizePara.message}</p>}
-          </div>
+          {/* JoditField: classSizePara — pre-populated with existing data */}
+          <JoditField
+            label="Description Paragraph"
+            hint="Full description about the class size policy"
+            initialValue={classSizeParaInit}
+            contentRef={classSizeParaRef}
+            error={classSizeParaError}
+            onClearError={() => setClassSizeParaError("")}
+            placeholder="e.g. At AYM, only 25 students are admitted in one batch…"
+            height={250}
+          />
         </div>
 
         <div className={styles.formDivider} />
@@ -434,9 +599,8 @@ export default function EditClassCampusAmenitiesPage() {
             {errors.campusTitle && <p className={styles.errorMsg}>⚠ {errors.campusTitle.message}</p>}
           </div>
 
-          {/* ── Campus Photo — single image ── */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Campus Photo<span className={styles.required}>*</span></label>
+            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Campus Photo</label>
             <p className={styles.fieldHint}>Click to replace the existing campus image</p>
             <SingleImageUpload
               preview={campusImagePreview}
@@ -459,22 +623,17 @@ export default function EditClassCampusAmenitiesPage() {
             {errors.campusHighlight && <p className={styles.errorMsg}>⚠ {errors.campusHighlight.message}</p>}
           </div>
 
-          {/* ── JoditEditor: campusPara ── */}
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Description Paragraph<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Full description about the campus</p>
-            <div className={errors.campusPara ? styles.inputError : ""} style={{ borderRadius: 8, overflow: "hidden" }}>
-              <JoditEditor
-                value={watch("campusPara")}
-                config={{ ...joditConfig, placeholder: "e.g. Spread across an expansive 5000 sq.mts.…" }}
-                onBlur={(val) => setValue("campusPara", val, { shouldValidate: true })}
-              />
-            </div>
-            <input type="hidden" {...register("campusPara", {
-              validate: (v) => v.replace(/<[^>]*>/g, "").trim() !== "" || "Paragraph is required",
-            })} />
-            {errors.campusPara && <p className={styles.errorMsg}>⚠ {errors.campusPara.message}</p>}
-          </div>
+          {/* JoditField: campusPara — pre-populated with existing data */}
+          <JoditField
+            label="Description Paragraph"
+            hint="Full description about the campus"
+            initialValue={campusParaInit}
+            contentRef={campusParaRef}
+            error={campusParaError}
+            onClearError={() => setCampusParaError("")}
+            placeholder="e.g. Spread across an expansive 5000 sq.mts.…"
+            height={250}
+          />
         </div>
 
         <div className={styles.formDivider} />
@@ -513,22 +672,17 @@ export default function EditClassCampusAmenitiesPage() {
             {errors.amenitiesTitle && <p className={styles.errorMsg}>⚠ {errors.amenitiesTitle.message}</p>}
           </div>
 
-          {/* ── JoditEditor: amenitiesMainPara ── */}
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Main Paragraph<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>First paragraph about accommodation and rooms</p>
-            <div className={errors.amenitiesMainPara ? styles.inputError : ""} style={{ borderRadius: 8, overflow: "hidden" }}>
-              <JoditEditor
-                value={watch("amenitiesMainPara")}
-                config={{ ...joditConfig, placeholder: "e.g. Students have fully furnished rooms amid lush gardens…" }}
-                onBlur={(val) => setValue("amenitiesMainPara", val, { shouldValidate: true })}
-              />
-            </div>
-            <input type="hidden" {...register("amenitiesMainPara", {
-              validate: (v) => v.replace(/<[^>]*>/g, "").trim() !== "" || "Main paragraph is required",
-            })} />
-            {errors.amenitiesMainPara && <p className={styles.errorMsg}>⚠ {errors.amenitiesMainPara.message}</p>}
-          </div>
+          {/* JoditField: amenitiesMainPara — pre-populated with existing data */}
+          <JoditField
+            label="Main Paragraph"
+            hint="First paragraph about accommodation and rooms"
+            initialValue={amenitiesParaInit}
+            contentRef={amenitiesParaRef}
+            error={amenitiesParaError}
+            onClearError={() => setAmenitiesParaError("")}
+            placeholder="e.g. Students have fully furnished rooms amid lush gardens…"
+            height={250}
+          />
 
           <div className={styles.fieldGroup}>
             <label className={styles.label}><span className={styles.labelIcon}>✦</span>List Intro Label</label>
@@ -577,9 +731,8 @@ export default function EditClassCampusAmenitiesPage() {
             )}
           </div>
 
-          {/* ── Amenity Room Image ── */}
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Amenity Mosaic / Room Image<span className={styles.required}>*</span></label>
+            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Amenity Mosaic / Room Image</label>
             <p className={styles.fieldHint}>Click to replace the existing room image</p>
             <SingleImageUpload
               preview={amenityImagePreview}
@@ -590,10 +743,9 @@ export default function EditClassCampusAmenitiesPage() {
             />
           </div>
 
-          {/* Mosaic Tag */}
           <div className={styles.fieldGroup}>
             <label className={styles.label}><span className={styles.labelIcon}>✦</span>Image Tag Label</label>
-            <p className={styles.fieldHint}>Text tag shown as overlay on the room image (e.g. Furnished Rooms)</p>
+            <p className={styles.fieldHint}>Text tag shown as overlay on the room image</p>
             <div className={styles.inputWrap}>
               <input type="text" className={styles.input} placeholder="e.g. Furnished Rooms"
                 maxLength={40}
@@ -615,10 +767,12 @@ export default function EditClassCampusAmenitiesPage() {
             onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
           >
-            {isSubmitting ? <><span className={styles.spinner} /> Updating…</> : <><span>✦</span> Update Section</>}
+            {isSubmitting
+              ? <><span className={styles.spinner} /> Updating…</>
+              : <><span>✦</span> Update Section</>
+            }
           </button>
         </div>
-
       </div>
     </div>
   );

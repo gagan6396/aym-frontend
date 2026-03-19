@@ -44,18 +44,24 @@ export default function AddFounderPage() {
   const [isDragging, setIsDragging] = useState(false);
 
   /* Redirect if founder already exists */
-  useEffect(() => {
-    const check = async () => {
-      try {
-        const res = await api.get("/founder/get-founder");
-        if (res.data.data) {
-          toast.error("Founder already exists. Please edit it instead.");
-          router.replace("/admin/dashboard/teachers/founder");
-        }
-      } catch {}
-    };
-    check();
-  }, []);
+useEffect(() => {
+  let called = false;
+
+  const check = async () => {
+    if (called) return;
+    called = true;
+
+    try {
+      const res = await api.get("/founder/get-founder");
+      if (res.data.data) {
+        toast.error("Founder already exists. Please edit it instead.");
+        router.replace("/admin/dashboard/teachers/founder");
+      }
+    } catch {}
+  };
+
+  check();
+}, [router]);
 
   /* ── Field helpers ── */
   const set = (key: keyof FormData, val: string) => {
@@ -102,14 +108,19 @@ export default function AddFounderPage() {
     const e: FormErrors = {};
     if (!form.name.trim()) e.name = "Founder name is required";
     if (!form.subtitle.trim()) e.subtitle = "Subtitle / designation is required";
-    if (!imageFile) e.image = "A profile photo is required";
-    if (form.bioItems.some((b) => !b.trim())) e.bioItems = "All biography paragraphs must be filled";
+    if (!imageFile && !imagePreview) {
+  e.image = "A profile photo is required";
+}
+    if (!form.bioItems.length || form.bioItems.some((b) => !b.trim())) {
+  e.bioItems = "All biography paragraphs must be filled";
+}
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
   /* ── Submit ── */
   const handleSubmit = async () => {
+     if (isSubmitting) return; 
     if (!validate()) return;
     try {
       setIsSubmitting(true);
@@ -126,7 +137,7 @@ export default function AddFounderPage() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setSubmitted(true);
-      setTimeout(() => router.push("/admin/dashboard/teachers/founder"), 1500);
+      setTimeout(() => router.push("/admin/our-teachers/founder"), 1500);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to save founder");
     } finally {
@@ -153,7 +164,7 @@ export default function AddFounderPage() {
       <div className={styles.breadcrumb}>
         <button className={styles.breadcrumbBtn} onClick={() => router.push("/admin/dashboard/teachers")}>Our Teachers</button>
         <span className={styles.breadcrumbSep}>›</span>
-        <button className={styles.breadcrumbBtn} onClick={() => router.push("/admin/dashboard/teachers/founder")}>Founder</button>
+        <button className={styles.breadcrumbBtn} onClick={() => router.push("/admin/our-teachers/founder")}>Founder</button>
         <span className={styles.breadcrumbSep}>›</span>
         <span className={styles.breadcrumbCurrent}>Add Founder</span>
       </div>
@@ -387,7 +398,7 @@ export default function AddFounderPage() {
 
         {/* Form Actions */}
         <div className={styles.formActions}>
-          <Link href="/admin/dashboard/teachers/founder" className={styles.cancelBtn}>
+          <Link href="/admin/our-teachers/founder" className={styles.cancelBtn}>
             ← Cancel
           </Link>
           <button type="button"
