@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "@/assets/style/Admin/dashboard/blog/Blog.module.css";
-// import api from "@/lib/api";
+import api from "@/lib/api";
 
 /* ═══════════════════════════════════════════════
    TYPES
@@ -12,6 +12,7 @@ import styles from "@/assets/style/Admin/dashboard/blog/Blog.module.css";
 export type SectionType = "heading" | "subheading" | "paragraph" | "images" | "divider";
 
 export interface BlogImage {
+    id: string; // ✅ ADD THIS
   src: string;
   caption: string;
   tempUrlInput?: string;
@@ -92,7 +93,8 @@ export default function AddBlogPage() {
   const [submitted, setSubmitted] = useState<"published" | "draft" | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [autoSlug, setAutoSlug] = useState(true);
-
+  const coverFile = useRef<File | null>(null);
+const imageFiles = useRef<Record<string, File>>({});
   const [form, setForm] = useState<FormData>({
     title: "", slug: "", excerpt: "", date: "",
     author: "", category: "", coverImage: "", tags: [],
@@ -128,30 +130,37 @@ export default function AddBlogPage() {
      COVER IMAGE
   ────────────────────────────────────────────── */
   const handleCoverFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    set("coverImage", URL.createObjectURL(f));
-    if (coverFileRef.current) coverFileRef.current.value = "";
-  };
-  const handleCoverDrop = (e: React.DragEvent) => {
-    e.preventDefault(); setIsCoverDragOver(false);
-    const f = e.dataTransfer.files[0];
-    if (!f || !f.type.startsWith("image/")) return;
-    set("coverImage", URL.createObjectURL(f));
-  };
-  const handleCoverUrl = () => {
-    const url = coverUrlInput.trim();
-    if (!url) return;
-    set("coverImage", url); setCoverUrlInput("");
-  };
+  const f = e.target.files?.[0];
+  if (!f) return;
 
+  coverFile.current = f; // ✅ store file
+  set("coverImage", URL.createObjectURL(f)); // preview
+};
+  const handleCoverDrop = (e: React.DragEvent) => {
+  e.preventDefault();
+  setIsCoverDragOver(false);
+
+  const f = e.dataTransfer.files[0];
+  if (!f || !f.type.startsWith("image/")) return;
+
+  coverFile.current = f; // ✅ ADD THIS
+  set("coverImage", URL.createObjectURL(f));
+};
+  const handleCoverUrl = () => {
+  const url = coverUrlInput.trim();
+  if (!url) return;
+
+  coverFile.current = null; // ✅ ADD THIS
+  set("coverImage", url);
+  setCoverUrlInput("");
+};
   /* ─────────────────────────────────────────────
      CONTENT BLOCK OPERATIONS
   ────────────────────────────────────────────── */
   const addBlock = (type: SectionType) => {
     const newBlock: BlogSection = {
       id: uid(), type,
-      ...(type === "images" ? { images: [{ src: "", caption: "" }], imageLayout: "single" } : {}),
+      ...(type === "images" ? { images: [{ id: uid(), src: "", caption: "" }], imageLayout: "single" } : {}),
       ...(type !== "images" && type !== "divider" ? { text: "" } : {}),
     };
     setForm((p) => ({ ...p, content: [...p.content, newBlock] }));
@@ -169,28 +178,52 @@ export default function AddBlogPage() {
     setForm((p) => ({ ...p, content: p.content.filter((_, i) => i !== idx) }));
 
   /* Image sub-item operations */
-  const addImageItem = (blockIdx: number) =>
-    updateBlock(blockIdx, {
-      images: [...(form.content[blockIdx].images ?? []), { src: "", caption: "" }],
-    });
+ const addImageItem = (blockIdx: number) =>
+  updateBlock(blockIdx, {
+    images: [
+      ...(form.content[blockIdx].images ?? []),
+      { id: uid(), src: "", caption: "" }, // ✅ ADD ID
+    ],
+  });
 
-  const updateImageItem = (blockIdx: number, imgIdx: number, partial: Partial<BlogImage>) => {
-    const imgs = [...(form.content[blockIdx].images ?? [])];
-    imgs[imgIdx] = { ...imgs[imgIdx], ...partial };
-    updateBlock(blockIdx, { images: imgs });
-  };
+  const updateImageItem = (
+  blockIdx: number,
+  imgId: string,
+  partial: Partial<BlogImage>
+) => {
+  const imgs = [...(form.content[blockIdx].images ?? [])];
 
-  const removeImageItem = (blockIdx: number, imgIdx: number) => {
-    const imgs = (form.content[blockIdx].images ?? []).filter((_, i) => i !== imgIdx);
-    updateBlock(blockIdx, { images: imgs });
-  };
+  const i = imgs.findIndex((img) => img.id === imgId);
+
+  imgs[i] = { ...imgs[i], ...partial };
+
+  updateBlock(blockIdx, { images: imgs });
+};
+
+ const removeImageItem = (blockIdx: number, imgId: string) => {
+  delete imageFiles.current[imgId];
+
+  const imgs = (form.content[blockIdx].images ?? []).filter(
+    (img) => img.id !== imgId
+  );
+
+  updateBlock(blockIdx, { images: imgs });
+};
 
   /* Image item file upload */
   const imageFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const handleImageFile = (blockIdx: number, imgIdx: number, file: File) => {
-    const url = URL.createObjectURL(file);
-    updateImageItem(blockIdx, imgIdx, { src: url });
-  };
+  const handleImageFile = (blockIdx: number, imgId: string, file: File) => {
+  imageFiles.current[imgId] = file;
+
+  const url = URL.createObjectURL(file);
+
+  const imgs = [...(form.content[blockIdx].images ?? [])];
+  const i = imgs.findIndex((x) => x.id === imgId);
+
+  imgs[i] = { ...imgs[i], src: url };
+
+  updateBlock(blockIdx, { images: imgs });
+};
 
   /* Block drag reorder */
   const handleBlockDragStart = (i: number) => { blockDragIdx.current = i; };
@@ -223,22 +256,97 @@ export default function AddBlogPage() {
      SUBMIT
   ────────────────────────────────────────────── */
   const handleSubmit = async (asDraft = false) => {
-    if (!asDraft && !validate()) return;
-    try {
-      setIsSubmitting(true);
-      const payload = {
-        ...form,
-        content: form.content.map(({ id, ...rest }) => rest), // strip local ids
-        status: asDraft ? "Draft" : "Published",
+  if (!asDraft && !validate()) return;
+
+  try {
+    setIsSubmitting(true);
+
+    const fd = new FormData();
+
+    /* =========================
+       BASIC FIELDS
+    ========================= */
+    fd.append("title", form.title);
+    fd.append("slug", form.slug);
+    fd.append("excerpt", form.excerpt);
+    fd.append("date", form.date);
+    fd.append("author", form.author);
+    fd.append("category", form.category);
+    fd.append("tags", JSON.stringify(form.tags));
+    fd.append("status", asDraft ? "Draft" : "Published");
+
+    /* =========================
+       COVER IMAGE
+    ========================= */
+    if (coverFile.current) {
+      fd.append("coverImage", coverFile.current);
+    } else {
+      fd.append("coverImage", form.coverImage);
+    }
+
+    /* =========================
+       CONTENT + IMAGES
+    ========================= */
+    const contentImages: File[] = [];
+
+    const cleanContent = form.content.map((block, blockIdx) => {
+      if (block.type === "images") {
+        return {
+          type: block.type,
+          imageLayout: block.imageLayout,
+          images: block.images?.map((img, imgIdx) => {
+            const file = imageFiles.current[img.id];
+
+            // ✅ file upload case
+            if (file) {
+              contentImages.push(file);
+
+              return {
+                isFile: true,
+                caption: img.caption,
+              };
+            }
+
+            // ✅ URL case
+            return {
+              src: img.src,
+              caption: img.caption,
+            };
+          }),
+        };
+      }
+
+      return {
+        type: block.type,
+        text: block.text,
       };
-      // await api.post("/blogs/create", payload);
-      console.log("Payload:", payload);
-      setSubmitted(asDraft ? "draft" : "published");
-      setTimeout(() => router.push("/admin/dashboard/blogs"), 1500);
-    } catch (err: any) {
-      alert(err?.response?.data?.message || err?.message || "Failed to save");
-    } finally { setIsSubmitting(false); }
-  };
+    });
+
+    fd.append("content", JSON.stringify(cleanContent));
+
+    /* =========================
+       MULTIPLE FILES
+    ========================= */
+    contentImages.forEach((file) => {
+      fd.append("contentImages", file);
+    });
+
+    /* =========================
+       API CALL
+    ========================= */
+    await api.post("/blogs/create", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    setSubmitted(asDraft ? "draft" : "published");
+    setTimeout(() => router.push("/admin/dashboard/blog"), 1500);
+
+  } catch (err: any) {
+    alert(err?.response?.data?.message || err?.message || "Failed to save");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   /* ─────────────────────────────────────────────
      SUCCESS
@@ -263,7 +371,7 @@ export default function AddBlogPage() {
     <div className={styles.formPage}>
 
       <div className={styles.breadcrumb}>
-        <Link href="/admin/dashboard/blogs" className={styles.breadcrumbLink}>Blogs</Link>
+        <Link href="/admin/dashboard/blog" className={styles.breadcrumbLink}>Blogs</Link>
         <span className={styles.breadcrumbSep}>›</span>
         <span className={styles.breadcrumbCurrent}>New Post</span>
       </div>
@@ -421,7 +529,10 @@ export default function AddBlogPage() {
                 ? <>
                     <img src={form.coverImage} alt="Cover" className={styles.coverPreviewImg} />
                     <div className={styles.coverOverlay}>
-                      <button type="button" className={styles.removeImgBtn} onClick={() => set("coverImage", "")}>✕</button>
+                      <button type="button" className={styles.removeImgBtn} onClick={() => {
+  coverFile.current = null;
+  set("coverImage", "");
+}}>✕</button>
                     </div>
                   </>
                 : <div className={styles.coverPreviewEmpty}>
@@ -563,8 +674,8 @@ export default function AddBlogPage() {
 
                       {/* Image sub-items */}
                       <div className={styles.imageSubList}>
-                        {(block.images ?? []).map((img, imgIdx) => (
-                          <div key={imgIdx} className={styles.imageSubItem}>
+                       {(block.images ?? []).map((img) => (
+  <div key={img.id} className={styles.imageSubItem}>
                             {/* Thumb preview */}
                             {img.src
                               ? <img src={img.src} alt={img.caption || "img"} className={styles.imageSubThumb}
@@ -581,15 +692,18 @@ export default function AddBlogPage() {
                                     <input type="text" className={styles.input}
                                       placeholder="Paste image URL…"
                                       value={img.tempUrlInput ?? img.src}
-                                      onChange={(e) => updateImageItem(idx, imgIdx, { tempUrlInput: e.target.value })}
+                                      onChange={(e) => updateImageItem(idx, img.id, { tempUrlInput: e.target.value })}
                                       onBlur={(e) => {
                                         const url = e.target.value.trim();
-                                        if (url) updateImageItem(idx, imgIdx, { src: url, tempUrlInput: undefined });
+                                        if (url) updateImageItem(idx, img.id, {
+  src: url,
+  tempUrlInput: undefined,
+});;
                                       }}
                                       onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                           const url = (e.target as HTMLInputElement).value.trim();
-                                          if (url) updateImageItem(idx, imgIdx, { src: url, tempUrlInput: undefined });
+                                          if (url) updateImageItem(idx, img.id, { src: url, tempUrlInput: undefined });
                                         }
                                       }}
                                     />
@@ -597,16 +711,18 @@ export default function AddBlogPage() {
                                   <button type="button"
                                     style={{ padding: "0.45rem 0.65rem", border: "1.5px dashed rgba(224,123,0,0.35)", borderRadius: "6px", background: "transparent", cursor: "pointer", fontSize: "0.85rem", color: "#a07840", transition: "all 0.18s", whiteSpace: "nowrap" }}
                                     onClick={() => {
-                                      const ref = imageFileRefs.current[`${idx}-${imgIdx}`];
+                                      const ref = imageFileRefs.current[img.id];
                                       if (ref) ref.click();
                                     }}
                                   >📁</button>
                                   <input
-                                    ref={(el) => { imageFileRefs.current[`${idx}-${imgIdx}`] = el; }}
+                                    ref={(el) => {
+  imageFileRefs.current[img.id] = el;
+}}
                                     type="file" accept="image/*" style={{ display: "none" }}
                                     onChange={(e) => {
                                       const f = e.target.files?.[0];
-                                      if (f) handleImageFile(idx, imgIdx, f);
+                                      if (f) handleImageFile(idx, img.id, f)
                                       if (e.target) e.target.value = "";
                                     }}
                                   />
@@ -620,14 +736,14 @@ export default function AddBlogPage() {
                                   <input type="text" className={styles.input}
                                     placeholder="e.g. Morning Asana Practice at AYM Yoga School, Rishikesh"
                                     value={img.caption} maxLength={200}
-                                    onChange={(e) => updateImageItem(idx, imgIdx, { caption: e.target.value })} />
+                                    onChange={(e) => updateImageItem(idx, img.id, { caption: e.target.value })} />
                                   <span className={styles.charCount} style={{ top: "50%", transform: "translateY(-50%)", bottom: "auto" }}>{img.caption.length}/200</span>
                                 </div>
                               </div>
                             </div>
 
                             <button type="button" className={styles.imageSubRemove}
-                              onClick={() => removeImageItem(idx, imgIdx)}
+                              onClick={() =>removeImageItem(idx, img.id)}
                               disabled={(block.images ?? []).length <= 1}>✕</button>
                           </div>
                         ))}
@@ -662,7 +778,7 @@ export default function AddBlogPage() {
 
         {/* Form Actions */}
         <div className={styles.formActions}>
-          <Link href="/admin/dashboard/blogs" className={styles.cancelBtn}>← Cancel</Link>
+          <Link href="/admin/dashboard/blog" className={styles.cancelBtn}>← Cancel</Link>
           <button type="button" className={styles.draftBtn}
             onClick={() => handleSubmit(true)} disabled={isSubmitting}>
             Save as Draft

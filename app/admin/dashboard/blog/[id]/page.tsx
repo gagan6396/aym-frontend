@@ -4,15 +4,20 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import styles from "@/assets/style/Admin/dashboard/blog/Blog.module.css";
-// import api from "@/lib/api";
+import api from "@/lib/api";
 
 /* ════════════════════════════════════════
-   TYPES (same as Add page)
+   TYPES
 ════════════════════════════════════════ */
 export type SectionType = "heading" | "subheading" | "paragraph" | "images" | "divider";
 export type ImageLayout = "single" | "two-col" | "three-col" | "wide";
 
-export interface BlogImage { src: string; caption: string; tempUrlInput?: string; }
+export interface BlogImage {
+  id: string;
+  src: string;
+  caption: string;
+  tempUrlInput?: string;
+}
 
 export interface BlogSection {
   id: string;
@@ -23,16 +28,26 @@ export interface BlogSection {
 }
 
 interface FormData {
-  title: string; slug: string; excerpt: string;
-  date: string; author: string; category: string;
-  coverImage: string; tags: string[];
+  title: string;
+  slug: string;
+  excerpt: string;
+  date: string;
+  author: string;
+  category: string;
+  coverImage: string;
+  tags: string[];
   content: BlogSection[];
   status: "Published" | "Draft";
 }
 
 interface FormErrors {
-  title?: string; slug?: string; excerpt?: string;
-  date?: string; category?: string; coverImage?: string; content?: string;
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  date?: string;
+  category?: string;
+  coverImage?: string;
+  content?: string;
 }
 
 /* ── Helpers ── */
@@ -40,45 +55,49 @@ let idCounter = 0;
 const uid = () => `blk-${++idCounter}-${Math.random().toString(36).slice(2, 6)}`;
 
 const TYPE_LABELS: Record<SectionType, string> = {
-  heading: "H2 Heading", subheading: "H3 Subheading",
-  paragraph: "Paragraph", images: "Image Block", divider: "Divider",
+  heading: "H2 Heading",
+  subheading: "H3 Subheading",
+  paragraph: "Paragraph",
+  images: "Image Block",
+  divider: "Divider",
 };
+
 const LAYOUT_LABELS: Record<ImageLayout, string> = {
-  single: "Single Image", "two-col": "2 Column",
-  "three-col": "3 Column", wide: "Wide / Full",
+  single: "Single Image",
+  "two-col": "2 Column",
+  "three-col": "3 Column",
+  wide: "Wide / Full",
 };
+
 const CATEGORY_OPTIONS = [
   "Yoga Teacher Training", "Yoga", "Ayurveda", "Yoga Retreats",
   "Lifestyle", "Health", "Meditation", "Philosophy", "Nutrition",
 ];
 
-/* ── Mock existing blog data ── */
-const MOCK_BLOG: Omit<FormData, "content"> & { rawContent: Omit<BlogSection, "id">[] } = {
-  title: "Top 5 Advantages of Yoga Teacher Training Course",
-  slug: "top-5-advantages-yoga-teacher-training-course",
-  excerpt: "Yoga studios are booming now in every nook and corner of the world. But how do we know if the trainers there are qualified enough to guide others on yoga?",
-  date: "2022-07-04",
-  author: "Swami Arvind",
-  category: "Yoga Teacher Training",
-  coverImage: "https://images.unsplash.com/photo-1545389336-cf090694435e?w=900&q=80",
-  tags: ["Yoga Teacher Training", "Rishikesh", "Yoga"],
-  status: "Published",
-  rawContent: [
-    { type: "heading", text: "What is Yoga Teacher Training?" },
-    { type: "paragraph", text: "Yoga Teacher Training (YTT) is an immersive, transformative program designed for those who wish to deepen their personal yoga practice and share the ancient wisdom of yoga with others." },
-    { type: "images", imageLayout: "two-col", images: [
-      { src: "https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?w=800&q=80", caption: "Morning Asana Practice at AYM Yoga School, Rishikesh" },
-      { src: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80", caption: "Students in guided group practice session" },
-    ]},
-    { type: "heading", text: "Top 5 Advantages of Yoga Teacher Training" },
-    { type: "subheading", text: "1. Deepened Self-Awareness & Personal Transformation" },
-    { type: "paragraph", text: "One of the most profound gifts of a YTT program is the journey inward. Through daily asana practice, pranayama, and meditation, students cultivate a heightened awareness of their physical and mental patterns." },
-    { type: "divider" },
-    { type: "subheading", text: "5. Worldwide Career Opportunities" },
-    { type: "paragraph", text: "A Yoga Alliance-certified YTT certificate from AYM Yoga School opens doors to teaching opportunities in studios, retreat centres, wellness resorts, cruise ships, and corporate wellness programs worldwide." },
-  ],
-};
+/* ─────────────────────────────────────────────
+   IMAGE URL HELPERS
+   resolveImage — prepend backend origin to /uploads/... paths
+   stripBase    — remove backend origin before saving back to DB
+────────────────────────────────────────────── */
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/?$/, "") ??
+  "http://localhost:5000";
 
+function resolveImage(src?: string): string {
+  if (!src) return "";
+  if (src.startsWith("http") || src.startsWith("blob:")) return src;
+  return `${BASE_URL}${src.startsWith("/") ? "" : "/"}${src}`;
+}
+
+function stripBase(src: string): string {
+  // turn "http://localhost:5000/uploads/x.jpg" back to "/uploads/x.jpg"
+  if (src.startsWith(BASE_URL)) return src.slice(BASE_URL.length);
+  return src;
+}
+
+/* ════════════════════════════════════════
+   COMPONENT
+════════════════════════════════════════ */
 export default function EditBlogPage() {
   const router = useRouter();
   const params = useParams();
@@ -93,36 +112,66 @@ export default function EditBlogPage() {
   const [submitted, setSubmitted] = useState<"published" | "draft" | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
 
+  const coverFile = useRef<File | null>(null);
+  const imageFiles = useRef<Record<string, File>>({});
+  const imageFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
   const [form, setForm] = useState<FormData>({
     title: "", slug: "", excerpt: "", date: "", author: "",
     category: "", coverImage: "", tags: [], content: [], status: "Draft",
   });
 
   const blockDragIdx = useRef<number | null>(null);
-  const imageFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  /* ── Fetch ── */
+  /* ─────────────────────────────────────────────
+     FETCH — resolve ALL image paths on load
+  ────────────────────────────────────────────── */
   useEffect(() => {
+    if (!blogId) return;
+
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        // const res = await api.get(`/blogs/${blogId}`);
-        // const data = res.data.data;
-        const data = MOCK_BLOG;
+        const res = await api.get(`/blogs/get/${blogId}`);
+        const data = res.data.data;
+
+        const content: BlogSection[] = (data.content ?? []).map((block: any) => ({
+          ...block,
+          id: uid(),
+          images: block.images
+            ? block.images.map((img: any) => ({
+                ...img,
+                id: uid(),
+                src: resolveImage(img.src), // ✅ fix content image paths
+              }))
+            : undefined,
+        }));
+
         setForm({
-          title: data.title, slug: data.slug, excerpt: data.excerpt,
-          date: data.date, author: data.author, category: data.category,
-          coverImage: data.coverImage, tags: data.tags ?? [],
-          status: data.status,
-          content: (data.rawContent).map((s) => ({ ...s, id: uid() })) as BlogSection[],
+          title: data.title ?? "",
+          slug: data.slug ?? "",
+          excerpt: data.excerpt ?? "",
+          date: data.date ? data.date.slice(0, 10) : "",
+          author: data.author ?? "",
+          category: data.category ?? "",
+          coverImage: resolveImage(data.coverImage), // ✅ fix cover image path
+          tags: data.tags ?? [],
+          status: data.status ?? "Draft",
+          content,
         });
-      } catch (err) { console.log(err); }
-      finally { setIsLoading(false); }
+      } catch (err) {
+        console.error("Fetch blog error:", err);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    if (blogId) fetchData();
+
+    fetchData();
   }, [blogId]);
 
-  /* ── Field setters ── */
+  /* ─────────────────────────────────────────────
+     FIELD SETTERS
+  ────────────────────────────────────────────── */
   const set = (key: keyof Omit<FormData, "tags" | "content" | "status">, val: string) => {
     setForm((p) => ({ ...p, [key]: val }));
     setErrors((p) => ({ ...p, [key]: undefined }));
@@ -133,32 +182,46 @@ export default function EditBlogPage() {
     if (!t || form.tags.includes(t)) return;
     setForm((p) => ({ ...p, tags: [...p.tags, t] }));
   };
-  const removeTag = (t: string) => setForm((p) => ({ ...p, tags: p.tags.filter((x) => x !== t) }));
+  const removeTag = (t: string) =>
+    setForm((p) => ({ ...p, tags: p.tags.filter((x) => x !== t) }));
 
-  /* ── Cover image ── */
+  /* ─────────────────────────────────────────────
+     COVER IMAGE
+  ────────────────────────────────────────────── */
   const handleCoverFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
+    coverFile.current = f;
     set("coverImage", URL.createObjectURL(f));
-    if (coverFileRef.current) coverFileRef.current.value = "";
   };
+
   const handleCoverDrop = (e: React.DragEvent) => {
-    e.preventDefault(); setIsCoverDragOver(false);
+    e.preventDefault();
+    setIsCoverDragOver(false);
     const f = e.dataTransfer.files[0];
     if (!f || !f.type.startsWith("image/")) return;
+    coverFile.current = f;
     set("coverImage", URL.createObjectURL(f));
   };
+
   const handleCoverUrl = () => {
     const url = coverUrlInput.trim();
     if (!url) return;
-    set("coverImage", url); setCoverUrlInput("");
+    coverFile.current = null;
+    set("coverImage", url);
+    setCoverUrlInput("");
   };
 
-  /* ── Block operations ── */
+  /* ─────────────────────────────────────────────
+     CONTENT BLOCK OPERATIONS
+  ────────────────────────────────────────────── */
   const addBlock = (type: SectionType) => {
     const newBlock: BlogSection = {
-      id: uid(), type,
-      ...(type === "images" ? { images: [{ src: "", caption: "" }], imageLayout: "single" } : {}),
+      id: uid(),
+      type,
+      ...(type === "images"
+        ? { images: [{ id: uid(), src: "", caption: "" }], imageLayout: "single" }
+        : {}),
       ...(type !== "images" && type !== "divider" ? { text: "" } : {}),
     };
     setForm((p) => ({ ...p, content: [...p.content, newBlock] }));
@@ -176,16 +239,34 @@ export default function EditBlogPage() {
     setForm((p) => ({ ...p, content: p.content.filter((_, i) => i !== idx) }));
 
   const addImageItem = (blockIdx: number) =>
-    updateBlock(blockIdx, { images: [...(form.content[blockIdx].images ?? []), { src: "", caption: "" }] });
+    updateBlock(blockIdx, {
+      images: [
+        ...(form.content[blockIdx].images ?? []),
+        { id: uid(), src: "", caption: "" },
+      ],
+    });
 
-  const updateImageItem = (blockIdx: number, imgIdx: number, partial: Partial<BlogImage>) => {
+  const updateImageItem = (blockIdx: number, imgId: string, partial: Partial<BlogImage>) => {
     const imgs = [...(form.content[blockIdx].images ?? [])];
-    imgs[imgIdx] = { ...imgs[imgIdx], ...partial };
+    const i = imgs.findIndex((img) => img.id === imgId);
+    imgs[i] = { ...imgs[i], ...partial };
     updateBlock(blockIdx, { images: imgs });
   };
 
-  const removeImageItem = (blockIdx: number, imgIdx: number) =>
-    updateBlock(blockIdx, { images: (form.content[blockIdx].images ?? []).filter((_, i) => i !== imgIdx) });
+  const removeImageItem = (blockIdx: number, imgId: string) => {
+    delete imageFiles.current[imgId];
+    updateBlock(blockIdx, {
+      images: (form.content[blockIdx].images ?? []).filter((img) => img.id !== imgId),
+    });
+  };
+
+  const handleImageFile = (blockIdx: number, imgId: string, file: File) => {
+    imageFiles.current[imgId] = file;
+    const imgs = [...(form.content[blockIdx].images ?? [])];
+    const i = imgs.findIndex((x) => x.id === imgId);
+    imgs[i] = { ...imgs[i], src: URL.createObjectURL(file) };
+    updateBlock(blockIdx, { images: imgs });
+  };
 
   const handleBlockDragStart = (i: number) => { blockDragIdx.current = i; };
   const handleBlockDragEnter = (i: number) => {
@@ -197,7 +278,9 @@ export default function EditBlogPage() {
     setForm((p) => ({ ...p, content: arr }));
   };
 
-  /* ── Validation ── */
+  /* ─────────────────────────────────────────────
+     VALIDATION
+  ────────────────────────────────────────────── */
   const validate = (): boolean => {
     const e: FormErrors = {};
     if (!form.title.trim()) e.title = "Title is required";
@@ -211,25 +294,74 @@ export default function EditBlogPage() {
     return Object.keys(e).length === 0;
   };
 
-  /* ── Submit ── */
+  /* ─────────────────────────────────────────────
+     SUBMIT — strip resolved BASE_URL before sending
+     so DB always stores clean relative paths
+  ────────────────────────────────────────────── */
   const handleSubmit = async (asDraft = false) => {
     if (!asDraft && !validate()) return;
+
     try {
       setIsSubmitting(true);
-      const payload = {
-        ...form,
-        content: form.content.map(({ id, ...rest }) => rest),
-        status: asDraft ? "Draft" : "Published",
-      };
-      // await api.put(`/blogs/${blogId}`, payload);
-      console.log("Update payload:", payload);
+
+      const fd = new FormData();
+      fd.append("title", form.title);
+      fd.append("slug", form.slug);
+      fd.append("excerpt", form.excerpt);
+      fd.append("date", form.date);
+      fd.append("author", form.author);
+      fd.append("category", form.category);
+      fd.append("tags", JSON.stringify(form.tags));
+      fd.append("status", asDraft ? "Draft" : "Published");
+
+      /* Cover image: new file upload OR existing path (stripped back to relative) */
+      if (coverFile.current) {
+        fd.append("coverImage", coverFile.current);
+      } else {
+        fd.append("coverImage", stripBase(form.coverImage));
+      }
+
+      /* Content blocks */
+      const contentImages: File[] = [];
+
+      const cleanContent = form.content.map((block) => {
+        if (block.type === "images") {
+          return {
+            type: block.type,
+            imageLayout: block.imageLayout,
+            images: block.images?.map((img) => {
+              const file = imageFiles.current[img.id];
+              if (file) {
+                contentImages.push(file);
+                return { isFile: true, caption: img.caption };
+              }
+              // strip resolved base URL — send clean relative path back to DB
+              return { src: stripBase(img.src), caption: img.caption };
+            }),
+          };
+        }
+        return { type: block.type, text: block.text };
+      });
+
+      fd.append("content", JSON.stringify(cleanContent));
+      contentImages.forEach((file) => fd.append("contentImages", file));
+
+      await api.put(`/blogs/update/${blogId}`, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
       setSubmitted(asDraft ? "draft" : "published");
-      setTimeout(() => router.push("/admin/dashboard/blogs"), 1500);
+      setTimeout(() => router.push("/admin/dashboard/blog"), 1500);
     } catch (err: any) {
       alert(err?.response?.data?.message || err?.message || "Failed to update");
-    } finally { setIsSubmitting(false); }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
+  /* ─────────────────────────────────────────────
+     LOADING / SUCCESS SCREENS
+  ────────────────────────────────────────────── */
   if (isLoading) {
     return (
       <div className={styles.successScreen}>
@@ -247,17 +379,23 @@ export default function EditBlogPage() {
         <div className={styles.successCard}>
           <div className={styles.successOm}>ॐ</div>
           <div className={styles.successCheck}>✓</div>
-          <h2 className={styles.successTitle}>{submitted === "draft" ? "Saved as Draft!" : "Blog Updated!"}</h2>
+          <h2 className={styles.successTitle}>
+            {submitted === "draft" ? "Saved as Draft!" : "Blog Updated!"}
+          </h2>
           <p className={styles.successText}>Redirecting to blog list…</p>
         </div>
       </div>
     );
   }
 
+  /* ─────────────────────────────────────────────
+     RENDER
+  ────────────────────────────────────────────── */
   return (
     <div className={styles.formPage}>
+
       <div className={styles.breadcrumb}>
-        <Link href="/admin/dashboard/blogs" className={styles.breadcrumbLink}>Blogs</Link>
+        <Link href="/admin/dashboard/blog" className={styles.breadcrumbLink}>Blogs</Link>
         <span className={styles.breadcrumbSep}>›</span>
         <span className={styles.breadcrumbCurrent}>Edit Post</span>
       </div>
@@ -287,8 +425,7 @@ export default function EditBlogPage() {
           <div className={styles.fieldGroup}>
             <label className={styles.label}><span className={styles.labelIcon}>✦</span>Title<span className={styles.required}>*</span></label>
             <div className={`${styles.inputWrap} ${errors.title ? styles.inputError : ""} ${form.title && !errors.title ? styles.inputSuccess : ""}`}>
-              <input type="text" className={styles.input}
-                value={form.title} maxLength={200}
+              <input type="text" className={styles.input} value={form.title} maxLength={200}
                 onChange={(e) => set("title", e.target.value)} />
               <span className={styles.charCount}>{form.title.length}/200</span>
             </div>
@@ -321,7 +458,8 @@ export default function EditBlogPage() {
             <div className={styles.fieldGroup}>
               <label className={styles.label}><span className={styles.labelIcon}>✦</span>Date<span className={styles.required}>*</span></label>
               <div className={`${styles.inputWrap} ${errors.date ? styles.inputError : ""} ${form.date ? styles.inputSuccess : ""}`}>
-                <input type="date" className={styles.input} value={form.date} onChange={(e) => set("date", e.target.value)} />
+                <input type="date" className={styles.input} value={form.date}
+                  onChange={(e) => set("date", e.target.value)} />
               </div>
               {errors.date && <p className={styles.errorMsg}>⚠ {errors.date}</p>}
             </div>
@@ -356,7 +494,7 @@ export default function EditBlogPage() {
                 </span>
               ))}
               <input type="text" className={styles.tagInput}
-                placeholder={form.tags.length === 0 ? "Yoga, Rishikesh…" : "Add tag…"}
+                placeholder={form.tags.length === 0 ? "Yoga, Rishikesh, Health…" : "Add tag…"}
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -386,7 +524,10 @@ export default function EditBlogPage() {
                 ? <>
                     <img src={form.coverImage} alt="Cover" className={styles.coverPreviewImg} />
                     <div className={styles.coverOverlay}>
-                      <button type="button" className={styles.removeImgBtn} onClick={() => set("coverImage", "")}>✕</button>
+                      <button type="button" className={styles.removeImgBtn} onClick={() => {
+                        coverFile.current = null;
+                        set("coverImage", "");
+                      }}>✕</button>
                     </div>
                   </>
                 : <div className={styles.coverPreviewEmpty}>
@@ -410,8 +551,10 @@ export default function EditBlogPage() {
               </div>
               <div className={styles.urlRow}>
                 <div className={styles.inputWrap}>
-                  <input type="text" className={styles.input} placeholder="Or paste cover URL"
-                    value={coverUrlInput} onChange={(e) => setCoverUrlInput(e.target.value)}
+                  <input type="text" className={styles.input}
+                    placeholder="Or paste cover image URL"
+                    value={coverUrlInput}
+                    onChange={(e) => setCoverUrlInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") handleCoverUrl(); }} />
                 </div>
                 <button type="button" className={styles.addUrlBtn} onClick={handleCoverUrl}>Use URL</button>
@@ -461,11 +604,12 @@ export default function EditBlogPage() {
                 </div>
 
                 <div className={styles.blockCardBody}>
+
                   {(block.type === "heading" || block.type === "subheading") && (
                     <div className={styles.inputWrap} style={{ marginBottom: 0 }}>
                       <input type="text" className={styles.input}
-                        value={block.text ?? ""} maxLength={200}
                         placeholder={block.type === "heading" ? "H2 heading text…" : "H3 subheading text…"}
+                        value={block.text ?? ""} maxLength={200}
                         onChange={(e) => updateBlock(idx, { text: e.target.value })} />
                       <span className={styles.charCount}>{(block.text ?? "").length}/200</span>
                     </div>
@@ -499,8 +643,8 @@ export default function EditBlogPage() {
                       </div>
 
                       <div className={styles.imageSubList}>
-                        {(block.images ?? []).map((img, imgIdx) => (
-                          <div key={imgIdx} className={styles.imageSubItem}>
+                        {(block.images ?? []).map((img) => (
+                          <div key={img.id} className={styles.imageSubItem}>
                             {img.src
                               ? <img src={img.src} alt={img.caption || "img"} className={styles.imageSubThumb}
                                   onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0.3"; }} />
@@ -514,27 +658,27 @@ export default function EditBlogPage() {
                                     <input type="text" className={styles.input}
                                       placeholder="Paste image URL…"
                                       value={img.tempUrlInput ?? img.src}
-                                      onChange={(e) => updateImageItem(idx, imgIdx, { tempUrlInput: e.target.value })}
+                                      onChange={(e) => updateImageItem(idx, img.id, { tempUrlInput: e.target.value })}
                                       onBlur={(e) => {
                                         const url = e.target.value.trim();
-                                        if (url) updateImageItem(idx, imgIdx, { src: url, tempUrlInput: undefined });
+                                        if (url) updateImageItem(idx, img.id, { src: url, tempUrlInput: undefined });
                                       }}
                                       onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                           const url = (e.target as HTMLInputElement).value.trim();
-                                          if (url) updateImageItem(idx, imgIdx, { src: url, tempUrlInput: undefined });
+                                          if (url) updateImageItem(idx, img.id, { src: url, tempUrlInput: undefined });
                                         }
                                       }} />
                                   </div>
                                   <button type="button"
-                                    style={{ padding: "0.45rem 0.65rem", border: "1.5px dashed rgba(224,123,0,0.35)", borderRadius: "6px", background: "transparent", cursor: "pointer", fontSize: "0.85rem", color: "#a07840" }}
-                                    onClick={() => imageFileRefs.current[`${idx}-${imgIdx}`]?.click()}>📁</button>
+                                    style={{ padding: "0.45rem 0.65rem", border: "1.5px dashed rgba(224,123,0,0.35)", borderRadius: "6px", background: "transparent", cursor: "pointer", fontSize: "0.85rem", color: "#a07840", transition: "all 0.18s", whiteSpace: "nowrap" }}
+                                    onClick={() => imageFileRefs.current[img.id]?.click()}>📁</button>
                                   <input
-                                    ref={(el) => { imageFileRefs.current[`${idx}-${imgIdx}`] = el; }}
+                                    ref={(el) => { imageFileRefs.current[img.id] = el; }}
                                     type="file" accept="image/*" style={{ display: "none" }}
                                     onChange={(e) => {
                                       const f = e.target.files?.[0];
-                                      if (f) updateImageItem(idx, imgIdx, { src: URL.createObjectURL(f) });
+                                      if (f) handleImageFile(idx, img.id, f);
                                       if (e.target) e.target.value = "";
                                     }} />
                                 </div>
@@ -544,17 +688,18 @@ export default function EditBlogPage() {
                                 <div className={styles.inputWrap}>
                                   <input type="text" className={styles.input}
                                     placeholder="Image caption…" value={img.caption} maxLength={200}
-                                    onChange={(e) => updateImageItem(idx, imgIdx, { caption: e.target.value })} />
+                                    onChange={(e) => updateImageItem(idx, img.id, { caption: e.target.value })} />
                                   <span className={styles.charCount} style={{ top: "50%", transform: "translateY(-50%)", bottom: "auto" }}>{img.caption.length}/200</span>
                                 </div>
                               </div>
                             </div>
                             <button type="button" className={styles.imageSubRemove}
-                              onClick={() => removeImageItem(idx, imgIdx)}
+                              onClick={() => removeImageItem(idx, img.id)}
                               disabled={(block.images ?? []).length <= 1}>✕</button>
                           </div>
                         ))}
                       </div>
+
                       <button type="button" className={styles.addImageBtn} onClick={() => addImageItem(idx)}>
                         + Add Image
                       </button>
@@ -582,8 +727,9 @@ export default function EditBlogPage() {
         <div className={styles.formDivider} />
 
         <div className={styles.formActions}>
-          <Link href="/admin/dashboard/blogs" className={styles.cancelBtn}>← Cancel</Link>
-          <button type="button" className={styles.draftBtn} onClick={() => handleSubmit(true)} disabled={isSubmitting}>
+          <Link href="/admin/dashboard/blog" className={styles.cancelBtn}>← Cancel</Link>
+          <button type="button" className={styles.draftBtn}
+            onClick={() => handleSubmit(true)} disabled={isSubmitting}>
             Save as Draft
           </button>
           <button type="button"
