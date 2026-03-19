@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import styles from "../../assets/style/Home/Hometestimonialssection.module.css";
+import api from "@/lib/api";
 
 interface Testimonial {
-  id: number;
+  id: string;
   name: string;
   country: string;
   flag: string;
@@ -15,12 +16,19 @@ interface Testimonial {
 }
 
 interface TextReview {
-  id: number;
+  id: string;
   name: string;
   role: string;
   avatar: string;
   quote: string;
   rating: number;
+}
+
+interface SectionMeta {
+  superTitle: string;
+  mainTitle: string;
+  subtitle: string;
+  trustItems: { icon: string; label: string }[];
 }
 
 function getYoutubeId(input: string): string {
@@ -38,111 +46,46 @@ function getYoutubeId(input: string): string {
   return s;
 }
 
-const textReviews: TextReview[] = [
-  {
-    id: 1,
-    name: "Vinita Rai",
-    role: "Certified Yoga Teacher",
-    avatar: "/images/reviews/vinita.jpg",
-    quote:
-      "This is truly the best yoga school for 200-hour Yoga Teacher Training. The environment is peaceful, supportive, and perfect for learning. The teachers are knowledgeable, the classes are well-structured, and the overall atmosphere helps you grow mentally, physically, and spiritually. Highly recommended for a transformative experience.",
-    rating: 5,
-  },
-  {
-    id: 2,
-    name: "Alexandra Guzman",
-    role: "Yoga Practitioner, Peruvian",
-    avatar: "/images/reviews/alexandra.jpg",
-    quote:
-      "I completed the 300-hour Online Teacher Training with Stuti and had an excellent experience. The live sessions helped me learn various yoga styles, and the recorded material was equally valuable. The guidance was clear, supportive, and enriching. I highly recommend this program to anyone wanting to deepen their yoga practice.",
-    rating: 5,
-  },
-  {
-    id: 3,
-    name: "Neeraj Neeru",
-    role: "Yoga Practitioner",
-    avatar: "/images/reviews/neeraj.jpg",
-    quote:
-      "I'm truly grateful for the AYM Teacher Training classes. The teachers' attention to detail and patient guidance helped me improve my practice. Special thanks to Vishnuji, Abhishekji, Latikaji, Sant Prakashji, Lataji, and Gaurabji for their support. The variety of classes suited my needs perfectly. Highly recommended!",
-    rating: 5,
-  },
-  {
-    id: 4,
-    name: "Priya Sharma",
-    role: "Yoga Practitioner",
-    avatar: "/images/reviews/priya.jpg",
-    quote:
-      "I completed the 300-hour Online Teacher Training with Stuti and had an excellent experience. The live sessions helped me learn various yoga styles, and the recorded material was equally valuable. The guidance was clear, supportive, and enriching. I highly recommend this program to anyone wanting to deepen their yoga practice.",
-    rating: 5,
-  },
-];
-
-const testimonials: Testimonial[] = [
-  {
-    id: 1,
-    name: "Marit",
-    country: "Netherlands",
-    flag: "🇳🇱",
-    youtubeId: "https://youtube.com/shorts/l12jCvLqUQg?si=AjiGeADxSb4xiqrk",
-    quote:
-      "Namaste, my name is Marit. I am from the Netherlands and I came to AYM two weeks ago and I'm loving it so much. The teachers, they are amazing. They are guiding me through the practices very well and everybody else, they have such good eye for the little details and the day planning is also amazing. The food, the fellow students, I get so much energy from it. I even decided to do another 300 hours, besides the 200 hours that I'm doing now, just to be able to stay here longer.",
-    course: "200hr YTT",
-    rating: 5,
-  },
-  {
-    id: 2,
-    name: "Sarah",
-    country: "United States",
-    flag: "🇺🇸",
-    youtubeId: "https://youtube.com/shorts/jUAovisMEfk?si=hOls1k7FfBqbsGHp",
-    quote:
-      "AYM has been a life-changing experience. The depth of knowledge our teachers carry is extraordinary — every session felt like peeling back another layer of yoga's true essence. The Himalayan setting along the Ganges is unlike anything I have experienced. I came seeking a certification and left with a complete shift in perspective.",
-    course: "300hr YTT",
-    rating: 5,
-  },
-  {
-    id: 3,
-    name: "Lena",
-    country: "Germany",
-    flag: "🇩🇪",
-    youtubeId: "https://youtube.com/shorts/2lVpgxazEWw?si=xoJSbgjqH0541nAe",
-    quote:
-      "I have attended several yoga trainings across Europe but nothing compared to the authenticity and rigor of AYM. Yogi Chetan's lineage comes through in every aspect of the curriculum. The pranayama sessions alone were worth the journey. My practice deepened exponentially.",
-    course: "200hr YTT",
-    rating: 5,
-  },
-];
+/* ── Fallback data (shown if API fails) ── */
+const DEFAULT_META: SectionMeta = {
+  superTitle: "Voices from Our Global Sangha",
+  mainTitle: "Success Stories of Our Students",
+  subtitle: "Hear the inspiring journeys of our students from around the world. Discover how their time in India transformed their practice and their lives.",
+  trustItems: [
+    { icon: "🌍", label: "Students from 50+ Countries" },
+    { icon: "⭐", label: "4.9 / 5 Average Rating" },
+    { icon: "🧘", label: "100,000+ Certified Teachers" },
+  ],
+};
 
 function StarRating({ count }: { count: number }) {
   return (
     <div className={styles.stars}>
       {Array.from({ length: count }).map((_, i) => (
-        <span key={i} className={styles.star}>
-          ★
-        </span>
+        <span key={i} className={styles.star}>★</span>
       ))}
     </div>
   );
 }
 
-function TextReviewSlider() {
+/* ── Text Review Slider ── */
+function TextReviewSlider({ reviews }: { reviews: TextReview[] }) {
   const [current, setCurrent] = useState(0);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
-  const total = textReviews.length;
+  const total = reviews.length;
+
   const prev = () => setCurrent((c) => (c - 1 + total) % total);
   const next = () => setCurrent((c) => (c + 1) % total);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const handleTouchEnd   = (e: React.TouchEvent) => {
     touchEndX.current = e.changedTouches[0].clientX;
     const diff = touchStartX.current - touchEndX.current;
-    if (Math.abs(diff) > 40) {
-      diff > 0 ? next() : prev();
-    }
+    if (Math.abs(diff) > 40) diff > 0 ? next() : prev();
   };
+
+  if (!reviews.length) return null;
 
   return (
     <div className={styles.reviewSliderSection}>
@@ -152,26 +95,15 @@ function TextReviewSlider() {
         <span className={styles.dividerLine} />
       </div>
       <div className={styles.reviewSliderHeader}>
-        <h2 className={styles.reviewSliderTitle}>
-          Student Reviews &amp; Success Stories
-        </h2>
-        <p className={styles.reviewSliderSub}>
-          Authentic stories of transformation from students who began just like
-          you.
-        </p>
+        <h2 className={styles.reviewSliderTitle}>Student Reviews &amp; Success Stories</h2>
+        <p className={styles.reviewSliderSub}>Authentic stories of transformation from students who began just like you.</p>
       </div>
-      <div
-        className={styles.reviewViewport}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+      <div className={styles.reviewViewport} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
         <div
           className={styles.reviewTrack}
-          style={{
-            transform: `translateX(calc(-${current} * var(--slide-width)))`,
-          }}
+          style={{ transform: `translateX(calc(-${current} * var(--slide-width)))` }}
         >
-          {textReviews.map((review) => (
+          {reviews.map((review) => (
             <div key={review.id} className={styles.reviewSlide}>
               <div className={styles.reviewCardInner}>
                 <div className={styles.reviewCardTop}>
@@ -187,9 +119,7 @@ function TextReviewSlider() {
                         if (fallback) fallback.style.display = "flex";
                       }}
                     />
-                    <div className={styles.reviewAvatarFallback}>
-                      {review.name.charAt(0)}
-                    </div>
+                    <div className={styles.reviewAvatarFallback}>{review.name.charAt(0)}</div>
                   </div>
                   <div className={styles.reviewCardMeta}>
                     <span className={styles.reviewCardName}>{review.name}</span>
@@ -198,14 +128,17 @@ function TextReviewSlider() {
                 </div>
                 <StarRating count={review.rating} />
                 <div className={styles.reviewCardQuoteMark}>&ldquo;</div>
-                <p className={styles.reviewCardQuote}>{review.quote}</p>
+                <p
+                  className={styles.reviewCardQuote}
+                  dangerouslySetInnerHTML={{ __html: review.quote }}
+                />
               </div>
             </div>
           ))}
         </div>
       </div>
       <div className={styles.reviewDots}>
-        {textReviews.map((_, i) => (
+        {reviews.map((_, i) => (
           <button
             key={i}
             className={`${styles.reviewDot} ${i === current ? styles.reviewDotActive : ""}`}
@@ -218,6 +151,7 @@ function TextReviewSlider() {
   );
 }
 
+/* ── Video Card ── */
 interface VideoCardProps {
   testimonial: Testimonial;
   isActive: boolean;
@@ -225,12 +159,7 @@ interface VideoCardProps {
   onClick: () => void;
 }
 
-function VideoCard({
-  testimonial,
-  isActive,
-  isPlaying,
-  onClick,
-}: VideoCardProps) {
+function VideoCard({ testimonial, isActive, isPlaying, onClick }: VideoCardProps) {
   const vid = getYoutubeId(testimonial.youtubeId);
   return (
     <button
@@ -244,218 +173,276 @@ function VideoCard({
           src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`}
           alt={testimonial.name}
           className={styles.videoThumbImg}
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.opacity = "0";
-          }}
+          onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
         />
         <div className={styles.videoThumbFallback}>
           <span className={styles.videoFallbackOm}>ॐ</span>
         </div>
         <div className={styles.videoPlayOverlay}>
-          <span className={styles.videoPlayBtn}>
-            {isActive && isPlaying ? "⏸" : "▶"}
-          </span>
+          <span className={styles.videoPlayBtn}>{isActive && isPlaying ? "⏸" : "▶"}</span>
         </div>
         <div className={styles.videoCardBadge}>{testimonial.course}</div>
       </div>
       <div className={styles.videoCardMeta}>
         <span className={styles.videoCardName}>{testimonial.name}</span>
-        <span className={styles.videoCardCountry}>
-          {testimonial.flag} {testimonial.country}
-        </span>
+        <span className={styles.videoCardCountry}>{testimonial.flag} {testimonial.country}</span>
       </div>
     </button>
   );
 }
 
-const HomeTestimonialsSection: React.FC = () => {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [animKey, setAnimKey] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+/* ── Skeleton loader ── */
+function SectionSkeleton() {
+  return (
+    <section className={styles.section}>
+      <div className={styles.container}>
+        <div style={{ textAlign: "center", padding: "4rem 0", fontFamily: "Cinzel, serif", color: "rgba(224,123,0,0.4)", fontSize: "2.5rem" }}>
+          ॐ
+        </div>
+      </div>
+    </section>
+  );
+}
 
-  const active = testimonials[activeIdx];
-  const activeVid = getYoutubeId(active.youtubeId);
+/* ── Main Component ── */
+const HomeTestimonialsSection: React.FC = () => {
+  const [videos,      setVideos]      = useState<Testimonial[]>([]);
+  const [textReviews, setTextReviews] = useState<TextReview[]>([]);
+  const [meta,        setMeta]        = useState<SectionMeta>(DEFAULT_META);
+  const [isLoading,   setIsLoading]   = useState(true);
+  const [activeIdx,   setActiveIdx]   = useState(0);
+  const [animKey,     setAnimKey]     = useState(0);
+  const [isPlaying,   setIsPlaying]   = useState(false);
+
+  /* ── Fetch both APIs ── */
+  useEffect(() => {
+    (async () => {
+      try {
+        const [videoRes, textRes] = await Promise.all([
+          api.get("/testimonials/videos/all-videos"),
+          api.get("/testimonials/text/all-reviews"),
+        ]);
+
+        /* Map videos */
+        const mappedVideos: Testimonial[] = (videoRes.data.data ?? [])
+          .filter((d: any) => d.status !== "Inactive")
+          .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+          .map((d: any) => ({
+            id:        d._id,
+            name:      d.name      ?? "",
+            country:   d.country   ?? "",
+            flag:      d.flag      ?? "🌍",
+            youtubeId: d.youtubeId ?? getYoutubeId(d.youtubeUrl ?? ""),
+            quote:     d.quote     ?? "",
+            course:    d.course    ?? "",
+            rating:    d.rating    ?? 5,
+          }));
+
+        /* Map text reviews */
+        const mappedText: TextReview[] = (textRes.data.data ?? [])
+          .filter((d: any) => d.status !== "Inactive")
+          .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
+          .map((d: any) => ({
+            id:     d._id,
+            name:   d.name      ?? "",
+            role:   d.role      ?? "",
+            avatar: d.avatarSrc ?? "",
+            quote:  d.quote     ?? "",
+            rating: d.rating    ?? 5,
+          }));
+
+        /* Extract sectionMeta from first available record */
+        const metaSource = videoRes.data.data?.[0]?.sectionMeta
+          ?? textRes.data.data?.[0]?.sectionMeta;
+
+        if (metaSource) {
+          setMeta({
+            superTitle: metaSource.superTitle ?? DEFAULT_META.superTitle,
+            mainTitle:  metaSource.mainTitle  ?? DEFAULT_META.mainTitle,
+            subtitle:   metaSource.subtitle   ?? DEFAULT_META.subtitle,
+            trustItems: metaSource.trustItems?.length
+              ? metaSource.trustItems
+              : DEFAULT_META.trustItems,
+          });
+        }
+
+        setVideos(mappedVideos);
+        setTextReviews(mappedText);
+      } catch (err) {
+        console.error("Failed to load testimonials:", err);
+        /* Keep defaults on error */
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
   const handleSelect = (idx: number) => {
-    if (idx === activeIdx) {
-      setIsPlaying((p) => !p);
-      return;
-    }
+    if (idx === activeIdx) { setIsPlaying((p) => !p); return; }
     setActiveIdx(idx);
     setAnimKey((k) => k + 1);
     setIsPlaying(false);
   };
 
+  if (isLoading) return <SectionSkeleton />;
+
+  /* If no videos fetched, still show text reviews + meta */
+  const active    = videos[activeIdx];
+  const activeVid = active ? getYoutubeId(active.youtubeId) : "";
+
   return (
     <section className={styles.section}>
       <div className={styles.topBorder} />
-      <div className={styles.bgWatermark} aria-hidden="true">
-        ॐ
-      </div>
-      <div
-        className={`${styles.corner} ${styles.cornerTL}`}
-        aria-hidden="true"
-      />
-      <div
-        className={`${styles.corner} ${styles.cornerTR}`}
-        aria-hidden="true"
-      />
-      <div
-        className={`${styles.corner} ${styles.cornerBL}`}
-        aria-hidden="true"
-      />
-      <div
-        className={`${styles.corner} ${styles.cornerBR}`}
-        aria-hidden="true"
-      />
+      <div className={styles.bgWatermark} aria-hidden="true">ॐ</div>
+      <div className={`${styles.corner} ${styles.cornerTL}`} aria-hidden="true" />
+      <div className={`${styles.corner} ${styles.cornerTR}`} aria-hidden="true" />
+      <div className={`${styles.corner} ${styles.cornerBL}`} aria-hidden="true" />
+      <div className={`${styles.corner} ${styles.cornerBR}`} aria-hidden="true" />
+
       <div className={styles.container}>
-        <TextReviewSlider />
-        <div className={styles.omDivider}>
-          <span className={styles.dividerLine} />
-          <span className={styles.omSymbol}>ॐ</span>
-          <span className={styles.dividerLine} />
-        </div>
-        <div className={styles.header}>
-          <p className={styles.superTitle}>Voices from Our Global Sangha</p>
-          <h2 className={styles.mainTitle}>Success Stories of Our Students</h2>
-          <p className={styles.subtitle}>
-            Hear the inspiring journeys of our students from around the world.
-            Discover how their time in India transformed their practice and
-            their lives.
-          </p>
-        </div>
-        <div className={styles.mainCard} key={animKey}>
-          <div className={styles.videoSection}>
-            <div className={styles.videoFrame}>
-              <div className={styles.videoInner}>
-                {isPlaying ? (
-                  <iframe
-                    key={`yt-${active.id}-${activeVid}`}
-                    className={styles.youtubeIframe}
-                    src={`https://www.youtube.com/embed/${activeVid}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
-                    title={`${active.name} testimonial`}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                ) : (
-                  <>
-                    <img
-                      src={`https://img.youtube.com/vi/${activeVid}/hqdefault.jpg`}
-                      alt={`${active.name} video thumbnail`}
-                      className={styles.videoThumbBg}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.opacity = "0";
-                      }}
-                    />
-                    <div className={styles.videoThumbFallbackLarge}>
-                      <span className={styles.videoOmLarge}>ॐ</span>
-                      <p className={styles.videoHint}>Video Testimonial</p>
-                    </div>
-                    <div
-                      className={styles.videoPlayLarge}
-                      role="button"
-                      tabIndex={0}
-                      aria-label="Play video"
-                      onClick={() => setIsPlaying(true)}
-                      onKeyDown={(e) => e.key === "Enter" && setIsPlaying(true)}
-                    >
-                      <span className={styles.videoPlayIconLarge}>▶</span>
-                    </div>
-                  </>
-                )}
-                <div className={styles.videoBadgeOverlay}>{active.course}</div>
-              </div>
-              <div className={`${styles.tape} ${styles.tapeTL}`} />
-              <div className={`${styles.tape} ${styles.tapeTR}`} />
-              <div className={`${styles.tape} ${styles.tapeBL}`} />
-              <div className={`${styles.tape} ${styles.tapeBR}`} />
-            </div>
-            <div className={styles.studentInfo}>
-              <div className={styles.studentAvatar}>
-                {active.name.charAt(0)}
-              </div>
-              <div>
-                <p className={styles.studentName}>{active.name}</p>
-                <p className={styles.studentCountry}>
-                  {active.flag} {active.country}
-                </p>
-                <StarRating count={active.rating} />
-              </div>
-            </div>
-          </div>
 
-          <div className={styles.quoteSection}>
-            <div className={styles.quoteMark} aria-hidden="true">
-              &ldquo;
+        {/* ── Text Reviews ── */}
+        {textReviews.length > 0 && <TextReviewSlider reviews={textReviews} />}
+
+        {/* ── Video Section ── */}
+        {videos.length > 0 && active && (
+          <>
+            <div className={styles.omDivider}>
+              <span className={styles.dividerLine} />
+              <span className={styles.omSymbol}>ॐ</span>
+              <span className={styles.dividerLine} />
             </div>
-            <blockquote className={styles.quoteText}>{active.quote}</blockquote>
-            <div className={styles.quoteFooter}>
-              <div className={styles.quoteAuthorBlock}>
-                <span className={styles.quoteAuthorName}>{active.name}</span>
-                <span className={styles.quoteAuthorSeparator}>·</span>
-                <span className={styles.quoteAuthorDetail}>
-                  {active.country}
-                </span>
-                <span className={styles.quoteAuthorSeparator}>·</span>
-                <span className={styles.quoteAuthorDetail}>
-                  {active.course}
-                </span>
+
+            {/* Section Header from backend */}
+            <div className={styles.header}>
+              <p className={styles.superTitle}>{meta.superTitle}</p>
+              <h2 className={styles.mainTitle}>{meta.mainTitle}</h2>
+              <p className={styles.subtitle}>{meta.subtitle}</p>
+            </div>
+
+            {/* Main video card */}
+            <div className={styles.mainCard} key={animKey}>
+              <div className={styles.videoSection}>
+                <div className={styles.videoFrame}>
+                  <div className={styles.videoInner}>
+                    {isPlaying ? (
+                      <iframe
+                        key={`yt-${active.id}-${activeVid}`}
+                        className={styles.youtubeIframe}
+                        src={`https://www.youtube.com/embed/${activeVid}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+                        title={`${active.name} testimonial`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <>
+                        <img
+                          src={`https://img.youtube.com/vi/${activeVid}/hqdefault.jpg`}
+                          alt={`${active.name} video thumbnail`}
+                          className={styles.videoThumbBg}
+                          onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
+                        />
+                        <div className={styles.videoThumbFallbackLarge}>
+                          <span className={styles.videoOmLarge}>ॐ</span>
+                          <p className={styles.videoHint}>Video Testimonial</p>
+                        </div>
+                        <div
+                          className={styles.videoPlayLarge}
+                          role="button"
+                          tabIndex={0}
+                          aria-label="Play video"
+                          onClick={() => setIsPlaying(true)}
+                          onKeyDown={(e) => e.key === "Enter" && setIsPlaying(true)}
+                        >
+                          <span className={styles.videoPlayIconLarge}>▶</span>
+                        </div>
+                      </>
+                    )}
+                    <div className={styles.videoBadgeOverlay}>{active.course}</div>
+                  </div>
+                  <div className={`${styles.tape} ${styles.tapeTL}`} />
+                  <div className={`${styles.tape} ${styles.tapeTR}`} />
+                  <div className={`${styles.tape} ${styles.tapeBL}`} />
+                  <div className={`${styles.tape} ${styles.tapeBR}`} />
+                </div>
+                <div className={styles.studentInfo}>
+                  <div className={styles.studentAvatar}>{active.name.charAt(0)}</div>
+                  <div>
+                    <p className={styles.studentName}>{active.name}</p>
+                    <p className={styles.studentCountry}>{active.flag} {active.country}</p>
+                    <StarRating count={active.rating} />
+                  </div>
+                </div>
               </div>
-              <div className={styles.ornamentRow}>
-                <span className={styles.ornamentLine} />
-                <span className={styles.ornamentDiamond}>◆</span>
-                <span className={styles.ornamentLine} />
+
+              <div className={styles.quoteSection}>
+                <div className={styles.quoteMark} aria-hidden="true">&ldquo;</div>
+                <blockquote
+                  className={styles.quoteText}
+                  dangerouslySetInnerHTML={{ __html: active.quote }}
+                />
+                <div className={styles.quoteFooter}>
+                  <div className={styles.quoteAuthorBlock}>
+                    <span className={styles.quoteAuthorName}>{active.name}</span>
+                    <span className={styles.quoteAuthorSeparator}>·</span>
+                    <span className={styles.quoteAuthorDetail}>{active.country}</span>
+                    <span className={styles.quoteAuthorSeparator}>·</span>
+                    <span className={styles.quoteAuthorDetail}>{active.course}</span>
+                  </div>
+                  <div className={styles.ornamentRow}>
+                    <span className={styles.ornamentLine} />
+                    <span className={styles.ornamentDiamond}>◆</span>
+                    <span className={styles.ornamentLine} />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className={styles.thumbRow}>
-          {testimonials.map((t, idx) => (
-            <VideoCard
-              key={t.id}
-              testimonial={t}
-              isActive={idx === activeIdx}
-              isPlaying={isPlaying}
-              onClick={() => handleSelect(idx)}
-            />
-          ))}
-        </div>
+            {/* Thumbnail row */}
+            <div className={styles.thumbRow}>
+              {videos.map((t, idx) => (
+                <VideoCard
+                  key={t.id}
+                  testimonial={t}
+                  isActive={idx === activeIdx}
+                  isPlaying={isPlaying}
+                  onClick={() => handleSelect(idx)}
+                />
+              ))}
+            </div>
 
-        <div className={styles.dots} role="tablist">
-          {testimonials.map((_, idx) => (
-            <button
-              key={idx}
-              type="button"
-              role="tab"
-              aria-selected={idx === activeIdx}
-              className={`${styles.dot} ${idx === activeIdx ? styles.dotActive : ""}`}
-              onClick={() => handleSelect(idx)}
-            />
-          ))}
-        </div>
+            {/* Dots */}
+            <div className={styles.dots} role="tablist">
+              {videos.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  role="tab"
+                  aria-selected={idx === activeIdx}
+                  className={`${styles.dot} ${idx === activeIdx ? styles.dotActive : ""}`}
+                  onClick={() => handleSelect(idx)}
+                />
+              ))}
+            </div>
+          </>
+        )}
 
+        {/* ── Trust Strip from backend ── */}
         <div className={styles.trustStrip}>
-          <div className={styles.trustItem}>
-            <span className={styles.trustIcon}>🌍</span>
-            <span className={styles.trustLabel}>
-              Students from 50+ Countries
-            </span>
-          </div>
-          <span className={styles.trustDivider}>◆</span>
-          <div className={styles.trustItem}>
-            <span className={styles.trustIcon}>⭐</span>
-            <span className={styles.trustLabel}>4.9 / 5 Average Rating</span>
-          </div>
-          <span className={styles.trustDivider}>◆</span>
-          <div className={styles.trustItem}>
-            <span className={styles.trustIcon}>🧘</span>
-            <span className={styles.trustLabel}>
-              100,000+ Certified Teachers
-            </span>
-          </div>
+          {meta.trustItems.map((item, i) => (
+            <React.Fragment key={i}>
+              <div className={styles.trustItem}>
+                <span className={styles.trustIcon}>{item.icon}</span>
+                <span className={styles.trustLabel}>{item.label}</span>
+              </div>
+              {i < meta.trustItems.length - 1 && (
+                <span className={styles.trustDivider}>◆</span>
+              )}
+            </React.Fragment>
+          ))}
         </div>
+
       </div>
       <div className={styles.bottomBorder} />
     </section>

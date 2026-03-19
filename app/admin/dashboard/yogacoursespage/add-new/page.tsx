@@ -4,96 +4,100 @@ import { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import {
+  useForm,
+  useFieldArray,
+  Controller,
+  type SubmitHandler,
+} from "react-hook-form";
 import styles from "@/assets/style/Admin/dashboard/yogacoursespage/Yogacoursessection.module.css";
 import api from "@/lib/api";
 
 /* ══════════════════════════════════════════════════════
-   Jodit Editor — SSR disabled
+   Jodit — SSR disabled
 ══════════════════════════════════════════════════════ */
 const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 /* ══════════════════════════════════════════════════════
-   TYPES
+   CONSTANTS
 ══════════════════════════════════════════════════════ */
-interface CourseSectionHeader {
-  eyebrow: string;
-  sectionTitle: string;
-  sectionDesc: string;
-}
+const CERT_OPTIONS = ["100 Hour", "200 RYT", "300 RYT", "500 RYT"];
+const STYLE_OPTIONS = [
+  "Ashtanga / Hatha",
+  "Hatha / Ashtanga Yoga",
+  "Multi-Style Yoga",
+  "Hatha / Multi-Style",
+  "Kundalini Yoga",
+  "Yin Yoga",
+  "Vinyasa Flow",
+];
+
+type TabId = "courses" | "who" | "teachersHeader" | "founder" | "teachers";
+const TAB_LABELS: Record<TabId, string> = {
+  courses:        "① Courses",
+  who:            "② Who Section",
+  teachersHeader: "③ Teachers Intro",
+  founder:        "④ Founder",
+  teachers:       "⑤ Teachers Grid",
+};
+
+/* ══════════════════════════════════════════════════════
+   FORM TYPES
+══════════════════════════════════════════════════════ */
 interface CourseItem {
-  hours: string; days: string; name: string; style: string;
+  name: string; hours: string; days: string; style: string;
   duration: string; certificate: string; feeShared: string; feePrivate: string;
   color: string; imgUrl: string; imgPreview: string; imgFile: File | null;
   detailsLink: string; bookLink: string;
-}
-interface WhoSection {
-  eyebrow: string; sectionTitle: string;
-  para1: string; para2: string; para3: string; para4: string; para5: string;
-  chips: string[]; quoteText: string; quoteAttrib: string;
-}
-interface TeachersSectionHeader {
-  eyebrow: string; sectionTitle: string;
-  introPara1: string; introPara1Highlight: string;
-  introPara2: string; introPara2Highlight: string;
-  ctaBtnText: string; ctaBtnLink: string;
-}
-interface FounderSection {
-  eyebrow: string; name: string;
-  imgUrl: string; imgPreview: string; imgFile: File | null; imgAlt: string;
-  para1: string; para2: string; para3: string; para3Highlight: string;
-  detailsBtnText: string; detailsBtnLink: string;
-  bookBtnText: string; bookBtnLink: string;
 }
 interface TeacherItem {
   name: string; surname: string;
   imgUrl: string; imgPreview: string; imgFile: File | null;
 }
 
-type Errors<T> = Partial<Record<keyof T, string>>;
-type TabId = "courses" | "who" | "teachersHeader" | "founder" | "teachers";
-
-const CERT_OPTIONS  = ["100 Hour", "200 RYT", "300 RYT", "500 RYT"];
-const STYLE_OPTIONS = ["Ashtanga / Hatha", "Hatha / Ashtanga Yoga", "Multi-Style Yoga", "Hatha / Multi-Style", "Kundalini Yoga", "Yin Yoga", "Vinyasa Flow"];
-
-const EMPTY_COURSE: CourseItem   = { hours: "", days: "", name: "", style: "", duration: "", certificate: "", feeShared: "", feePrivate: "", color: "#8B5E3C", imgUrl: "", imgPreview: "", imgFile: null, detailsLink: "#", bookLink: "#" };
-const EMPTY_TEACHER: TeacherItem = { name: "", surname: "", imgUrl: "", imgPreview: "", imgFile: null };
+/* Each tab has its own form type */
+interface CoursesForm {
+  eyebrow: string; sectionTitle: string; sectionDesc: string;
+  courses: CourseItem[];
+}
+interface WhoForm {
+  eyebrow: string; sectionTitle: string;
+  para1: string; para2: string; para3: string; para4: string; para5: string;
+  chips: { label: string }[];
+  quoteText: string; quoteAttrib: string;
+}
+interface TeachersHeaderForm {
+  eyebrow: string; sectionTitle: string;
+  introPara1: string; introPara1Highlight: string;
+  introPara2: string; introPara2Highlight: string;
+  ctaBtnText: string; ctaBtnLink: string;
+}
+interface FounderForm {
+  eyebrow: string; name: string;
+  imgUrl: string; imgPreview: string; imgFile: File | null; imgAlt: string;
+  para1: string; para2: string; para3: string; para3Highlight: string;
+  detailsBtnText: string; detailsBtnLink: string;
+  bookBtnText: string; bookBtnLink: string;
+}
+interface TeachersForm {
+  teachers: TeacherItem[];
+}
 
 /* ══════════════════════════════════════════════════════
    HELPERS
 ══════════════════════════════════════════════════════ */
-
-/** Strip HTML tags and decode entities — converts Jodit HTML output to plain text for backend */
 function stripHtml(html: string): string {
   if (!html) return "";
-  // Remove all HTML tags
   let text = html.replace(/<[^>]*>/g, " ");
-  // Decode common HTML entities
   text = text
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, " ");
-  // Collapse multiple spaces/newlines
-  text = text.replace(/\s+/g, " ").trim();
-  return text;
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ");
+  return text.replace(/\s+/g, " ").trim();
 }
-
-/** Check if a Jodit value is empty (empty string, whitespace-only, or empty <p>) */
 function isRteEmpty(val: string): boolean {
   if (!val) return true;
-  const stripped = stripHtml(val);
-  return stripped === "" || val === "<p><br></p>" || val === "<p></p>";
+  return stripHtml(val) === "" || val === "<p><br></p>" || val === "<p></p>";
 }
-
-
-/* ══════════════════════════════════════════════════════
-   IMAGE URL HELPER
-   /uploads/file.jpg  →  http://172.20.10.2:5000/uploads/file.jpg
-   https://...        →  unchanged
-   "" / null          →  ""
-══════════════════════════════════════════════════════ */
 function getImageUrl(path: string | undefined | null): string {
   if (!path || path.trim() === "") return "";
   if (/^https?:\/\//.test(path)) return path;
@@ -102,229 +106,140 @@ function getImageUrl(path: string | undefined | null): string {
 }
 
 /* ══════════════════════════════════════════════════════
-   JODIT CONFIG HOOK
+   JODIT CONFIG
 ══════════════════════════════════════════════════════ */
 function useJoditConfig() {
   return useMemo(() => ({
-    readonly: false,
-    toolbar: true,
-    spellcheck: false,
-    language: "en",
-    toolbarButtonSize: "small" as const,
-    toolbarAdaptive: false,
-    showCharsCounter: false,
-    showWordsCounter: false,
-    showXPathInStatusbar: false,
-    askBeforePasteHTML: false,
-    askBeforePasteFromWord: false,
-    buttons: [
-      "bold", "italic", "underline", "strikethrough", "|",
-      "brush", "font", "fontsize", "|",
-      "align", "|",
-      "ul", "ol", "|",
-      "link", "|",
-      "undo", "redo", "|",
-      "source"
-    ],
+    readonly: false, toolbar: true, spellcheck: false, language: "en",
+    toolbarButtonSize: "small" as const, toolbarAdaptive: false,
+    showCharsCounter: false, showWordsCounter: false, showXPathInStatusbar: false,
+    askBeforePasteHTML: false, askBeforePasteFromWord: false,
+    buttons: ["bold","italic","underline","strikethrough","|","brush","font","fontsize","|","align","|","ul","ol","|","link","|","undo","redo","|","source"],
     height: 180,
-    style: {
-      fontFamily: "'Cormorant Garamond', serif",
-      fontSize: "1rem",
-      color: "#3d1d00",
-      background: "#fff",
-    },
-    editorCssClass: "jodit-yoga-editor",
+    style: { fontFamily: "'Cormorant Garamond', serif", fontSize: "1rem", color: "#3d1d00", background: "#fff" },
     placeholder: "Type and format your text here…",
   }), []);
 }
 
 /* ══════════════════════════════════════════════════════
-   DUAL IMAGE FIELD  (URL + Upload, mutually aware)
+   DUAL IMAGE FIELD
 ══════════════════════════════════════════════════════ */
 interface DualImageProps {
-  label: string;
-  hint: string;
-  urlVal: string;
-  previewVal: string;
-  err?: string;
+  label: string; hint: string; urlVal: string; previewVal: string; err?: string;
   onUrlChange: (url: string) => void;
-  onFileChange: (file: File, preview: string) => void;
+  onFileChange: (file: File | null, preview: string) => void;
   recommendedSize?: string;
+  required?: boolean;
 }
-
-function DualImageField({ label, hint, urlVal, previewVal, err, onUrlChange, onFileChange, recommendedSize = "600×400px" }: DualImageProps) {
+function DualImageField({ label, hint, urlVal, previewVal, err, onUrlChange, onFileChange, recommendedSize = "600×400px", required = true }: DualImageProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // Accept base64 preview, https:// URL, or relative /uploads/ path
-  const activePreview = previewVal || (urlVal && urlVal.trim() !== "" ? getImageUrl(urlVal) : "");
-
+  const activePreview = previewVal || (urlVal ? getImageUrl(urlVal) : "");
   const handleFile = (file: File | null) => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
-      onFileChange(file, e.target?.result as string);
-    };
+    reader.onload = (e) => onFileChange(file, e.target?.result as string);
     reader.readAsDataURL(file);
   };
-
   return (
     <div className={styles.fieldGroup}>
       <label className={styles.label}>
-        <span className={styles.labelIcon}>✦</span>{label}<span className={styles.required}>*</span>
+        <span className={styles.labelIcon}>✦</span>{label}{required && <span className={styles.required}>*</span>}
       </label>
       <p className={styles.fieldHint}>{hint}</p>
-
       <div className={styles.dualImgWrapper}>
-        {/* Left — URL input */}
         <div className={styles.dualImgLeft}>
           <p className={styles.dualImgSubLabel}>Option A — Paste URL</p>
           <div className={`${styles.inputWrap} ${styles.inputWithPrefix} ${err && !urlVal ? styles.inputError : ""} ${urlVal && !err ? styles.inputSuccess : ""}`}>
             <span className={styles.inputPrefix}>🔗</span>
-            <input
-              type="text"
-              className={`${styles.input} ${styles.inputPrefixed}`}
-              placeholder="https://images.unsplash.com/…"
-              value={urlVal}
-              onChange={(e) => onUrlChange(e.target.value)}
-            />
+            <input type="text" className={`${styles.input} ${styles.inputPrefixed}`}
+              placeholder="https://…" value={urlVal} onChange={(e) => onUrlChange(e.target.value)} />
           </div>
-
           <p className={styles.dualImgOrDivider}><span>— or —</span></p>
-
           <p className={styles.dualImgSubLabel}>Option B — Upload File</p>
-          <label
-            className={`${styles.uploadArea} ${styles.uploadAreaSm}`}
-            style={{ cursor: "pointer" }}
+          <label className={`${styles.uploadArea} ${styles.uploadAreaSm}`} style={{ cursor: "pointer" }}
             onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files?.[0] || null); }}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className={styles.fileInput}
-              onChange={(e) => handleFile(e.target.files?.[0] || null)}
-            />
+            onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files?.[0] || null); }}>
+            <input ref={fileInputRef} type="file" accept="image/*" className={styles.fileInput}
+              onChange={(e) => handleFile(e.target.files?.[0] || null)} />
             <span className={styles.uploadIcon}>🖼</span>
             <span className={styles.uploadText}>Click or drag &amp; drop</span>
             <span className={styles.uploadSubtext}>JPG, PNG, WEBP — {recommendedSize}</span>
           </label>
         </div>
-
-        {/* Right — Live preview */}
         <div className={styles.dualImgRight}>
           <p className={styles.dualImgSubLabel}>Preview</p>
           {activePreview ? (
             <div className={styles.dualImgPreviewBox}>
-              <img
-                src={activePreview}
-                alt="preview"
-                className={styles.dualImgPreviewImg}
-                onError={(e) => (e.currentTarget.style.display = "none")}
-              />
-              <button
-                type="button"
-                className={styles.dualImgClear}
-                onClick={() => { onUrlChange(""); onFileChange(null as any, ""); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                title="Clear image"
-              >✕</button>
+              <img src={activePreview} alt="preview" className={styles.dualImgPreviewImg}
+                onError={(e) => (e.currentTarget.style.display = "none")} />
+              <button type="button" className={styles.dualImgClear} title="Clear image"
+                onClick={() => { onUrlChange(""); onFileChange(null, ""); if (fileInputRef.current) fileInputRef.current.value = ""; }}>✕</button>
             </div>
           ) : (
-            <div className={styles.dualImgPlaceholder}>
-              <span>🖼</span>
-              <span>No image yet</span>
-            </div>
+            <div className={styles.dualImgPlaceholder}><span>🖼</span><span>No image yet</span></div>
           )}
         </div>
       </div>
-
       {err && <p className={styles.errorMsg}>⚠ {err}</p>}
     </div>
   );
 }
 
 /* ══════════════════════════════════════════════════════
-   PLAIN FIELD COMPONENTS
+   PLAIN FIELD PRIMITIVES
 ══════════════════════════════════════════════════════ */
-function TXT({ label, hint, val, err, onCh, ph, max = 150, req = true }: {
-  label: string; hint: string; val: string; err?: string;
-  onCh: (v: string) => void; ph: string; max?: number; req?: boolean;
-}) {
+function TXT({ label, hint, val, err, onCh, ph, max = 150, req = true }:
+  { label: string; hint: string; val: string; err?: string; onCh: (v: string) => void; ph: string; max?: number; req?: boolean }) {
   return (
     <div className={styles.fieldGroup}>
-      <label className={styles.label}>
-        <span className={styles.labelIcon}>✦</span>{label}{req && <span className={styles.required}>*</span>}
-      </label>
+      <label className={styles.label}><span className={styles.labelIcon}>✦</span>{label}{req && <span className={styles.required}>*</span>}</label>
       <p className={styles.fieldHint}>{hint}</p>
       <div className={`${styles.inputWrap} ${err ? styles.inputError : ""} ${val && !err ? styles.inputSuccess : ""}`}>
-        <input type="text" className={styles.input} placeholder={ph} value={val} maxLength={max}
-          onChange={(e) => onCh(e.target.value)} />
+        <input type="text" className={styles.input} placeholder={ph} value={val} maxLength={max} onChange={(e) => onCh(e.target.value)} />
         <span className={styles.charCount}>{val.length}/{max}</span>
       </div>
       {err && <p className={styles.errorMsg}>⚠ {err}</p>}
     </div>
   );
 }
-
-function TA({ label, hint, val, err, onCh, ph, rows = 3, max = 600, req = true }: {
-  label: string; hint: string; val: string; err?: string;
-  onCh: (v: string) => void; ph: string; rows?: number; max?: number; req?: boolean;
-}) {
+function TA({ label, hint, val, err, onCh, ph, rows = 3, max = 600, req = true }:
+  { label: string; hint: string; val: string; err?: string; onCh: (v: string) => void; ph: string; rows?: number; max?: number; req?: boolean }) {
   return (
     <div className={styles.fieldGroup}>
-      <label className={styles.label}>
-        <span className={styles.labelIcon}>✦</span>{label}{req && <span className={styles.required}>*</span>}
-      </label>
+      <label className={styles.label}><span className={styles.labelIcon}>✦</span>{label}{req && <span className={styles.required}>*</span>}</label>
       <p className={styles.fieldHint}>{hint}</p>
       <div className={`${styles.inputWrap} ${err ? styles.inputError : ""} ${val && !err ? styles.inputSuccess : ""}`}>
-        <textarea className={`${styles.input} ${styles.textarea}`} placeholder={ph} value={val}
-          maxLength={max} rows={rows} onChange={(e) => onCh(e.target.value)} />
+        <textarea className={`${styles.input} ${styles.textarea}`} placeholder={ph} value={val} maxLength={max} rows={rows} onChange={(e) => onCh(e.target.value)} />
         <span className={`${styles.charCount} ${styles.charCountBottom}`}>{val.length}/{max}</span>
       </div>
       {err && <p className={styles.errorMsg}>⚠ {err}</p>}
     </div>
   );
 }
-
-function LINK({ label, hint, val, err, onCh, ph, req = false }: {
-  label: string; hint: string; val: string; err?: string;
-  onCh: (v: string) => void; ph: string; req?: boolean;
-}) {
+function LNKF({ label, hint, val, err, onCh, ph, req = false }:
+  { label: string; hint: string; val: string; err?: string; onCh: (v: string) => void; ph: string; req?: boolean }) {
   return (
     <div className={styles.fieldGroup}>
-      <label className={styles.label}>
-        <span className={styles.labelIcon}>✦</span>{label}{req && <span className={styles.required}>*</span>}
-      </label>
+      <label className={styles.label}><span className={styles.labelIcon}>✦</span>{label}{req && <span className={styles.required}>*</span>}</label>
       <p className={styles.fieldHint}>{hint}</p>
       <div className={`${styles.inputWrap} ${styles.inputWithPrefix} ${err ? styles.inputError : ""} ${val && !err ? styles.inputSuccess : ""}`}>
         <span className={styles.inputPrefix}>🔗</span>
-        <input type="text" className={`${styles.input} ${styles.inputPrefixed}`} placeholder={ph} value={val}
-          onChange={(e) => onCh(e.target.value)} />
+        <input type="text" className={`${styles.input} ${styles.inputPrefixed}`} placeholder={ph} value={val} onChange={(e) => onCh(e.target.value)} />
       </div>
       {err && <p className={styles.errorMsg}>⚠ {err}</p>}
     </div>
   );
 }
-
-/* ── Jodit Rich Text Field ── */
-function RTE({ label, hint, val, err, onCh, req = true }: {
-  label: string; hint: string; val: string; err?: string;
-  onCh: (v: string) => void; req?: boolean;
-}) {
+function RTE({ label, hint, val, err, onCh, req = true }:
+  { label: string; hint: string; val: string; err?: string; onCh: (v: string) => void; req?: boolean }) {
   const config = useJoditConfig();
-  const editorRef = useRef(null);
+  const edRef  = useRef(null);
   return (
     <div className={styles.fieldGroup}>
-      <label className={styles.label}>
-        <span className={styles.labelIcon}>✦</span>{label}{req && <span className={styles.required}>*</span>}
-      </label>
+      <label className={styles.label}><span className={styles.labelIcon}>✦</span>{label}{req && <span className={styles.required}>*</span>}</label>
       <p className={styles.fieldHint}>{hint}</p>
-      <div className={`${styles.joditWrap} ${err ? styles.joditError : ""} ${val && val !== "<p><br></p>" && !err ? styles.joditSuccess : ""}`}>
-        <JoditEditor
-          ref={editorRef}
-          value={val}
-          config={config}
-          onBlur={(newContent) => onCh(newContent)}
-        />
+      <div className={`${styles.joditWrap} ${err ? styles.joditError : ""} ${val && !isRteEmpty(val) && !err ? styles.joditSuccess : ""}`}>
+        <JoditEditor ref={edRef} value={val} config={config} onBlur={(v) => onCh(v)} />
       </div>
       {err && <p className={styles.errorMsg}>⚠ {err}</p>}
     </div>
@@ -332,205 +247,134 @@ function RTE({ label, hint, val, err, onCh, req = true }: {
 }
 
 /* ══════════════════════════════════════════════════════
+   DEFAULT VALUES
+══════════════════════════════════════════════════════ */
+const DEFAULT_COURSE: CourseItem = {
+  name:"", hours:"", days:"", style:"", duration:"", certificate:"",
+  feeShared:"", feePrivate:"", color:"#8B5E3C",
+  imgUrl:"", imgPreview:"", imgFile:null, detailsLink:"#", bookLink:"#",
+};
+const DEFAULT_TEACHER: TeacherItem = {
+  name:"", surname:"", imgUrl:"", imgPreview:"", imgFile:null,
+};
+
+/* ══════════════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════════════ */
-
 export default function AddYogaCoursesPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("courses");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  /* ── State ── */
-  const [sectionHeader, setSectionHeader] = useState<CourseSectionHeader>({ eyebrow: "", sectionTitle: "", sectionDesc: "" });
-  const [headerErrors, setHeaderErrors]   = useState<Errors<CourseSectionHeader>>({});
-  const [courses, setCourses]             = useState<CourseItem[]>([{ ...EMPTY_COURSE }]);
-  const [courseErrors, setCourseErrors]   = useState<Errors<CourseItem>[]>([]);
+  /* ══════════ FORM: COURSES ══════════ */
+  const coursesForm = useForm<CoursesForm>({
+    defaultValues: {
+      eyebrow:"", sectionTitle:"", sectionDesc:"",
+      courses:[{ ...DEFAULT_COURSE }],
+    },
+  });
+  const { fields: courseFields, append: appendCourse, remove: removeCourse } =
+    useFieldArray({ control: coursesForm.control, name: "courses" });
 
-  const [who, setWho]             = useState<WhoSection>({ eyebrow: "", sectionTitle: "", para1: "", para2: "", para3: "", para4: "", para5: "", chips: ["", "", "", "", "", ""], quoteText: "", quoteAttrib: "" });
-  const [whoErrors, setWhoErrors] = useState<Errors<WhoSection>>({});
+  /* ══════════ FORM: WHO ══════════ */
+  const whoForm = useForm<WhoForm>({
+    defaultValues: {
+      eyebrow:"", sectionTitle:"",
+      para1:"", para2:"", para3:"", para4:"", para5:"",
+      chips:[{ label:"" },{ label:"" },{ label:"" },{ label:"" },{ label:"" },{ label:"" }],
+      quoteText:"", quoteAttrib:"",
+    },
+  });
+  const { fields: chipFields, append: appendChip, remove: removeChip } =
+    useFieldArray({ control: whoForm.control, name: "chips" });
 
-  const [teachersHeader, setTeachersHeader] = useState<TeachersSectionHeader>({ eyebrow: "", sectionTitle: "", introPara1: "", introPara1Highlight: "", introPara2: "", introPara2Highlight: "", ctaBtnText: "", ctaBtnLink: "" });
-  const [teachersHeaderErrors, setTHErrors] = useState<Errors<TeachersSectionHeader>>({});
+  /* ══════════ FORM: TEACHERS HEADER ══════════ */
+  const thForm = useForm<TeachersHeaderForm>({
+    defaultValues: {
+      eyebrow:"", sectionTitle:"",
+      introPara1:"", introPara1Highlight:"",
+      introPara2:"", introPara2Highlight:"",
+      ctaBtnText:"", ctaBtnLink:"",
+    },
+  });
 
-  const [founder, setFounder]             = useState<FounderSection>({ eyebrow: "", name: "", imgUrl: "", imgPreview: "", imgFile: null, imgAlt: "", para1: "", para2: "", para3: "", para3Highlight: "", detailsBtnText: "", detailsBtnLink: "#", bookBtnText: "Book Now", bookBtnLink: "#" });
-  const [founderErrors, setFounderErrors] = useState<Errors<FounderSection>>({});
+  /* ══════════ FORM: FOUNDER ══════════ */
+  const founderForm = useForm<FounderForm>({
+    defaultValues: {
+      eyebrow:"", name:"",
+      imgUrl:"", imgPreview:"", imgFile:null, imgAlt:"",
+      para1:"", para2:"", para3:"", para3Highlight:"",
+      detailsBtnText:"", detailsBtnLink:"#",
+      bookBtnText:"Book Now", bookBtnLink:"#",
+    },
+  });
+  const founderImgUrl     = founderForm.watch("imgUrl");
+  const founderImgPreview = founderForm.watch("imgPreview");
 
-  const [teachers, setTeachers]           = useState<TeacherItem[]>([{ ...EMPTY_TEACHER }]);
-  const [teacherErrors, setTeacherErrors] = useState<Errors<TeacherItem>[]>([]);
+  /* ══════════ FORM: TEACHERS ══════════ */
+  const teachersForm = useForm<TeachersForm>({
+    defaultValues: { teachers:[{ ...DEFAULT_TEACHER }] },
+  });
+  const { fields: teacherFields, append: appendTeacher, remove: removeTeacher } =
+    useFieldArray({ control: teachersForm.control, name: "teachers" });
 
-  /* ══════════ HELPERS ══════════ */
-  const setHdr = (k: keyof CourseSectionHeader, v: string) => {
-    setSectionHeader((p) => ({ ...p, [k]: v }));
-    setHeaderErrors((p) => ({ ...p, [k]: undefined }));
+  /* ══════════ TAB ERROR FLAGS (for dot indicators) ══════════ */
+  const tabErr: Record<TabId, boolean> = {
+    courses:        Object.keys(coursesForm.formState.errors).length > 0,
+    who:            Object.keys(whoForm.formState.errors).length > 0,
+    teachersHeader: Object.keys(thForm.formState.errors).length > 0,
+    founder:        Object.keys(founderForm.formState.errors).length > 0,
+    teachers:       Object.keys(teachersForm.formState.errors).length > 0,
   };
 
-  /* Course helpers */
-  const updateCourse = (i: number, k: keyof CourseItem, v: any) =>
-    setCourses((p) => { const a = [...p]; a[i] = { ...a[i], [k]: v }; return a; });
-  const updateCourseImg = (i: number, file: File | null, preview: string) =>
-    setCourses((p) => { const a = [...p]; a[i] = { ...a[i], imgFile: file, imgPreview: preview, imgUrl: file ? "" : a[i].imgUrl }; return a; });
-  const updateCourseImgUrl = (i: number, url: string) =>
-    setCourses((p) => { const a = [...p]; a[i] = { ...a[i], imgUrl: url, imgFile: null, imgPreview: "" }; return a; });
-  const addCourse    = () => { if (courses.length < 6) setCourses((p) => [...p, { ...EMPTY_COURSE }]); };
-  const removeCourse = (i: number) => setCourses((p) => p.filter((_, idx) => idx !== i));
+  /* ══════════════════════════════════════════════════════
+     FINAL SUBMIT — validates ALL 5 forms then POSTs /create
+  ══════════════════════════════════════════════════════ */
+  const handleFinalSubmit = async () => {
+    /* Trigger validation on all forms */
+    const [v1, v2, v3, v4, v5] = await Promise.all([
+      coursesForm.trigger(),
+      whoForm.trigger(),
+      thForm.trigger(),
+      founderForm.trigger(),
+      teachersForm.trigger(),
+    ]);
 
-  /* Who helpers */
-  const setW = (k: keyof WhoSection, v: string) => {
-    setWho((p) => ({ ...p, [k]: v }));
-    setWhoErrors((p) => ({ ...p, [k]: undefined }));
-  };
-  const updateChip = (i: number, v: string) =>
-    setWho((p) => { const c = [...p.chips]; c[i] = v; return { ...p, chips: c }; });
-  const addChip    = () => { if (who.chips.length < 8) setWho((p) => ({ ...p, chips: [...p.chips, ""] })); };
-  const removeChip = (i: number) => setWho((p) => ({ ...p, chips: p.chips.filter((_, idx) => idx !== i) }));
-
-  const setTH = (k: keyof TeachersSectionHeader, v: string) => {
-    setTeachersHeader((p) => ({ ...p, [k]: v }));
-    setTHErrors((p) => ({ ...p, [k]: undefined }));
-  };
-
-  /* Founder helpers */
-  const setF = (k: keyof FounderSection, v: any) => {
-    setFounder((p) => ({ ...p, [k]: v }));
-    setFounderErrors((p) => ({ ...p, [k]: undefined }));
-  };
-  const handleFounderFile = (file: File | null, preview: string) => {
-    setFounder((p) => ({ ...p, imgFile: file, imgPreview: preview, imgUrl: file ? "" : p.imgUrl }));
-  };
-  const handleFounderUrl = (url: string) => {
-    setFounder((p) => ({ ...p, imgUrl: url, imgFile: null, imgPreview: "" }));
-  };
-
-  /* Teacher helpers */
-  const updateTeacher = (i: number, k: keyof TeacherItem, v: string) =>
-    setTeachers((p) => { const a = [...p]; a[i] = { ...a[i], [k]: v }; return a; });
-  const updateTeacherImg = (i: number, file: File | null, preview: string) =>
-    setTeachers((p) => { const a = [...p]; a[i] = { ...a[i], imgFile: file, imgPreview: preview, imgUrl: file ? "" : a[i].imgUrl }; return a; });
-  const updateTeacherImgUrl = (i: number, url: string) =>
-    setTeachers((p) => { const a = [...p]; a[i] = { ...a[i], imgUrl: url, imgFile: null, imgPreview: "" }; return a; });
-  const addTeacher    = () => { if (teachers.length < 10) setTeachers((p) => [...p, { ...EMPTY_TEACHER }]); };
-  const removeTeacher = (i: number) => setTeachers((p) => p.filter((_, idx) => idx !== i));
-
-  /* ══════════ VALIDATIONS ══════════ */
-  const getImgSrc = (imgUrl: string, imgPreview: string) => imgPreview || imgUrl;
-
-  const validateCourses = (): boolean => {
-    let ok = true;
-    const he: Errors<CourseSectionHeader> = {};
-    if (!sectionHeader.eyebrow.trim())      { he.eyebrow     = "Required"; ok = false; }
-    if (!sectionHeader.sectionTitle.trim()) { he.sectionTitle = "Required"; ok = false; }
-    if (!sectionHeader.sectionDesc.trim())  { he.sectionDesc  = "Required"; ok = false; }
-    setHeaderErrors(he);
-    const ce = courses.map((c) => {
-      const e: Errors<CourseItem> = {};
-      if (!c.hours.trim())       { e.hours       = "Required"; ok = false; }
-      if (!c.days.trim())        { e.days        = "Required"; ok = false; }
-      if (!c.name.trim())        { e.name        = "Required"; ok = false; }
-      if (!c.style.trim())       { e.style       = "Required"; ok = false; }
-      if (!c.duration.trim())    { e.duration    = "Required"; ok = false; }
-      if (!c.certificate.trim()) { e.certificate = "Required"; ok = false; }
-      if (!c.feeShared.trim())   { e.feeShared   = "Required"; ok = false; }
-      if (!c.feePrivate.trim())  { e.feePrivate  = "Required"; ok = false; }
-      const imgSrc = getImgSrc(c.imgUrl, c.imgPreview);
-      if (!imgSrc) { e.imgUrl = "Image required (URL or upload)"; ok = false; }
-      else if (!c.imgPreview && !/^https?:\/\/.+/.test(c.imgUrl.trim())) { e.imgUrl = "Valid URL required"; ok = false; }
-      return e;
-    });
-    setCourseErrors(ce);
-    return ok;
-  };
-
-  const validateWho = (): boolean => {
-    let ok = true;
-    const e: Errors<WhoSection> = {};
-    if (!who.eyebrow.trim())      { e.eyebrow     = "Required"; ok = false; }
-    if (!who.sectionTitle.trim()) { e.sectionTitle = "Required"; ok = false; }
-    if (!who.para1.trim() || who.para1 === "<p><br></p>") { e.para1 = "Required"; ok = false; }
-    if (!who.para2.trim() || who.para2 === "<p><br></p>") { e.para2 = "Required"; ok = false; }
-    if (!who.para3.trim() || who.para3 === "<p><br></p>") { e.para3 = "Required"; ok = false; }
-    if (!who.para4.trim() || who.para4 === "<p><br></p>") { e.para4 = "Required"; ok = false; }
-    if (!who.para5.trim() || who.para5 === "<p><br></p>") { e.para5 = "Required"; ok = false; }
-    if (!who.quoteText.trim())    { e.quoteText    = "Required"; ok = false; }
-    if (!who.quoteAttrib.trim())  { e.quoteAttrib  = "Required"; ok = false; }
-    if (who.chips.some((c) => !c.trim())) { e.chips = "All chip labels must be filled"; ok = false; }
-    setWhoErrors(e);
-    return ok;
-  };
-
-  const validateTeachersHeader = (): boolean => {
-    let ok = true;
-    const e: Errors<TeachersSectionHeader> = {};
-    if (!teachersHeader.eyebrow.trim())              { e.eyebrow             = "Required"; ok = false; }
-    if (!teachersHeader.sectionTitle.trim())         { e.sectionTitle        = "Required"; ok = false; }
-    if (!teachersHeader.introPara1.trim() || teachersHeader.introPara1 === "<p><br></p>") { e.introPara1 = "Required"; ok = false; }
-    if (!teachersHeader.introPara1Highlight.trim())  { e.introPara1Highlight = "Required"; ok = false; }
-    if (!teachersHeader.introPara2.trim() || teachersHeader.introPara2 === "<p><br></p>") { e.introPara2 = "Required"; ok = false; }
-    if (!teachersHeader.introPara2Highlight.trim())  { e.introPara2Highlight = "Required"; ok = false; }
-    if (!teachersHeader.ctaBtnText.trim())           { e.ctaBtnText          = "Required"; ok = false; }
-    if (!teachersHeader.ctaBtnLink.trim())           { e.ctaBtnLink          = "Required"; ok = false; }
-    setTHErrors(e);
-    return ok;
-  };
-
-  const validateFounder = (): boolean => {
-    let ok = true;
-    const e: Errors<FounderSection> = {};
-    if (!founder.eyebrow.trim())         { e.eyebrow        = "Required"; ok = false; }
-    if (!founder.name.trim())            { e.name           = "Required"; ok = false; }
-    if (!founder.imgAlt.trim())          { e.imgAlt         = "Required"; ok = false; }
-    if (!founder.para1.trim() || founder.para1 === "<p><br></p>") { e.para1 = "Required"; ok = false; }
-    if (!founder.para2.trim() || founder.para2 === "<p><br></p>") { e.para2 = "Required"; ok = false; }
-    if (!founder.para3.trim() || founder.para3 === "<p><br></p>") { e.para3 = "Required"; ok = false; }
-    if (!founder.para3Highlight.trim())  { e.para3Highlight = "Required"; ok = false; }
-    if (!founder.detailsBtnText.trim())  { e.detailsBtnText = "Required"; ok = false; }
-    if (!founder.detailsBtnLink.trim())  { e.detailsBtnLink = "Required"; ok = false; }
-    if (!founder.bookBtnText.trim())     { e.bookBtnText    = "Required"; ok = false; }
-    if (!founder.bookBtnLink.trim())     { e.bookBtnLink    = "Required"; ok = false; }
-    setFounderErrors(e);
-    return ok;
-  };
-
-  const validateTeachers = (): boolean => {
-    let ok = true;
-    const errs = teachers.map((t) => {
-      const e: Errors<TeacherItem> = {};
-      if (!t.name.trim())    { e.name    = "Required"; ok = false; }
-      if (!t.surname.trim()) { e.surname = "Required"; ok = false; }
-      return e;
-    });
-    setTeacherErrors(errs);
-    return ok;
-  };
-
-  /* ══════════ SUBMIT ══════════ */
-  const handleSubmit = async () => {
-    const v1 = validateCourses();
-    const v2 = validateWho();
-    const v3 = validateTeachersHeader();
-    const v4 = validateFounder();
-    const v5 = validateTeachers();
     if (!v1 || !v2 || !v3 || !v4 || !v5) {
-      alert("Please fill all required fields in all sections");
+      /* Switch to first tab that has errors */
+      if (!v1) setActiveTab("courses");
+      else if (!v2) setActiveTab("who");
+      else if (!v3) setActiveTab("teachersHeader");
+      else if (!v4) setActiveTab("founder");
+      else setActiveTab("teachers");
+      alert("Please fill all required fields. The tab with errors has been highlighted.");
       return;
     }
+
     try {
       setIsSubmitting(true);
 
-      // ── Check if any file uploads exist ──
-      const hasFiles =
-        courses.some((c) => c.imgFile) ||
-        !!founder.imgFile ||
-        teachers.some((t) => t.imgFile);
+      const cData = coursesForm.getValues();
+      const wData = whoForm.getValues();
+      const tHData = thForm.getValues();
+      const fData = founderForm.getValues();
+      const tData = teachersForm.getValues();
 
-      // ── Build clean payload (strip HTML from ALL text fields) ──
+      /* ── Detect file uploads ── */
+      const hasFiles =
+        cData.courses.some((c) => c.imgFile) ||
+        !!fData.imgFile ||
+        tData.teachers.some((t) => t.imgFile);
+
+      /* ── Build clean payload ── */
       const payload = {
         sectionHeader: {
-          eyebrow:      stripHtml(sectionHeader.eyebrow),
-          sectionTitle: stripHtml(sectionHeader.sectionTitle),
-          sectionDesc:  stripHtml(sectionHeader.sectionDesc),
+          eyebrow:      stripHtml(cData.eyebrow),
+          sectionTitle: stripHtml(cData.sectionTitle),
+          sectionDesc:  stripHtml(cData.sectionDesc),
         },
-        courses: courses.map((c, i) => ({
+        courses: cData.courses.map((c, i) => ({
           hours:       stripHtml(c.hours),
           days:        stripHtml(c.days),
           name:        stripHtml(c.name),
@@ -545,42 +389,42 @@ export default function AddYogaCoursesPage() {
           bookLink:    c.bookLink    || "#",
         })),
         who: {
-          eyebrow:      stripHtml(who.eyebrow),
-          sectionTitle: stripHtml(who.sectionTitle),
-          para1:        stripHtml(who.para1),
-          para2:        stripHtml(who.para2),
-          para3:        stripHtml(who.para3),
-          para4:        stripHtml(who.para4),
-          para5:        stripHtml(who.para5),
-          chips:        who.chips.filter((c) => c.trim() !== "").map(stripHtml),
-          quoteText:    stripHtml(who.quoteText),
-          quoteAttrib:  stripHtml(who.quoteAttrib),
+          eyebrow:      stripHtml(wData.eyebrow),
+          sectionTitle: stripHtml(wData.sectionTitle),
+          para1:        stripHtml(wData.para1),
+          para2:        stripHtml(wData.para2),
+          para3:        stripHtml(wData.para3),
+          para4:        stripHtml(wData.para4),
+          para5:        stripHtml(wData.para5),
+          chips:        wData.chips.map((c) => stripHtml(c.label)).filter(Boolean),
+          quoteText:    stripHtml(wData.quoteText),
+          quoteAttrib:  stripHtml(wData.quoteAttrib),
         },
         teachersHeader: {
-          eyebrow:             stripHtml(teachersHeader.eyebrow),
-          sectionTitle:        stripHtml(teachersHeader.sectionTitle),
-          introPara1:          stripHtml(teachersHeader.introPara1),
-          introPara1Highlight: stripHtml(teachersHeader.introPara1Highlight),
-          introPara2:          stripHtml(teachersHeader.introPara2),
-          introPara2Highlight: stripHtml(teachersHeader.introPara2Highlight),
-          ctaBtnText:          stripHtml(teachersHeader.ctaBtnText),
-          ctaBtnLink:          teachersHeader.ctaBtnLink,
+          eyebrow:             stripHtml(tHData.eyebrow),
+          sectionTitle:        stripHtml(tHData.sectionTitle),
+          introPara1:          stripHtml(tHData.introPara1),
+          introPara1Highlight: stripHtml(tHData.introPara1Highlight),
+          introPara2:          stripHtml(tHData.introPara2),
+          introPara2Highlight: stripHtml(tHData.introPara2Highlight),
+          ctaBtnText:          stripHtml(tHData.ctaBtnText),
+          ctaBtnLink:          tHData.ctaBtnLink,
         },
         founder: {
-          eyebrow:        stripHtml(founder.eyebrow),
-          name:           stripHtml(founder.name),
-          imgUrl:         founder.imgFile ? "__upload_founderImg" : founder.imgUrl,
-          imgAlt:         stripHtml(founder.imgAlt),
-          para1:          stripHtml(founder.para1),
-          para2:          stripHtml(founder.para2),
-          para3:          stripHtml(founder.para3),
-          para3Highlight: stripHtml(founder.para3Highlight),
-          detailsBtnText: stripHtml(founder.detailsBtnText),
-          detailsBtnLink: founder.detailsBtnLink || "#",
-          bookBtnText:    stripHtml(founder.bookBtnText),
-          bookBtnLink:    founder.bookBtnLink    || "#",
+          eyebrow:        stripHtml(fData.eyebrow),
+          name:           stripHtml(fData.name),
+          imgUrl:         fData.imgFile ? "__upload_founderImg" : fData.imgUrl,
+          imgAlt:         stripHtml(fData.imgAlt),
+          para1:          stripHtml(fData.para1),
+          para2:          stripHtml(fData.para2),
+          para3:          stripHtml(fData.para3),
+          para3Highlight: stripHtml(fData.para3Highlight),
+          detailsBtnText: stripHtml(fData.detailsBtnText),
+          detailsBtnLink: fData.detailsBtnLink || "#",
+          bookBtnText:    stripHtml(fData.bookBtnText),
+          bookBtnLink:    fData.bookBtnLink    || "#",
         },
-        teachers: teachers
+        teachers: tData.teachers
           .filter((t) => t.name.trim() && t.surname.trim())
           .map((t, i) => ({
             name:    stripHtml(t.name),
@@ -590,17 +434,15 @@ export default function AddYogaCoursesPage() {
       };
 
       if (hasFiles) {
-        // ── Send as FormData (files + JSON data field) ──
-        const formData = new FormData();
-        courses.forEach((c, i) => { if (c.imgFile) formData.append(`courseImg_${i}`, c.imgFile); });
-        if (founder.imgFile) formData.append("founderImg", founder.imgFile);
-        teachers.forEach((t, i) => { if (t.imgFile) formData.append(`teacherImg_${i}`, t.imgFile); });
-        formData.append("data", JSON.stringify(payload));
-        await api.post("/yoga-courses/create", formData, {
+        const fd = new FormData();
+        cData.courses.forEach((c, i) => { if (c.imgFile) fd.append(`courseImg_${i}`, c.imgFile!); });
+        if (fData.imgFile) fd.append("founderImg", fData.imgFile);
+        tData.teachers.forEach((t, i) => { if (t.imgFile) fd.append(`teacherImg_${i}`, t.imgFile!); });
+        fd.append("data", JSON.stringify(payload));
+        await api.post("/yoga-courses/create", fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
       } else {
-        // ── No files — send plain JSON ──
         await api.post("/yoga-courses/create", payload);
       }
 
@@ -614,40 +456,29 @@ export default function AddYogaCoursesPage() {
     }
   };
 
-  /* ── Tab error flags ── */
-  const tabErr: Record<TabId, boolean> = {
-    courses:        Object.keys(headerErrors).length > 0 || courseErrors.some((e) => Object.keys(e).length > 0),
-    who:            Object.keys(whoErrors).length > 0,
-    teachersHeader: Object.keys(teachersHeaderErrors).length > 0,
-    founder:        Object.keys(founderErrors).length > 0,
-    teachers:       teacherErrors.some((e) => Object.keys(e).length > 0),
-  };
-
-  const TAB_LABELS: Record<TabId, string> = {
-    courses: "① Courses", who: "② Who Section",
-    teachersHeader: "③ Teachers Intro", founder: "④ Founder", teachers: "⑤ Teachers Grid",
-  };
-
-  /* ── Success Screen ── */
+  /* ══════════ SUCCESS SCREEN ══════════ */
   if (submitted) {
     return (
       <div className={styles.successScreen}>
         <div className={styles.successCard}>
           <div className={styles.successOm}>ॐ</div>
           <div className={styles.successCheck}>✓</div>
-          <h2 className={styles.successTitle}>Section Saved!</h2>
+          <h2 className={styles.successTitle}>Page Created!</h2>
           <p className={styles.successText}>Redirecting to yoga courses list…</p>
         </div>
       </div>
     );
   }
 
+  /* ══════════════════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════════════════ */
   return (
     <div className={styles.page}>
 
       {/* Breadcrumb */}
       <div className={styles.breadcrumb}>
-        <button className={styles.breadcrumbLink} onClick={() => router.push("/admin")}>Dashboard</button>
+        <button className={styles.breadcrumbLink} onClick={() => router.push("/admin/dashboard")}>Dashboard</button>
         <span className={styles.breadcrumbSep}>›</span>
         <button className={styles.breadcrumbLink} onClick={() => router.push("/admin/dashboard/yogacoursespage")}>Yoga Courses</button>
         <span className={styles.breadcrumbSep}>›</span>
@@ -656,14 +487,14 @@ export default function AddYogaCoursesPage() {
 
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>Add — Yoga Courses &amp; Teachers Page</h1>
-        <p className={styles.pageSubtitle}>Fill each section and save independently</p>
+        <p className={styles.pageSubtitle}>Fill each section and submit on the last tab</p>
       </div>
 
       <div className={styles.ornament}>
         <span>❧</span><div className={styles.ornamentLine} /><span>ॐ</span><div className={styles.ornamentLine} /><span>❧</span>
       </div>
 
-      {/* Tabs */}
+      {/* Tab Nav */}
       <div className={styles.tabNav}>
         {(Object.keys(TAB_LABELS) as TabId[]).map((tab) => (
           <button key={tab}
@@ -675,375 +506,499 @@ export default function AddYogaCoursesPage() {
         ))}
       </div>
 
-      {/* ══════════ TAB 1 — COURSES ══════════ */}
+      {/* ══════════════════════════════════════════════════
+          TAB 1 — COURSES
+      ══════════════════════════════════════════════════ */}
       {activeTab === "courses" && (
         <div className={styles.formCard}>
+          {/* Section Header */}
           <div className={styles.sectionBlock}>
             <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Section Header</h3></div>
-            <TXT label="Eyebrow Text" hint='Small text above the heading — e.g. "Sacred Path of Yoga"' val={sectionHeader.eyebrow} err={headerErrors.eyebrow} onCh={(v) => setHdr("eyebrow", v)} ph="e.g. Sacred Path of Yoga" max={80} />
-            <TXT label="Section Title (H2)" hint="Main heading of the courses section" val={sectionHeader.sectionTitle} err={headerErrors.sectionTitle} onCh={(v) => setHdr("sectionTitle", v)} ph="e.g. Join Our Yoga Teacher Training in Rishikesh" />
-            <TA  label="Section Description" hint="Paragraph shown below the heading" val={sectionHeader.sectionDesc} err={headerErrors.sectionDesc} onCh={(v) => setHdr("sectionDesc", v)} ph="Ready to embark on a transformative path…" max={400} rows={3} />
+            <Controller control={coursesForm.control} name="eyebrow" rules={{ required: "Required" }}
+              render={({ field, fieldState }) => (
+                <TXT label="Eyebrow Text" hint='Small text above the heading — e.g. "Sacred Path of Yoga"' val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Sacred Path of Yoga" max={80} />
+              )} />
+            <Controller control={coursesForm.control} name="sectionTitle" rules={{ required: "Required" }}
+              render={({ field, fieldState }) => (
+                <TXT label="Section Title (H2)" hint="Main heading of the courses section" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Join Our Yoga Teacher Training in Rishikesh" />
+              )} />
+            <Controller control={coursesForm.control} name="sectionDesc" rules={{ required: "Required" }}
+              render={({ field, fieldState }) => (
+                <TA label="Section Description" hint="Paragraph shown below the heading" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="Ready to embark on a transformative path…" max={400} rows={3} />
+              )} />
           </div>
 
           <div className={styles.formDivider} />
 
+          {/* Course Cards */}
           <div className={styles.sectionBlock}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionIcon}>✦</span>
               <h3 className={styles.sectionTitle}>Course Cards</h3>
-              <span className={styles.sectionBadge}>{courses.length}/6</span>
+              <span className={styles.sectionBadge}>{courseFields.length}/6</span>
             </div>
             <div className={styles.certsList}>
-              {courses.map((c, i) => (
-                <div key={i} className={styles.certCard}>
-                  <div className={styles.certCardHeader}>
-                    <span className={styles.certCardNum}>{i + 1}</span>
-                    <span className={styles.certCardTitle}>Course #{i + 1} — {c.name || "Untitled"}</span>
-                    <button type="button" className={styles.removeBtn} onClick={() => removeCourse(i)} disabled={courses.length <= 1}>✕ Remove</button>
+              {courseFields.map((field, i) => {
+                const imgUrl     = coursesForm.watch(`courses.${i}.imgUrl`);
+                const imgPreview = coursesForm.watch(`courses.${i}.imgPreview`);
+                const color      = coursesForm.watch(`courses.${i}.color`);
+                const feeShared  = coursesForm.watch(`courses.${i}.feeShared`);
+                const feePrivate = coursesForm.watch(`courses.${i}.feePrivate`);
+                const errs       = coursesForm.formState.errors.courses?.[i];
+
+                return (
+                  <div key={field.id} className={styles.certCard}>
+                    <div className={styles.certCardHeader}>
+                      <span className={styles.certCardNum}>{i + 1}</span>
+                      <span className={styles.certCardTitle}>Course #{i + 1} — {coursesForm.watch(`courses.${i}.name`) || "Untitled"}</span>
+                      <button type="button" className={styles.removeBtn} onClick={() => removeCourse(i)} disabled={courseFields.length <= 1}>✕ Remove</button>
+                    </div>
+                    <div style={{ padding: "1rem" }}>
+                      <div className={styles.twoCol}>
+                        <Controller control={coursesForm.control} name={`courses.${i}.name`} rules={{ required: "Required" }}
+                          render={({ field: f, fieldState: fs }) => (
+                            <TXT label="Course Name" hint="Full name shown on the card" val={f.value} err={fs.error?.message} onCh={f.onChange} ph="e.g. Beginner Yoga Course" max={100} />
+                          )} />
+                        <Controller control={coursesForm.control} name={`courses.${i}.hours`} rules={{ required: "Required" }}
+                          render={({ field: f, fieldState: fs }) => (
+                            <TXT label="Hours Label" hint="Badge on card image — e.g. 100 HOUR YOGA" val={f.value} err={fs.error?.message} onCh={f.onChange} ph="e.g. 100 HOUR YOGA" max={30} />
+                          )} />
+                      </div>
+                      <div className={styles.twoCol}>
+                        <Controller control={coursesForm.control} name={`courses.${i}.days`} rules={{ required: "Required" }}
+                          render={({ field: f, fieldState: fs }) => (
+                            <TXT label="Days Label" hint="Image tag — e.g. 14 Days Program" val={f.value} err={fs.error?.message} onCh={f.onChange} ph="e.g. 14 Days Program" max={30} />
+                          )} />
+                        <Controller control={coursesForm.control} name={`courses.${i}.duration`} rules={{ required: "Required" }}
+                          render={({ field: f, fieldState: fs }) => (
+                            <TXT label="Duration" hint="Meta row value — e.g. 14 Days" val={f.value} err={fs.error?.message} onCh={f.onChange} ph="e.g. 14 Days" max={20} />
+                          )} />
+                      </div>
+                      <div className={styles.twoCol}>
+                        {/* Style select */}
+                        <div className={styles.fieldGroup}>
+                          <label className={styles.label}><span className={styles.labelIcon}>✦</span>Course Style<span className={styles.required}>*</span></label>
+                          <p className={styles.fieldHint}>Type of yoga taught</p>
+                          <Controller control={coursesForm.control} name={`courses.${i}.style`} rules={{ required: "Required" }}
+                            render={({ field: f, fieldState: fs }) => (
+                              <>
+                                <select className={`${styles.select} ${fs.error ? styles.inputError : ""}`} value={f.value} onChange={f.onChange}>
+                                  <option value="">— Select Style —</option>
+                                  {STYLE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                                </select>
+                                {fs.error && <p className={styles.errorMsg}>⚠ {fs.error.message}</p>}
+                              </>
+                            )} />
+                        </div>
+                        {/* Certificate select */}
+                        <div className={styles.fieldGroup}>
+                          <label className={styles.label}><span className={styles.labelIcon}>✦</span>Certificate<span className={styles.required}>*</span></label>
+                          <p className={styles.fieldHint}>International certification level</p>
+                          <Controller control={coursesForm.control} name={`courses.${i}.certificate`} rules={{ required: "Required" }}
+                            render={({ field: f, fieldState: fs }) => (
+                              <>
+                                <select className={`${styles.select} ${fs.error ? styles.inputError : ""}`} value={f.value} onChange={f.onChange}>
+                                  <option value="">— Select —</option>
+                                  {CERT_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                                </select>
+                                {fs.error && <p className={styles.errorMsg}>⚠ {fs.error.message}</p>}
+                              </>
+                            )} />
+                        </div>
+                      </div>
+                      <div className={styles.twoCol}>
+                        <Controller control={coursesForm.control} name={`courses.${i}.feeShared`} rules={{ required: "Required" }}
+                          render={({ field: f, fieldState: fs }) => (
+                            <div className={styles.fieldGroup}>
+                              <label className={styles.label}><span className={styles.labelIcon}>✦</span>Shared Room Fee (USD)<span className={styles.required}>*</span></label>
+                              <p className={styles.fieldHint}>Price for shared accommodation</p>
+                              <div className={`${styles.inputWrap} ${styles.inputWithPrefix} ${fs.error ? styles.inputError : ""} ${f.value && !fs.error ? styles.inputSuccess : ""}`}>
+                                <span className={styles.inputPrefix}>$</span>
+                                <input type="number" className={`${styles.input} ${styles.inputPrefixed}`} placeholder="500" value={f.value} onChange={f.onChange} />
+                              </div>
+                              {fs.error && <p className={styles.errorMsg}>⚠ {fs.error.message}</p>}
+                            </div>
+                          )} />
+                        <Controller control={coursesForm.control} name={`courses.${i}.feePrivate`} rules={{ required: "Required" }}
+                          render={({ field: f, fieldState: fs }) => (
+                            <div className={styles.fieldGroup}>
+                              <label className={styles.label}><span className={styles.labelIcon}>✦</span>Private Room Fee (USD)<span className={styles.required}>*</span></label>
+                              <p className={styles.fieldHint}>Price for private accommodation</p>
+                              <div className={`${styles.inputWrap} ${styles.inputWithPrefix} ${fs.error ? styles.inputError : ""} ${f.value && !fs.error ? styles.inputSuccess : ""}`}>
+                                <span className={styles.inputPrefix}>$</span>
+                                <input type="number" className={`${styles.input} ${styles.inputPrefixed}`} placeholder="550" value={f.value} onChange={f.onChange} />
+                              </div>
+                              {fs.error && <p className={styles.errorMsg}>⚠ {fs.error.message}</p>}
+                            </div>
+                          )} />
+                      </div>
+
+                      {feeShared && feePrivate && (
+                        <div style={{ marginBottom: "1rem" }}>
+                          <span className={styles.feeBadge}>Preview: {feeShared} USD / {feePrivate} USD</span>
+                        </div>
+                      )}
+
+                      {/* Dual Image */}
+                      <DualImageField
+                        label="Card Image"
+                        hint="Upload a file OR paste an image URL (600×400px recommended)"
+                        urlVal={imgUrl}
+                        previewVal={imgPreview}
+                        err={errs?.imgUrl?.message}
+                        onUrlChange={(url) => {
+                          coursesForm.setValue(`courses.${i}.imgUrl`, url);
+                          coursesForm.setValue(`courses.${i}.imgFile`, null);
+                          coursesForm.setValue(`courses.${i}.imgPreview`, "");
+                          if (url) coursesForm.clearErrors(`courses.${i}.imgUrl`);
+                        }}
+                        onFileChange={(file, preview) => {
+                          coursesForm.setValue(`courses.${i}.imgFile`, file);
+                          coursesForm.setValue(`courses.${i}.imgPreview`, preview);
+                          if (file) {
+                            coursesForm.setValue(`courses.${i}.imgUrl`, "");
+                            coursesForm.clearErrors(`courses.${i}.imgUrl`);
+                          }
+                        }}
+                        recommendedSize="600×400px"
+                      />
+
+                      {/* Accent Color */}
+                      <div className={styles.fieldGroup}>
+                        <label className={styles.label}><span className={styles.labelIcon}>✦</span>Accent Color</label>
+                        <p className={styles.fieldHint}>Card overlay gradient color (--card-color)</p>
+                        <div className={styles.colorInputWrap}>
+                          <div className={styles.colorSwatch} style={{ background: color, position: "relative" }}>
+                            <input type="color" value={color}
+                              onChange={(e) => coursesForm.setValue(`courses.${i}.color`, e.target.value)}
+                              style={{ position: "absolute", opacity: 0, width: "100%", height: "100%", cursor: "pointer" }} />
+                          </div>
+                          <input type="text" className={styles.colorHexInput} value={color} maxLength={7}
+                            onChange={(e) => coursesForm.setValue(`courses.${i}.color`, e.target.value)} />
+                        </div>
+                      </div>
+
+                      <div className={styles.twoCol}>
+                        <Controller control={coursesForm.control} name={`courses.${i}.detailsLink`}
+                          render={({ field: f }) => (
+                            <LNKF label='"More Details" Button Link' hint='href for the "More Details" button' val={f.value} onCh={f.onChange} ph="/courses/beginner or #" />
+                          )} />
+                        <Controller control={coursesForm.control} name={`courses.${i}.bookLink`}
+                          render={({ field: f }) => (
+                            <LNKF label='"Book Now" Button Link' hint='href for the "Book Now" button' val={f.value} onCh={f.onChange} ph="/book or #" />
+                          )} />
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ padding: "1rem" }}>
-                    <div className={styles.twoCol}>
-                      <div className={styles.fieldGroup}>
-                        <label className={styles.label}><span className={styles.labelIcon}>✦</span>Course Name<span className={styles.required}>*</span></label>
-                        <p className={styles.fieldHint}>Full name shown on the card</p>
-                        <div className={`${styles.inputWrap} ${courseErrors[i]?.name ? styles.inputError : ""} ${c.name && !courseErrors[i]?.name ? styles.inputSuccess : ""}`}>
-                          <input type="text" className={styles.input} maxLength={100} placeholder="e.g. Beginner Yoga Course" value={c.name} onChange={(e) => updateCourse(i, "name", e.target.value)} />
-                        </div>
-                        {courseErrors[i]?.name && <p className={styles.errorMsg}>⚠ {courseErrors[i].name}</p>}
-                      </div>
-                      <div className={styles.fieldGroup}>
-                        <label className={styles.label}><span className={styles.labelIcon}>✦</span>Hours Label<span className={styles.required}>*</span></label>
-                        <p className={styles.fieldHint}>Badge on card image — e.g. 100 HOUR YOGA</p>
-                        <div className={`${styles.inputWrap} ${courseErrors[i]?.hours ? styles.inputError : ""} ${c.hours && !courseErrors[i]?.hours ? styles.inputSuccess : ""}`}>
-                          <input type="text" className={styles.input} maxLength={30} placeholder="e.g. 100 HOUR YOGA" value={c.hours} onChange={(e) => updateCourse(i, "hours", e.target.value)} />
-                        </div>
-                        {courseErrors[i]?.hours && <p className={styles.errorMsg}>⚠ {courseErrors[i].hours}</p>}
-                      </div>
-                    </div>
-                    <div className={styles.twoCol}>
-                      <div className={styles.fieldGroup}>
-                        <label className={styles.label}><span className={styles.labelIcon}>✦</span>Days Label<span className={styles.required}>*</span></label>
-                        <p className={styles.fieldHint}>Image tag — e.g. 14 Days Program</p>
-                        <div className={`${styles.inputWrap} ${courseErrors[i]?.days ? styles.inputError : ""} ${c.days && !courseErrors[i]?.days ? styles.inputSuccess : ""}`}>
-                          <input type="text" className={styles.input} maxLength={30} placeholder="e.g. 14 Days Program" value={c.days} onChange={(e) => updateCourse(i, "days", e.target.value)} />
-                        </div>
-                        {courseErrors[i]?.days && <p className={styles.errorMsg}>⚠ {courseErrors[i].days}</p>}
-                      </div>
-                      <div className={styles.fieldGroup}>
-                        <label className={styles.label}><span className={styles.labelIcon}>✦</span>Duration<span className={styles.required}>*</span></label>
-                        <p className={styles.fieldHint}>Meta row value — e.g. 14 Days</p>
-                        <div className={`${styles.inputWrap} ${courseErrors[i]?.duration ? styles.inputError : ""} ${c.duration && !courseErrors[i]?.duration ? styles.inputSuccess : ""}`}>
-                          <input type="text" className={styles.input} maxLength={20} placeholder="e.g. 14 Days" value={c.duration} onChange={(e) => updateCourse(i, "duration", e.target.value)} />
-                        </div>
-                        {courseErrors[i]?.duration && <p className={styles.errorMsg}>⚠ {courseErrors[i].duration}</p>}
-                      </div>
-                    </div>
-                    <div className={styles.twoCol}>
-                      <div className={styles.fieldGroup}>
-                        <label className={styles.label}><span className={styles.labelIcon}>✦</span>Course Style<span className={styles.required}>*</span></label>
-                        <p className={styles.fieldHint}>Type of yoga taught</p>
-                        <select className={`${styles.select} ${courseErrors[i]?.style ? styles.inputError : ""}`} value={c.style} onChange={(e) => updateCourse(i, "style", e.target.value)}>
-                          <option value="">— Select Style —</option>
-                          {STYLE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-                        </select>
-                        {courseErrors[i]?.style && <p className={styles.errorMsg}>⚠ {courseErrors[i].style}</p>}
-                      </div>
-                      <div className={styles.fieldGroup}>
-                        <label className={styles.label}><span className={styles.labelIcon}>✦</span>Certificate<span className={styles.required}>*</span></label>
-                        <p className={styles.fieldHint}>International certification level</p>
-                        <select className={`${styles.select} ${courseErrors[i]?.certificate ? styles.inputError : ""}`} value={c.certificate} onChange={(e) => updateCourse(i, "certificate", e.target.value)}>
-                          <option value="">— Select —</option>
-                          {CERT_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-                        </select>
-                        {courseErrors[i]?.certificate && <p className={styles.errorMsg}>⚠ {courseErrors[i].certificate}</p>}
-                      </div>
-                    </div>
-                    <div className={styles.twoCol}>
-                      <div className={styles.fieldGroup}>
-                        <label className={styles.label}><span className={styles.labelIcon}>✦</span>Shared Room Fee (USD)<span className={styles.required}>*</span></label>
-                        <p className={styles.fieldHint}>Price for shared accommodation</p>
-                        <div className={`${styles.inputWrap} ${styles.inputWithPrefix} ${courseErrors[i]?.feeShared ? styles.inputError : ""} ${c.feeShared && !courseErrors[i]?.feeShared ? styles.inputSuccess : ""}`}>
-                          <span className={styles.inputPrefix}>$</span>
-                          <input type="number" className={`${styles.input} ${styles.inputPrefixed}`} placeholder="500" value={c.feeShared} onChange={(e) => updateCourse(i, "feeShared", e.target.value)} />
-                        </div>
-                        {courseErrors[i]?.feeShared && <p className={styles.errorMsg}>⚠ {courseErrors[i].feeShared}</p>}
-                      </div>
-                      <div className={styles.fieldGroup}>
-                        <label className={styles.label}><span className={styles.labelIcon}>✦</span>Private Room Fee (USD)<span className={styles.required}>*</span></label>
-                        <p className={styles.fieldHint}>Price for private accommodation</p>
-                        <div className={`${styles.inputWrap} ${styles.inputWithPrefix} ${courseErrors[i]?.feePrivate ? styles.inputError : ""} ${c.feePrivate && !courseErrors[i]?.feePrivate ? styles.inputSuccess : ""}`}>
-                          <span className={styles.inputPrefix}>$</span>
-                          <input type="number" className={`${styles.input} ${styles.inputPrefixed}`} placeholder="550" value={c.feePrivate} onChange={(e) => updateCourse(i, "feePrivate", e.target.value)} />
-                        </div>
-                        {courseErrors[i]?.feePrivate && <p className={styles.errorMsg}>⚠ {courseErrors[i].feePrivate}</p>}
-                      </div>
-                    </div>
-                    {c.feeShared && c.feePrivate && (
-                      <div style={{ marginBottom: "1rem" }}><span className={styles.feeBadge}>Preview: {c.feeShared} USD / {c.feePrivate} USD</span></div>
-                    )}
-
-                    {/* ── DUAL IMAGE — Card ── */}
-                    <DualImageField
-                      label="Card Image"
-                      hint="Upload a file OR paste an image URL (w=600&q=80 recommended)"
-                      urlVal={c.imgUrl}
-                      previewVal={c.imgPreview}
-                      err={courseErrors[i]?.imgUrl}
-                      onUrlChange={(url) => updateCourseImgUrl(i, url)}
-                      onFileChange={(file, preview) => updateCourseImg(i, file, preview)}
-                      recommendedSize="600×400px"
-                    />
-
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.label}><span className={styles.labelIcon}>✦</span>Accent Color</label>
-                      <p className={styles.fieldHint}>Card overlay gradient color (--card-color)</p>
-                      <div className={styles.colorInputWrap}>
-                        <div className={styles.colorSwatch} style={{ background: c.color }}>
-                          <input type="color" value={c.color} onChange={(e) => updateCourse(i, "color", e.target.value)} style={{ position: "absolute", opacity: 0, width: "100%", height: "100%", cursor: "pointer" }} />
-                        </div>
-                        <input type="text" className={styles.colorHexInput} value={c.color} maxLength={7} onChange={(e) => updateCourse(i, "color", e.target.value)} />
-                      </div>
-                    </div>
-
-                    <div className={styles.twoCol}>
-                      <LINK label='"More Details" Button Link' hint='href for the "More Details" button' val={c.detailsLink} onCh={(v) => updateCourse(i, "detailsLink", v)} ph="/courses/beginner or #" />
-                      <LINK label='"Book Now" Button Link' hint='href for the "Book Now" button' val={c.bookLink} onCh={(v) => updateCourse(i, "bookLink", v)} ph="/book or #" />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-            {courses.length < 6 && <button type="button" className={styles.addBtn} onClick={addCourse}>+ Add Course Card</button>}
+            {courseFields.length < 6 && (
+              <button type="button" className={styles.addBtn} onClick={() => appendCourse({ ...DEFAULT_COURSE })}>
+                + Add Course Card
+              </button>
+            )}
           </div>
 
           <div className={styles.formDivider} />
           <div className={styles.formActions}>
             <Link href="/admin/dashboard/yogacoursespage" className={styles.cancelBtn}>← Cancel</Link>
-            <button type="button" className={styles.submitBtn} onClick={() => setActiveTab("who")} disabled={isSubmitting}>
+            <button type="button" className={styles.submitBtn} onClick={() => setActiveTab("who")}>
               Next: Who Section →
             </button>
           </div>
         </div>
       )}
 
-      {/* ══════════ TAB 2 — WHO ══════════ */}
+      {/* ══════════════════════════════════════════════════
+          TAB 2 — WHO
+      ══════════════════════════════════════════════════ */}
       {activeTab === "who" && (
         <div className={styles.formCard}>
           <div className={styles.sectionBlock}>
             <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Section Head</h3></div>
             <div className={styles.twoCol}>
-              <TXT label="Eyebrow" hint='Small label above heading — e.g. "Open to All Seekers"' val={who.eyebrow} err={whoErrors.eyebrow} onCh={(v) => setW("eyebrow", v)} ph="e.g. Open to All Seekers" max={80} />
-              <TXT label="Section Title (H2)" hint="Main heading of the who section" val={who.sectionTitle} err={whoErrors.sectionTitle} onCh={(v) => setW("sectionTitle", v)} ph="e.g. Who Can Join Yoga TTC in Rishikesh?" />
+              <Controller control={whoForm.control} name="eyebrow" rules={{ required: "Required" }}
+                render={({ field, fieldState }) => (
+                  <TXT label="Eyebrow" hint='Small label above heading — e.g. "Open to All Seekers"' val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Open to All Seekers" max={80} />
+                )} />
+              <Controller control={whoForm.control} name="sectionTitle" rules={{ required: "Required" }}
+                render={({ field, fieldState }) => (
+                  <TXT label="Section Title (H2)" hint="Main heading of the who section" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Who Can Join Yoga TTC in Rishikesh?" />
+                )} />
             </div>
           </div>
           <div className={styles.formDivider} />
           <div className={styles.sectionBlock}>
             <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Left Column — 5 Body Paragraphs</h3></div>
-            <RTE label="Paragraph 1" hint="About the course not being limited to vocational learners. Use Bold, Color etc. as needed." val={who.para1} err={whoErrors.para1} onCh={(v) => setW("para1", v)} />
-            <RTE label="Paragraph 2" hint="Age 18–50, body & mind benefits, yoga retreats." val={who.para2} err={whoErrors.para2} onCh={(v) => setW("para2", v)} />
-            <RTE label="Paragraph 3" hint="Career reasons — yoga teacher, lifestyle, weight loss, all walks of life." val={who.para3} err={whoErrors.para3} onCh={(v) => setW("para3", v)} />
-            <RTE label="Paragraph 4" hint="Teachers' personal & spiritual growth, sharing knowledge." val={who.para4} err={whoErrors.para4} onCh={(v) => setW("para4", v)} />
-            <RTE label="Paragraph 5" hint="Career opportunity, Yoga Alliance certificate, teach globally." val={who.para5} err={whoErrors.para5} onCh={(v) => setW("para5", v)} />
+            {(["para1","para2","para3","para4","para5"] as const).map((key, pi) => (
+              <Controller key={key} control={whoForm.control} name={key}
+                rules={{ validate: (v) => !isRteEmpty(v) || "Required" }}
+                render={({ field, fieldState }) => (
+                  <RTE label={`Paragraph ${pi + 1}`} hint="" val={field.value} err={fieldState.error?.message} onCh={field.onChange} />
+                )} />
+            ))}
           </div>
           <div className={styles.formDivider} />
           <div className={styles.sectionBlock}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionIcon}>✦</span>
-              <h3 className={styles.sectionTitle}>Right Decor — Feature Chips (✦ items)</h3>
-              <span className={styles.sectionBadge}>{who.chips.length}/8</span>
+              <h3 className={styles.sectionTitle}>Feature Chips (✦ items)</h3>
+              <span className={styles.sectionBadge}>{chipFields.length}/8</span>
             </div>
             <p className={styles.fieldHint} style={{ marginBottom: "1rem" }}>The ✦ chip items shown in the decorative right column</p>
-            {whoErrors.chips && <p className={styles.errorMsg} style={{ marginBottom: "0.8rem" }}>⚠ {whoErrors.chips}</p>}
             <div className={styles.badgesList}>
-              {who.chips.map((chip, i) => (
-                <div key={i} className={styles.badgeRow}>
+              {chipFields.map((field, i) => (
+                <div key={field.id} className={styles.badgeRow}>
                   <div className={styles.badgeIndex}>{i + 1}</div>
-                  <div className={styles.inputWrap} style={{ flex: 1 }}>
-                    <input type="text" className={styles.input} placeholder="e.g. Age 18–50 Welcome" value={chip} maxLength={40} onChange={(e) => updateChip(i, e.target.value)} />
-                  </div>
-                  <button type="button" className={styles.removeBadgeBtn} onClick={() => removeChip(i)} disabled={who.chips.length <= 1}>✕</button>
+                  <Controller control={whoForm.control} name={`chips.${i}.label`} rules={{ required: "Required" }}
+                    render={({ field: f, fieldState: fs }) => (
+                      <div className={styles.inputWrap} style={{ flex: 1 }}>
+                        <input type="text" className={`${styles.input} ${fs.error ? styles.inputError : ""}`}
+                          placeholder="e.g. Age 18–50 Welcome" value={f.value} maxLength={40} onChange={f.onChange} />
+                      </div>
+                    )} />
+                  <button type="button" className={styles.removeBadgeBtn} onClick={() => removeChip(i)} disabled={chipFields.length <= 1}>✕</button>
                 </div>
               ))}
             </div>
-            {who.chips.filter((c) => c.trim()).length > 0 && (
+            {/* Live preview */}
+            {whoForm.watch("chips").filter((c) => c.label.trim()).length > 0 && (
               <div className={styles.badgePreview}>
-                {who.chips.filter((c) => c.trim()).map((c, i) => (
-                  <div key={i} className={styles.badgeChip}><span className={styles.badgeChipIcon}>✦</span>{c}</div>
+                {whoForm.watch("chips").filter((c) => c.label.trim()).map((c, i) => (
+                  <div key={i} className={styles.badgeChip}><span className={styles.badgeChipIcon}>✦</span>{c.label}</div>
                 ))}
               </div>
             )}
-            {who.chips.length < 8 && <button type="button" className={styles.addBtn} onClick={addChip}>+ Add Chip</button>}
+            {chipFields.length < 8 && (
+              <button type="button" className={styles.addBtn} onClick={() => appendChip({ label: "" })}>+ Add Chip</button>
+            )}
           </div>
           <div className={styles.formDivider} />
           <div className={styles.sectionBlock}>
-            <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Right Decor — Quote Block</h3></div>
-            <TA label="Quote Text" hint='Shown with " " marks by frontend — do not include quotes here.' val={who.quoteText} err={whoErrors.quoteText} onCh={(v) => setW("quoteText", v)} ph="Yoga is the journey of the self, through the self, to the self." max={200} rows={2} />
-            <TXT label="Quote Attribution" hint='Author / source line — e.g. "— Bhagavad Gita"' val={who.quoteAttrib} err={whoErrors.quoteAttrib} onCh={(v) => setW("quoteAttrib", v)} ph="— Bhagavad Gita" max={80} />
+            <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Quote Block</h3></div>
+            <Controller control={whoForm.control} name="quoteText" rules={{ required: "Required" }}
+              render={({ field, fieldState }) => (
+                <TA label="Quote Text" hint='Do not include quote marks — frontend adds them' val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="Yoga is the journey of the self, through the self, to the self." max={200} rows={2} />
+              )} />
+            <Controller control={whoForm.control} name="quoteAttrib" rules={{ required: "Required" }}
+              render={({ field, fieldState }) => (
+                <TXT label="Quote Attribution" hint='Author / source line — e.g. "— Bhagavad Gita"' val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="— Bhagavad Gita" max={80} />
+              )} />
           </div>
           <div className={styles.formDivider} />
           <div className={styles.formActions}>
             <button type="button" className={styles.cancelBtn} onClick={() => setActiveTab("courses")}>← Previous</button>
-            <button type="button" className={styles.submitBtn} onClick={() => setActiveTab("teachersHeader")} disabled={isSubmitting}>
+            <button type="button" className={styles.submitBtn} onClick={() => setActiveTab("teachersHeader")}>
               Next: Teachers Intro →
             </button>
           </div>
         </div>
       )}
 
-      {/* ══════════ TAB 3 — TEACHERS HEADER ══════════ */}
+      {/* ══════════════════════════════════════════════════
+          TAB 3 — TEACHERS HEADER
+      ══════════════════════════════════════════════════ */}
       {activeTab === "teachersHeader" && (
         <div className={styles.formCard}>
           <div className={styles.sectionBlock}>
             <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Section Head</h3></div>
             <div className={styles.twoCol}>
-              <TXT label="Eyebrow" hint='Small label above heading — e.g. "Masters of the Ancient Art"' val={teachersHeader.eyebrow} err={teachersHeaderErrors.eyebrow} onCh={(v) => setTH("eyebrow", v)} ph="e.g. Masters of the Ancient Art" max={80} />
-              <TXT label="Section Title (H2)" hint="Main heading of the teachers section" val={teachersHeader.sectionTitle} err={teachersHeaderErrors.sectionTitle} onCh={(v) => setTH("sectionTitle", v)} ph="e.g. Our Experienced Yoga Teachers" />
+              <Controller control={thForm.control} name="eyebrow" rules={{ required: "Required" }}
+                render={({ field, fieldState }) => (
+                  <TXT label="Eyebrow" hint='Small label above heading — e.g. "Masters of the Ancient Art"' val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Masters of the Ancient Art" max={80} />
+                )} />
+              <Controller control={thForm.control} name="sectionTitle" rules={{ required: "Required" }}
+                render={({ field, fieldState }) => (
+                  <TXT label="Section Title (H2)" hint="Main heading of the teachers section" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Our Experienced Yoga Teachers" />
+                )} />
             </div>
           </div>
           <div className={styles.formDivider} />
           <div className={styles.sectionBlock}>
             <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Intro Paragraphs</h3></div>
-            {/* Jodit for intro para 1 */}
-            <RTE label="Intro Paragraph 1" hint="About the team — use Bold to highlight important keywords directly inside the editor." val={teachersHeader.introPara1} err={teachersHeaderErrors.introPara1} onCh={(v) => setTH("introPara1", v)} />
-            <TXT label="Paragraph 1 — Bold Highlight Text (plain)" hint="Optional: exact phrase from para 1 that the frontend wraps in <strong> (legacy support)" val={teachersHeader.introPara1Highlight} err={teachersHeaderErrors.introPara1Highlight} onCh={(v) => setTH("introPara1Highlight", v)} ph="e.g. hatha yoga teacher training in Rishikesh" max={120} />
-            {/* Jodit for intro para 2 */}
-            <RTE label="Intro Paragraph 2" hint="About online courses — use Bold to highlight keywords directly inside the editor." val={teachersHeader.introPara2} err={teachersHeaderErrors.introPara2} onCh={(v) => setTH("introPara2", v)} />
-            <TXT label="Paragraph 2 — Bold Highlight Text (plain)" hint="Optional: exact phrase from para 2 that the frontend wraps in <strong> (legacy support)" val={teachersHeader.introPara2Highlight} err={teachersHeaderErrors.introPara2Highlight} onCh={(v) => setTH("introPara2Highlight", v)} ph="e.g. online yoga instructor courses in Rishikesh" max={120} />
+            <Controller control={thForm.control} name="introPara1" rules={{ validate: (v) => !isRteEmpty(v) || "Required" }}
+              render={({ field, fieldState }) => (
+                <RTE label="Intro Paragraph 1" hint="About the team — use Bold for keywords." val={field.value} err={fieldState.error?.message} onCh={field.onChange} />
+              )} />
+            <Controller control={thForm.control} name="introPara1Highlight" rules={{ required: "Required" }}
+              render={({ field, fieldState }) => (
+                <TXT label="Paragraph 1 — Bold Highlight (plain)" hint="Exact phrase from para 1 wrapped in <strong>" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. hatha yoga teacher training in Rishikesh" max={120} />
+              )} />
+            <Controller control={thForm.control} name="introPara2" rules={{ validate: (v) => !isRteEmpty(v) || "Required" }}
+              render={({ field, fieldState }) => (
+                <RTE label="Intro Paragraph 2" hint="About online courses — use Bold for keywords." val={field.value} err={fieldState.error?.message} onCh={field.onChange} />
+              )} />
+            <Controller control={thForm.control} name="introPara2Highlight" rules={{ required: "Required" }}
+              render={({ field, fieldState }) => (
+                <TXT label="Paragraph 2 — Bold Highlight (plain)" hint="Exact phrase from para 2 wrapped in <strong>" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. online yoga instructor courses in Rishikesh" max={120} />
+              )} />
           </div>
           <div className={styles.formDivider} />
           <div className={styles.sectionBlock}>
-            <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>"Our Teachers' Information" CTA Button</h3></div>
+            <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>CTA Button</h3></div>
             <div className={styles.twoCol}>
-              <TXT label="Button Text" hint="Label shown on the CTA button" val={teachersHeader.ctaBtnText} err={teachersHeaderErrors.ctaBtnText} onCh={(v) => setTH("ctaBtnText", v)} ph="e.g. Our Teachers' Information" max={80} />
-              <LINK label="Button Link" hint="href for the CTA button" val={teachersHeader.ctaBtnLink} err={teachersHeaderErrors.ctaBtnLink} onCh={(v) => setTH("ctaBtnLink", v)} ph="/teachers or #" req />
+              <Controller control={thForm.control} name="ctaBtnText" rules={{ required: "Required" }}
+                render={({ field, fieldState }) => (
+                  <TXT label="Button Text" hint="Label shown on the CTA button" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Our Teachers' Information" max={80} />
+                )} />
+              <Controller control={thForm.control} name="ctaBtnLink" rules={{ required: "Required" }}
+                render={({ field, fieldState }) => (
+                  <LNKF label="Button Link" hint="href for the CTA button" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="/teachers or #" req />
+                )} />
             </div>
           </div>
           <div className={styles.formDivider} />
           <div className={styles.formActions}>
             <button type="button" className={styles.cancelBtn} onClick={() => setActiveTab("who")}>← Previous</button>
-            <button type="button" className={styles.submitBtn} onClick={() => setActiveTab("founder")} disabled={isSubmitting}>
+            <button type="button" className={styles.submitBtn} onClick={() => setActiveTab("founder")}>
               Next: Founder →
             </button>
           </div>
         </div>
       )}
 
-      {/* ══════════ TAB 4 — FOUNDER ══════════ */}
+      {/* ══════════════════════════════════════════════════
+          TAB 4 — FOUNDER
+      ══════════════════════════════════════════════════ */}
       {activeTab === "founder" && (
         <div className={styles.formCard}>
           <div className={styles.sectionBlock}>
             <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Founder Identity</h3></div>
             <div className={styles.twoCol}>
-              <TXT label="Eyebrow / Role Label" hint='Small text above the founder name — e.g. "Founder of AYM Yoga School"' val={founder.eyebrow} err={founderErrors.eyebrow} onCh={(v) => setF("eyebrow", v)} ph="e.g. Founder of AYM Yoga School" max={80} />
-              <TXT label="Founder Name (H3)" hint="Full display name" val={founder.name} err={founderErrors.name} onCh={(v) => setF("name", v)} ph="e.g. Yogi Chetan Mahesh" max={80} />
+              <Controller control={founderForm.control} name="eyebrow" rules={{ required: "Required" }}
+                render={({ field, fieldState }) => (
+                  <TXT label="Eyebrow / Role Label" hint='Small text above name — e.g. "Founder of AYM Yoga School"' val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Founder of AYM Yoga School" max={80} />
+                )} />
+              <Controller control={founderForm.control} name="name" rules={{ required: "Required" }}
+                render={({ field, fieldState }) => (
+                  <TXT label="Founder Name (H3)" hint="Full display name" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Yogi Chetan Mahesh" max={80} />
+                )} />
             </div>
           </div>
           <div className={styles.formDivider} />
           <div className={styles.sectionBlock}>
             <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Founder Photo</h3></div>
-
-            {/* ── DUAL IMAGE — Founder ── */}
             <DualImageField
-              label="Founder Photo"
-              hint="Upload a file OR paste an image URL. Recommended 500×600px."
-              urlVal={founder.imgUrl}
-              previewVal={founder.imgPreview}
-              err={founderErrors.imgUrl}
-              onUrlChange={handleFounderUrl}
-              onFileChange={handleFounderFile}
+              label="Founder Photo" hint="Upload a file OR paste an image URL. Recommended 500×600px."
+              urlVal={founderImgUrl} previewVal={founderImgPreview}
+              err={founderForm.formState.errors.imgUrl?.message}
+              onUrlChange={(url) => { founderForm.setValue("imgUrl", url); founderForm.setValue("imgFile", null); founderForm.setValue("imgPreview", ""); }}
+              onFileChange={(file, preview) => { founderForm.setValue("imgFile", file); founderForm.setValue("imgPreview", preview); if (file) founderForm.setValue("imgUrl", ""); }}
               recommendedSize="500×600px"
+              required={false}
             />
-
-            <TXT label="Image Alt Text" hint='Accessibility alt — e.g. "Yogi Chetan Mahesh — Founder of AYM Yoga School"' val={founder.imgAlt} err={founderErrors.imgAlt} onCh={(v) => setF("imgAlt", v)} ph="e.g. Yogi Chetan Mahesh — Founder of AYM Yoga School" max={150} />
-            <p className={styles.fieldHint} style={{ marginTop: "-1rem" }}>
-              Note: The overlay name label inside the image frame auto-uses the <strong>Founder Name</strong> field above.
-            </p>
+            <Controller control={founderForm.control} name="imgAlt" rules={{ required: "Required" }}
+              render={({ field, fieldState }) => (
+                <TXT label="Image Alt Text" hint='Accessibility alt text' val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Yogi Chetan Mahesh — Founder of AYM Yoga School" max={150} />
+              )} />
           </div>
           <div className={styles.formDivider} />
           <div className={styles.sectionBlock}>
             <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Bio Paragraphs</h3></div>
-            <RTE label="Paragraph 1" hint="Years of experience — Hatha & Ashtanga Yoga. Use Bold/Color for emphasis." val={founder.para1} err={founderErrors.para1} onCh={(v) => setF("para1", v)} />
-            <RTE label="Paragraph 2" hint="Student count (15,000+), best yoga instructor in India." val={founder.para2} err={founderErrors.para2} onCh={(v) => setF("para2", v)} />
-            <RTE label="Paragraph 3" hint="Achievement paragraph — bold the key achievement directly inside the editor." val={founder.para3} err={founderErrors.para3} onCh={(v) => setF("para3", v)} />
-            <TXT label="Paragraph 3 — Bold Highlight Text (plain)" hint="Optional: exact phrase from para 3 wrapped in <strong> (legacy support)" val={founder.para3Highlight} err={founderErrors.para3Highlight} onCh={(v) => setF("para3Highlight", v)} ph="e.g. Gold Medal recipient" max={80} />
+            {(["para1","para2","para3"] as const).map((key, pi) => (
+              <Controller key={key} control={founderForm.control} name={key}
+                rules={{ validate: (v) => !isRteEmpty(v) || "Required" }}
+                render={({ field, fieldState }) => (
+                  <RTE label={`Paragraph ${pi + 1}`} hint="" val={field.value} err={fieldState.error?.message} onCh={field.onChange} />
+                )} />
+            ))}
+            <Controller control={founderForm.control} name="para3Highlight" rules={{ required: "Required" }}
+              render={({ field, fieldState }) => (
+                <TXT label="Paragraph 3 — Bold Highlight (plain)" hint="Exact phrase from para 3 wrapped in <strong>" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Gold Medal recipient" max={80} />
+              )} />
           </div>
           <div className={styles.formDivider} />
           <div className={styles.sectionBlock}>
             <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Action Buttons</h3></div>
             <div className={styles.twoCol}>
-              <TXT label='"Know More" Button Text' hint="Label for the details button" val={founder.detailsBtnText} err={founderErrors.detailsBtnText} onCh={(v) => setF("detailsBtnText", v)} ph="e.g. Know More About Yogi Chetan Mahesh" max={80} />
-              <LINK label='"Know More" Button Link' hint="href for the details button" val={founder.detailsBtnLink} err={founderErrors.detailsBtnLink} onCh={(v) => setF("detailsBtnLink", v)} ph="/about/founder or #" req />
+              <Controller control={founderForm.control} name="detailsBtnText" rules={{ required: "Required" }}
+                render={({ field, fieldState }) => (
+                  <TXT label='"Know More" Button Text' hint="Label for the details button" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Know More About Yogi Chetan Mahesh" max={80} />
+                )} />
+              <Controller control={founderForm.control} name="detailsBtnLink" rules={{ required: "Required" }}
+                render={({ field, fieldState }) => (
+                  <LNKF label='"Know More" Button Link' hint="href for the details button" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="/about/founder or #" req />
+                )} />
             </div>
             <div className={styles.twoCol}>
-              <TXT label='"Book Now" Button Text' hint="Label for the book button" val={founder.bookBtnText} err={founderErrors.bookBtnText} onCh={(v) => setF("bookBtnText", v)} ph="e.g. Book Now" max={40} />
-              <LINK label='"Book Now" Button Link' hint="href for the book button" val={founder.bookBtnLink} err={founderErrors.bookBtnLink} onCh={(v) => setF("bookBtnLink", v)} ph="/book or #" req />
+              <Controller control={founderForm.control} name="bookBtnText" rules={{ required: "Required" }}
+                render={({ field, fieldState }) => (
+                  <TXT label='"Book Now" Button Text' hint="Label for the book button" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="e.g. Book Now" max={40} />
+                )} />
+              <Controller control={founderForm.control} name="bookBtnLink" rules={{ required: "Required" }}
+                render={({ field, fieldState }) => (
+                  <LNKF label='"Book Now" Button Link' hint="href for the book button" val={field.value} err={fieldState.error?.message} onCh={field.onChange} ph="/book or #" req />
+                )} />
             </div>
           </div>
           <div className={styles.formDivider} />
           <div className={styles.formActions}>
             <button type="button" className={styles.cancelBtn} onClick={() => setActiveTab("teachersHeader")}>← Previous</button>
-            <button type="button" className={styles.submitBtn} onClick={() => setActiveTab("teachers")} disabled={isSubmitting}>
+            <button type="button" className={styles.submitBtn} onClick={() => setActiveTab("teachers")}>
               Next: Teachers Grid →
             </button>
           </div>
         </div>
       )}
 
-      {/* ══════════ TAB 5 — TEACHERS GRID ══════════ */}
+      {/* ══════════════════════════════════════════════════
+          TAB 5 — TEACHERS GRID  (final submit here)
+      ══════════════════════════════════════════════════ */}
       {activeTab === "teachers" && (
         <div className={styles.formCard}>
           <div className={styles.sectionBlock}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionIcon}>✦</span>
-              <h3 className={styles.sectionTitle}>Teacher Cards (teachersGrid)</h3>
-              <span className={styles.sectionBadge}>{teachers.length}/10</span>
+              <h3 className={styles.sectionTitle}>Teacher Cards</h3>
+              <span className={styles.sectionBadge}>{teacherFields.length}/10</span>
             </div>
             <p className={styles.fieldHint} style={{ marginBottom: "1rem" }}>
               Each card shows name, surname, and photo in the grid below the founder block.
             </p>
             <div className={styles.certsList}>
-              {teachers.map((t, i) => (
-                <div key={i} className={styles.certCard}>
-                  <div className={styles.certCardHeader}>
-                    <span className={styles.certCardNum}>{i + 1}</span>
-                    <span className={styles.certCardTitle}>Teacher #{i + 1} — {t.name ? `${t.name} ${t.surname}` : "Untitled"}</span>
-                    <button type="button" className={styles.removeBtn} onClick={() => removeTeacher(i)} disabled={teachers.length <= 1}>✕ Remove</button>
-                  </div>
-                  <div style={{ padding: "1rem" }}>
-                    <div className={styles.twoCol}>
-                      <div className={styles.fieldGroup}>
-                        <label className={styles.label}><span className={styles.labelIcon}>✦</span>First Name<span className={styles.required}>*</span></label>
-                        <p className={styles.fieldHint}>Include title — e.g. Dr. / Yogi</p>
-                        <div className={`${styles.inputWrap} ${teacherErrors[i]?.name ? styles.inputError : ""} ${t.name && !teacherErrors[i]?.name ? styles.inputSuccess : ""}`}>
-                          <input type="text" className={styles.input} maxLength={60} placeholder="e.g. Dr. Mahesh or Yogi Deepak" value={t.name} onChange={(e) => updateTeacher(i, "name", e.target.value)} />
-                        </div>
-                        {teacherErrors[i]?.name && <p className={styles.errorMsg}>⚠ {teacherErrors[i].name}</p>}
-                      </div>
-                      <div className={styles.fieldGroup}>
-                        <label className={styles.label}><span className={styles.labelIcon}>✦</span>Surname<span className={styles.required}>*</span></label>
-                        <p className={styles.fieldHint}>Shown below the first name on the card</p>
-                        <div className={`${styles.inputWrap} ${teacherErrors[i]?.surname ? styles.inputError : ""} ${t.surname && !teacherErrors[i]?.surname ? styles.inputSuccess : ""}`}>
-                          <input type="text" className={styles.input} maxLength={60} placeholder="e.g. Bhatt" value={t.surname} onChange={(e) => updateTeacher(i, "surname", e.target.value)} />
-                        </div>
-                        {teacherErrors[i]?.surname && <p className={styles.errorMsg}>⚠ {teacherErrors[i].surname}</p>}
-                      </div>
-                    </div>
+              {teacherFields.map((field, i) => {
+                const imgUrl     = teachersForm.watch(`teachers.${i}.imgUrl`);
+                const imgPreview = teachersForm.watch(`teachers.${i}.imgPreview`);
 
-                    {/* ── DUAL IMAGE — Teacher ── */}
-                    <DualImageField
-                      label="Teacher Photo"
-                      hint="Upload a file OR paste an image URL. Recommended 300×350px."
-                      urlVal={t.imgUrl}
-                      previewVal={t.imgPreview}
-                      onUrlChange={(url) => updateTeacherImgUrl(i, url)}
-                      onFileChange={(file, preview) => updateTeacherImg(i, file, preview)}
-                      recommendedSize="300×350px"
-                    />
+                return (
+                  <div key={field.id} className={styles.certCard}>
+                    <div className={styles.certCardHeader}>
+                      <span className={styles.certCardNum}>{i + 1}</span>
+                      <span className={styles.certCardTitle}>
+                        Teacher #{i + 1} — {teachersForm.watch(`teachers.${i}.name`) ? `${teachersForm.watch(`teachers.${i}.name`)} ${teachersForm.watch(`teachers.${i}.surname`)}` : "Untitled"}
+                      </span>
+                      <button type="button" className={styles.removeBtn} onClick={() => removeTeacher(i)} disabled={teacherFields.length <= 1}>✕ Remove</button>
+                    </div>
+                    <div style={{ padding: "1rem" }}>
+                      <div className={styles.twoCol}>
+                        <Controller control={teachersForm.control} name={`teachers.${i}.name`} rules={{ required: "Required" }}
+                          render={({ field: f, fieldState: fs }) => (
+                            <TXT label="First Name" hint="Include title — e.g. Dr. / Yogi" val={f.value} err={fs.error?.message} onCh={f.onChange} ph="e.g. Dr. Mahesh or Yogi Deepak" max={60} />
+                          )} />
+                        <Controller control={teachersForm.control} name={`teachers.${i}.surname`} rules={{ required: "Required" }}
+                          render={({ field: f, fieldState: fs }) => (
+                            <TXT label="Surname" hint="Shown below the first name on the card" val={f.value} err={fs.error?.message} onCh={f.onChange} ph="e.g. Bhatt" max={60} />
+                          )} />
+                      </div>
+                      <DualImageField
+                        label="Teacher Photo" hint="Upload a file OR paste an image URL. Recommended 300×350px."
+                        urlVal={imgUrl} previewVal={imgPreview}
+                        onUrlChange={(url) => { teachersForm.setValue(`teachers.${i}.imgUrl`, url); teachersForm.setValue(`teachers.${i}.imgFile`, null); teachersForm.setValue(`teachers.${i}.imgPreview`, ""); }}
+                        onFileChange={(file, preview) => { teachersForm.setValue(`teachers.${i}.imgFile`, file); teachersForm.setValue(`teachers.${i}.imgPreview`, preview); if (file) teachersForm.setValue(`teachers.${i}.imgUrl`, ""); }}
+                        recommendedSize="300×350px"
+                        required={false}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-            {teachers.length < 10 && <button type="button" className={styles.addBtn} onClick={addTeacher}>+ Add Teacher</button>}
+            {teacherFields.length < 10 && (
+              <button type="button" className={styles.addBtn} onClick={() => appendTeacher({ ...DEFAULT_TEACHER })}>
+                + Add Teacher
+              </button>
+            )}
           </div>
           <div className={styles.formDivider} />
           <div className={styles.formActions}>
@@ -1051,10 +1006,12 @@ export default function AddYogaCoursesPage() {
             <button
               type="button"
               className={`${styles.submitBtn} ${isSubmitting ? styles.submitBtnLoading : ""}`}
-              onClick={handleSubmit}
+              onClick={handleFinalSubmit}
               disabled={isSubmitting}
             >
-              {isSubmitting ? <><span className={styles.spinner} /> Creating…</> : <><span>✦</span> Create Yoga Courses Page</>}
+              {isSubmitting
+                ? <><span className={styles.spinner} /> Creating…</>
+                : <><span>✦</span> Create Yoga Courses Page</>}
             </button>
           </div>
         </div>

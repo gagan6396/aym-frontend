@@ -27,10 +27,7 @@ const navItems = [
       { href: "/admin/dashboard/aymfullpage", label: "Aym Full Page" },
       { href: "/admin/dashboard/ourmission", label: "Our Mission" },
       { href: "/admin/dashboard/whyaymschool", label: "Why Aym School" },
-      {
-        href: "/admin/dashboard/testimonialsvideo",
-        label: "Testimonials Video",
-      },
+     
     ],
   },
 
@@ -53,7 +50,9 @@ const navItems = [
   {
     label: "Testimonials",
     icon: "✦",
-    children: [{ href: "/admin/testimonials", label: "All Testimonials" }],
+    children: [{ href: "/admin/dashboard/testimonialsvideo", label: "Testimonials video" },
+              { href: "/admin/dashboard/testimonialstext", label: "Testimonials Review Text" }
+    ],
   },
   { href: "/admin/dashboard/gallery", label: "Gallery", icon: "⌂" },
   { href: "/admin/dashboard/blog", label: "Blog", icon: "⌂" },

@@ -11,52 +11,28 @@ import api from "@/lib/api";
 
 const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
-function getYoutubeId(input: string): string {
-  if (!input) return "";
-  const s = input.trim();
-  if (/^[a-zA-Z0-9_-]{11}$/.test(s)) return s;
-  const shorts = s.match(/\/shorts\/([a-zA-Z0-9_-]{11})/);
-  if (shorts) return shorts[1];
-  const w = s.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-  if (w) return w[1];
-  const short = s.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-  if (short) return short[1];
-  const embed = s.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
-  if (embed) return embed[1];
-  return s;
-}
-
 interface TrustItem { icon: string; label: string; }
 interface FormValues {
-  name: string; country: string; flag: string;
-  youtubeUrl: string; course: string; rating: number; quote: string;
+  name: string; role: string; avatarSrc: string; rating: number; quote: string;
   superTitle: string; mainTitle: string; subtitle: string; trustItems: TrustItem[];
 }
 
-const COURSE_OPTIONS = ["200hr YTT","300hr YTT","500hr YTT","Online YTT","Yoga Retreat","Other"];
-const FLAG_OPTIONS = [
-  { flag: "🇺🇸", label: "United States" }, { flag: "🇬🇧", label: "United Kingdom" },
-  { flag: "🇩🇪", label: "Germany" },       { flag: "🇫🇷", label: "France" },
-  { flag: "🇳🇱", label: "Netherlands" },   { flag: "🇦🇺", label: "Australia" },
-  { flag: "🇨🇦", label: "Canada" },        { flag: "🇮🇳", label: "India" },
-  { flag: "🇧🇷", label: "Brazil" },        { flag: "🇲🇽", label: "Mexico" },
-  { flag: "🇮🇹", label: "Italy" },         { flag: "🇪🇸", label: "Spain" },
-  { flag: "🇯🇵", label: "Japan" },         { flag: "🇰🇷", label: "South Korea" },
-  { flag: "🇸🇬", label: "Singapore" },     { flag: "🌍", label: "Other" },
-];
-
-export default function EditVideoTestimonialPage() {
+export default function EditTextReviewPage() {
   const router   = useRouter();
   const params   = useParams();
   const reviewId = params?.id as string;
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [submitted, setSubmitted] = useState(false);
-  const editorRef = useRef(null);
+  const [isLoading,      setIsLoading]      = useState(true);
+  const [submitted,      setSubmitted]      = useState(false);
+  const [avatarFile,     setAvatarFile]     = useState<File | null>(null);
+  const [avatarPreview,  setAvatarPreview]  = useState("");
+  const [avatarUrlInput, setAvatarUrlInput] = useState("");
+  const avatarFileRef = useRef<HTMLInputElement>(null);
+  const editorRef     = useRef(null);
 
-  const { register, control, handleSubmit, watch, reset, setError, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const { register, control, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
     defaultValues: {
-      name: "", country: "", flag: "🇺🇸", youtubeUrl: "", course: "200hr YTT", rating: 5, quote: "",
+      name: "", role: "", avatarSrc: "", rating: 5, quote: "",
       superTitle: "", mainTitle: "", subtitle: "",
       trustItems: [{ icon: "✦", label: "" }],
     },
@@ -64,10 +40,9 @@ export default function EditVideoTestimonialPage() {
 
   const { fields, append, remove } = useFieldArray({ control, name: "trustItems" });
 
-  const youtubeUrl = watch("youtubeUrl");
-  const nameVal    = watch("name");
-  const ytId       = getYoutubeId(youtubeUrl);
-  const ytIdValid  = ytId.length === 11;
+  const nameVal       = watch("name");
+  const avatarSrc     = watch("avatarSrc");
+  const avatarDisplay = avatarPreview || avatarSrc;
 
   /* ── Fetch ── */
   useEffect(() => {
@@ -75,49 +50,75 @@ export default function EditVideoTestimonialPage() {
     (async () => {
       try {
         setIsLoading(true);
-        const res = await api.get(`/testimonials/videos/video/${reviewId}`);
+        const res = await api.get(`/testimonials/text/review/${reviewId}`);
         const d   = res.data.data;
         reset({
-          name:       d.name       ?? "",
-          country:    d.country    ?? "",
-          flag:       d.flag       ?? "🇺🇸",
-          youtubeUrl: d.youtubeUrl ?? d.youtubeId ?? "",
-          course:     d.course     ?? "200hr YTT",
-          rating:     d.rating     ?? 5,
-          quote:      d.quote      ?? "",
+          name:       d.name      ?? "",
+          role:       d.role      ?? "",
+          avatarSrc:  d.avatarSrc ?? "",
+          rating:     d.rating    ?? 5,
+          quote:      d.quote     ?? "",
           superTitle: d.sectionMeta?.superTitle ?? "",
           mainTitle:  d.sectionMeta?.mainTitle  ?? "",
           subtitle:   d.sectionMeta?.subtitle   ?? "",
           trustItems: d.sectionMeta?.trustItems?.length ? d.sectionMeta.trustItems : [{ icon: "✦", label: "" }],
         });
+        setAvatarFile(null);
+        setAvatarPreview("");
       } catch (err) {
-        toast.error("Failed to load testimonial");
+        toast.error("Failed to load review");
         console.error(err);
       } finally { setIsLoading(false); }
     })();
   }, [reviewId, reset]);
 
   const joditConfig = useMemo(() => ({
-    readonly: false, placeholder: "e.g. Namaste, my name is Marit…", height: 200, toolbarAdaptive: false,
+    readonly: false, placeholder: "e.g. This is truly the best yoga school…", height: 200, toolbarAdaptive: false,
     buttons: ["bold","italic","underline","strikethrough","|","font","fontsize","brush","|","paragraph","align","|","ul","ol","|","link","|","undo","redo","|","source"],
     colorPickerDefaultTab: "color", showCharsCounter: true, showWordsCounter: false, showXPathInStatusbar: false,
     style: { background: "transparent", color: "inherit" }, editorCssClass: styles.joditEditorBody ?? "",
   }), []);
 
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setAvatarFile(f);
+    setAvatarPreview(URL.createObjectURL(f));
+    setValue("avatarSrc", "");
+    if (avatarFileRef.current) avatarFileRef.current.value = "";
+  };
+
+  const handleAvatarUrl = () => {
+    const url = avatarUrlInput.trim();
+    if (!url) return;
+    setAvatarFile(null);
+    setAvatarPreview("");
+    setValue("avatarSrc", url, { shouldValidate: true });
+    setAvatarUrlInput("");
+  };
+
   const onSubmit = async (data: FormValues) => {
-    if (!ytIdValid) { setError("youtubeUrl", { message: "Could not extract a valid YouTube video ID" }); return; }
     try {
-      await api.put(`/testimonials/videos/update-video/${reviewId}`, {
-        name: data.name, country: data.country, flag: data.flag,
-        youtubeUrl: data.youtubeUrl, youtubeId: ytId,
-        course: data.course, quote: data.quote, rating: data.rating,
-        sectionMeta: { superTitle: data.superTitle, mainTitle: data.mainTitle, subtitle: data.subtitle, trustItems: data.trustItems },
-      });
+      const fd = new FormData();
+      fd.append("name",   data.name);
+      fd.append("role",   data.role);
+      fd.append("quote",  data.quote);
+      fd.append("rating", String(data.rating));
+      fd.append("sectionMeta", JSON.stringify({
+        superTitle: data.superTitle, mainTitle: data.mainTitle,
+        subtitle: data.subtitle, trustItems: data.trustItems,
+      }));
+      if (avatarFile) {
+        fd.append("avatar", avatarFile);
+      } else if (data.avatarSrc) {
+        fd.append("avatarSrc", data.avatarSrc);
+      }
+
+      await api.put(`/testimonials/text/update-review/${reviewId}`, fd, { headers: { "Content-Type": "multipart/form-data" } });
       setSubmitted(true);
-      setTimeout(() => router.push("/admin/dashboard/testimonialsvideo"), 1500);
+      setTimeout(() => router.push("/admin/dashboard/testimonialstext"), 1500);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || "Failed to update";
-      toast.error(msg.toLowerCase().includes("only 3") ? "⚠️ Video limit reached! Only 3 allowed." : msg, { duration: 5000 });
+      toast.error(err?.response?.data?.message || err?.message || "Failed to update");
     }
   };
 
@@ -131,7 +132,7 @@ export default function EditVideoTestimonialPage() {
     <div className={styles.successScreen}>
       <div className={styles.successCard}>
         <div className={styles.successOm}>ॐ</div><div className={styles.successCheck}>✓</div>
-        <h2 className={styles.successTitle}>Video Testimonial Updated!</h2>
+        <h2 className={styles.successTitle}>Text Review Updated!</h2>
         <p className={styles.successText}>Redirecting…</p>
       </div>
     </div>
@@ -142,15 +143,15 @@ export default function EditVideoTestimonialPage() {
       <Toaster position="bottom-right" toastOptions={{ duration: 3000, style: { background: "#1f2937", color: "#fff", borderRadius: "10px", padding: "12px 16px", fontSize: "14px" } }} />
 
       <div className={styles.breadcrumb}>
-        <Link href="/admin/dashboard/testimonialsvideo" className={styles.breadcrumbLink}>Video Testimonials</Link>
+        <Link href="/admin/dashboard/testimonialstext" className={styles.breadcrumbLink}>Text Reviews</Link>
         <span className={styles.breadcrumbSep}>›</span>
         <span className={styles.breadcrumbCurrent}>Edit</span>
       </div>
 
       <div className={styles.pageHeader}>
         <div className={styles.pageHeaderLeft}>
-          <h1 className={styles.pageTitle}>Edit Video Testimonial</h1>
-          <p className={styles.pageSubtitle}>Update all video testimonial details</p>
+          <h1 className={styles.pageTitle}>Edit Text Review</h1>
+          <p className={styles.pageSubtitle}>Update all text review details</p>
         </div>
       </div>
 
@@ -158,13 +159,13 @@ export default function EditVideoTestimonialPage() {
 
       <form className={styles.formCard} onSubmit={handleSubmit(onSubmit)} noValidate>
 
-        {/* ── STUDENT DETAILS ── */}
+        {/* ── REVIEWER DETAILS ── */}
         <div className={styles.sectionBlock}>
-          <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Student Details</h3></div>
+          <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Reviewer Details</h3></div>
 
           <div className={styles.twoCol}>
             <div className={styles.fieldGroup}>
-              <label className={styles.label}><span className={styles.labelIcon}>✦</span>Student Name<span className={styles.required}>*</span></label>
+              <label className={styles.label}><span className={styles.labelIcon}>✦</span>Reviewer Name<span className={styles.required}>*</span></label>
               <div className={`${styles.inputWrap} ${errors.name ? styles.inputError : nameVal ? styles.inputSuccess : ""}`}>
                 <input type="text" className={styles.input} maxLength={80}
                   {...register("name", { required: "Name is required" })} />
@@ -173,77 +174,69 @@ export default function EditVideoTestimonialPage() {
               {errors.name && <p className={styles.errorMsg}>⚠ {errors.name.message}</p>}
             </div>
             <div className={styles.fieldGroup}>
-              <label className={styles.label}><span className={styles.labelIcon}>✦</span>Country<span className={styles.required}>*</span></label>
-              <div className={`${styles.inputWrap} ${errors.country ? styles.inputError : watch("country") ? styles.inputSuccess : ""}`}>
-                <input type="text" className={styles.input} maxLength={60}
-                  {...register("country", { required: "Country is required" })} />
+              <label className={styles.label}><span className={styles.labelIcon}>✦</span>Role / Title<span className={styles.required}>*</span></label>
+              <p className={styles.fieldHint}>e.g. Certified Yoga Teacher · Yoga Practitioner, Peru</p>
+              <div className={`${styles.inputWrap} ${errors.role ? styles.inputError : watch("role") ? styles.inputSuccess : ""}`}>
+                <input type="text" className={styles.input} maxLength={100}
+                  {...register("role", { required: "Role is required" })} />
               </div>
-              {errors.country && <p className={styles.errorMsg}>⚠ {errors.country.message}</p>}
+              {errors.role && <p className={styles.errorMsg}>⚠ {errors.role.message}</p>}
             </div>
           </div>
 
-          <div className={styles.threeCol}>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}><span className={styles.labelIcon}>✦</span>Flag</label>
-              <div className={styles.inputWrap} style={{ position: "relative" }}>
-                <select className={styles.select} {...register("flag")}>
-                  {FLAG_OPTIONS.map((f) => <option key={f.flag} value={f.flag}>{f.flag} {f.label}</option>)}
-                </select>
-                <span className={styles.selectArrow}>▾</span>
+          {/* Avatar */}
+          <div className={styles.fieldGroup}>
+            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Avatar Photo</label>
+            <p className={styles.fieldHint}>Upload a new file or paste a URL to replace. Blank = initials shown.</p>
+            <div className={styles.avatarUploadRow}>
+              <div className={styles.avatarPreviewCircle}>
+                {avatarDisplay
+                  ? <img src={avatarDisplay} alt={nameVal} className={styles.avatarPreviewImg}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                  : <span>{nameVal?.charAt(0)?.toUpperCase() || "?"}</span>}
               </div>
-            </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}><span className={styles.labelIcon}>✦</span>Course<span className={styles.required}>*</span></label>
-              <div className={`${styles.inputWrap} ${errors.course ? styles.inputError : ""}`} style={{ position: "relative" }}>
-                <select className={styles.select} {...register("course", { required: "Course is required" })}>
-                  {COURSE_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <span className={styles.selectArrow}>▾</span>
-              </div>
-              {errors.course && <p className={styles.errorMsg}>⚠ {errors.course.message}</p>}
-            </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}><span className={styles.labelIcon}>✦</span>Rating</label>
-              <div className={styles.inputWrap} style={{ padding: "0 0.5rem" }}>
-                <Controller name="rating" control={control} render={({ field }) => (
-                  <div className={styles.starRatingInput}>
-                    {[1,2,3,4,5].map((s) => (
-                      <button key={s} type="button" className={`${styles.starBtn} ${s <= field.value ? styles.starBtnActive : ""}`} onClick={() => field.onChange(s)}>★</button>
-                    ))}
+              <div className={styles.avatarControls}>
+                <div className={styles.uploadZoneSmall} onClick={() => avatarFileRef.current?.click()}>
+                  <p className={styles.uploadText}>{avatarFile ? `✓ ${avatarFile.name}` : "📁 Click to replace photo"}</p>
+                  <input ref={avatarFileRef} type="file" accept="image/*" className={styles.uploadInput} onChange={handleAvatarFile} />
+                </div>
+                <div className={styles.urlRowSmall}>
+                  <div className={styles.inputWrap}>
+                    <input type="text" className={styles.input} placeholder="Or paste avatar URL (https://…)"
+                      value={avatarUrlInput}
+                      onChange={(e) => setAvatarUrlInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAvatarUrl(); } }} />
                   </div>
-                )} />
+                  <button type="button" className={styles.addUrlBtn} onClick={handleAvatarUrl}>Use URL</button>
+                </div>
               </div>
+            </div>
+            <input type="hidden" {...register("avatarSrc")} />
+          </div>
+
+          {/* Star Rating */}
+          <div className={styles.fieldGroup}>
+            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Star Rating</label>
+            <div className={styles.inputWrap} style={{ padding: "0 0.5rem" }}>
+              <Controller name="rating" control={control} render={({ field }) => (
+                <div className={styles.starRatingInput}>
+                  {[1,2,3,4,5].map((s) => (
+                    <button key={s} type="button" className={`${styles.starBtn} ${s <= field.value ? styles.starBtnActive : ""}`} onClick={() => field.onChange(s)}>★</button>
+                  ))}
+                </div>
+              )} />
             </div>
           </div>
         </div>
 
         <div className={styles.formDivider} />
 
-        {/* ── VIDEO ── */}
+        {/* ── REVIEW QUOTE ── */}
         <div className={styles.sectionBlock}>
-          <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Video Details</h3></div>
-
+          <div className={styles.sectionHeader}><span className={styles.sectionIcon}>✦</span><h3 className={styles.sectionTitle}>Review Quote</h3></div>
           <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>YouTube URL or Video ID<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Paste full YouTube URL, Shorts link, or just the 11-character video ID</p>
-            <div className={`${styles.inputWrap} ${styles.inputWithPrefix} ${errors.youtubeUrl ? styles.inputError : ytIdValid ? styles.inputSuccess : ""}`}>
-              <span className={styles.inputPrefix}>▶</span>
-              <input type="text" className={`${styles.input} ${styles.inputPrefixed}`}
-                {...register("youtubeUrl", { required: "YouTube URL/ID is required" })} />
-            </div>
-            {errors.youtubeUrl && <p className={styles.errorMsg}>⚠ {errors.youtubeUrl.message}</p>}
-            {ytId && (
-              <div className={styles.ytIdPreview}>
-                <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt="Thumbnail" className={styles.ytIdPreviewImg}
-                  onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0.3"; }} />
-                <span className={styles.ytIdPreviewText}>{ytIdValid ? `✓ Video ID: ${ytId}` : "⚠ Could not extract ID"}</span>
-              </div>
-            )}
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Quote / Testimonial Text<span className={styles.required}>*</span></label>
-            <p className={styles.fieldHint}>Supports bold, italic, colours &amp; more</p>
+            <label className={styles.label}><span className={styles.labelIcon}>✦</span>Review Text<span className={styles.required}>*</span></label>
+            <p className={styles.fieldHint}>Full review — supports bold, italic, colours &amp; more</p>
             <div className={errors.quote ? styles.joditWrapError : styles.joditWrap}>
               <Controller name="quote" control={control}
                 rules={{ required: "Quote is required", validate: (v) => v.replace(/<[^>]*>/g, "").trim().length > 0 || "Quote is required" }}
@@ -321,9 +314,9 @@ export default function EditVideoTestimonialPage() {
 
         <div className={styles.formDivider} />
         <div className={styles.formActions}>
-          <Link href="/admin/dashboard/testimonialsvideo" className={styles.cancelBtn}>← Cancel</Link>
+          <Link href="/admin/dashboard/testimonialstext" className={styles.cancelBtn}>← Cancel</Link>
           <button type="submit" className={`${styles.submitBtn} ${isSubmitting ? styles.submitBtnLoading : ""}`} disabled={isSubmitting}>
-            {isSubmitting ? <><span className={styles.spinner} /> Updating…</> : <><span>✦</span> Update Video Testimonial</>}
+            {isSubmitting ? <><span className={styles.spinner} /> Updating…</> : <><span>✦</span> Update Text Review</>}
           </button>
         </div>
       </form>
