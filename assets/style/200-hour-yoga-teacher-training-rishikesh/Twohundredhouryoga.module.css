@@ -2,6 +2,7 @@
    TwoHundredHourYoga.module.css
    Same vintage design as HundredHourYoga — Aged Parchment
    Saffron · Sepia Ink · Mandala/Chakra · Fully Responsive
+   + Seats / Apply styles added (same as HundredHourYoga)
    ================================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Dancing+Script:wght@600;700&display=swap');
@@ -89,13 +90,8 @@
 }
 
 @keyframes spinM {
-  from {
-    transform: rotate(0deg)
-  }
-
-  to {
-    transform: rotate(360deg)
-  }
+  from { transform: rotate(0deg) }
+  to   { transform: rotate(360deg) }
 }
 
 /* Border strip */
@@ -290,16 +286,6 @@
   margin: 0 auto;
 }
 
-
-
-
-
-
-
-
-
-
-
 .heroTextWrap {
   position: relative;
   z-index: 1;
@@ -335,29 +321,12 @@
   background: linear-gradient(160deg, #fff0cc 0%, #eed8a0 100%);
 }
 
-.statCard .cornerOrn:nth-child(1) {
-  top: 4px;
-  left: 4px
-}
+.statCard .cornerOrn:nth-child(1) { top: 4px; left: 4px }
+.statCard .cornerOrn:nth-child(2) { top: 4px; right: 4px }
+.statCard .cornerOrn:nth-child(3) { bottom: 4px; left: 4px }
+.statCard .cornerOrn:nth-child(4) { bottom: 4px; right: 4px }
 
-.statCard .cornerOrn:nth-child(2) {
-  top: 4px;
-  right: 4px
-}
-
-.statCard .cornerOrn:nth-child(3) {
-  bottom: 4px;
-  left: 4px
-}
-
-.statCard .cornerOrn:nth-child(4) {
-  bottom: 4px;
-  right: 4px
-}
-
-.statIcon {
-  font-size: 1.6rem;
-}
+.statIcon   { font-size: 1.6rem; }
 
 .statVal {
   font-family: var(--font-display);
@@ -392,7 +361,6 @@
   margin: 0 auto;
 }
 
-/* H3 left-align with orange underline */
 .h3Left {
   font-family: var(--font-body);
   font-size: clamp(1rem, 1.8vw, 1.2rem);
@@ -419,27 +387,14 @@
   box-shadow: inset 0 0 0 4px rgba(184, 134, 11, 0.08), 0 4px 18px var(--shadow-warm);
 }
 
-.overviewBox .cornerOrn:nth-child(1) {
-  top: 5px;
-  left: 5px
-}
+.overviewBox .cornerOrn:nth-child(1) { top: 5px; left: 5px }
+.overviewBox .cornerOrn:nth-child(2) { top: 5px; right: 5px }
+.overviewBox .cornerOrn:nth-child(3) { bottom: 5px; left: 5px }
+.overviewBox .cornerOrn:nth-child(4) { bottom: 5px; right: 5px }
 
-.overviewBox .cornerOrn:nth-child(2) {
-  top: 5px;
-  right: 5px
-}
-
-.overviewBox .cornerOrn:nth-child(3) {
-  bottom: 5px;
-  left: 5px
-}
-
-.overviewBox .cornerOrn:nth-child(4) {
-  bottom: 5px;
-  right: 5px
-}
-
-/* ═══ DATES TABLE ═══ */
+/* ═══════════════════════════════════════════════════
+   DATES TABLE — with thead + Seats + Apply columns
+═══════════════════════════════════════════════════ */
 .tableContainer {
   position: relative;
   border: 2px solid var(--saffron-gold);
@@ -449,34 +404,34 @@
   padding: 0.4rem;
 }
 
-.tableContainer .cornerOrn:nth-child(1) {
-  top: 4px;
-  left: 4px
-}
+.tableContainer .cornerOrn:nth-child(1) { top: 4px; left: 4px }
+.tableContainer .cornerOrn:nth-child(2) { top: 4px; right: 4px }
+.tableContainer .cornerOrn:nth-child(3) { bottom: 4px; left: 4px }
+.tableContainer .cornerOrn:nth-child(4) { bottom: 4px; right: 4px }
 
-.tableContainer .cornerOrn:nth-child(2) {
-  top: 4px;
-  right: 4px
-}
-
-.tableContainer .cornerOrn:nth-child(3) {
-  bottom: 4px;
-  left: 4px
-}
-
-.tableContainer .cornerOrn:nth-child(4) {
-  bottom: 4px;
-  right: 4px
-}
-
-.tableScroll {
-  overflow-x: auto;
-}
+.tableScroll { overflow-x: auto; }
 
 .datesTable {
   width: 100%;
   border-collapse: collapse;
-  min-width: 540px;
+  min-width: 780px;
+}
+
+/* ── thead (same as 100hr) ── */
+.datesTable thead tr {
+  background: linear-gradient(135deg, var(--saffron-bright) 0%, var(--saffron) 100%);
+}
+
+.datesTable thead th {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cream);
+  padding: 0.9rem 1rem;
+  text-align: center;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .datesTable tbody tr {
@@ -484,21 +439,15 @@
   transition: background 0.2s;
 }
 
-.datesTable tbody tr:nth-child(odd) {
-  background: rgba(245, 230, 200, 0.6);
-}
-
-.datesTable tbody tr:nth-child(even) {
-  background: rgba(232, 210, 168, 0.5);
-}
-
-.datesTable tbody tr:hover {
-  background: rgba(200, 112, 10, 0.1);
-}
+.datesTable tbody tr:nth-child(odd)  { background: rgba(245, 230, 200, 0.6); }
+.datesTable tbody tr:nth-child(even) { background: rgba(232, 210, 168, 0.5); }
+.datesTable tbody tr:hover           { background: rgba(200, 112, 10, 0.1); }
 
 .datesTable tbody td {
   padding: 0.7rem 1rem;
   font-family: var(--font-body);
+  text-align: center;
+  vertical-align: middle;
 }
 
 .dateCell {
@@ -506,30 +455,82 @@
   color: var(--ink-mid);
 }
 
-.dateCal {
-  color: var(--saffron);
-}
+.dateCal { color: var(--saffron); margin-right: 0.3rem; }
 
-.priceCell {
-  font-size: clamp(0.85rem, 1.3vw, 0.95rem);
-  color: var(--ink-soft);
+/* Room price cell — pipe-separated, slightly smaller */
+.roomPriceCell {
+  font-size: clamp(0.82rem, 1.2vw, 0.9rem) !important;
+  white-space: nowrap;
 }
 
 .priceAmt {
-  color: var(--saffron-bright);
+  color: var(--maroon);
   font-weight: 700;
 }
 
-.earlyCell {
-  text-align: right;
-  padding-right: 1rem;
-}
-
-.earlyBird {
+/* ════════════════════════
+   SEATS COLUMN STYLES
+   (same as HundredHourYoga)
+════════════════════════ */
+.seatsAvailable {
   font-family: var(--font-display);
   font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #3d6000;
+  background: rgba(90, 138, 0, 0.1);
+  border: 1px solid rgba(90, 138, 0, 0.3);
+  border-radius: 20px;
+  padding: 0.22rem 0.7rem;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.fullyBooked {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #8a2c00;
+  background: rgba(184, 64, 0, 0.1);
+  border: 1px solid rgba(184, 64, 0, 0.35);
+  border-radius: 20px;
+  padding: 0.22rem 0.7rem;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+/* ════════════════════════
+   APPLY LINK / DISABLED
+   (same as HundredHourYoga)
+════════════════════════ */
+.applyLink {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--saffron);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--saffron);
+  transition: color 0.18s, border-color 0.18s;
+  white-space: nowrap;
+}
+
+.applyLink:hover {
+  color: var(--maroon);
+  border-color: var(--maroon);
+}
+
+.applyDisabled {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #b0a090;
+  border-bottom: 1px dotted #b0a090;
+  cursor: not-allowed;
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .tableNote {
@@ -579,25 +580,10 @@
   box-shadow: inset 0 0 0 4px rgba(184, 134, 11, 0.07), 0 4px 18px var(--shadow-warm);
 }
 
-.feeInclCard .cornerOrn:nth-child(1) {
-  top: 5px;
-  left: 5px
-}
-
-.feeInclCard .cornerOrn:nth-child(2) {
-  top: 5px;
-  right: 5px
-}
-
-.feeInclCard .cornerOrn:nth-child(3) {
-  bottom: 5px;
-  left: 5px
-}
-
-.feeInclCard .cornerOrn:nth-child(4) {
-  bottom: 5px;
-  right: 5px
-}
+.feeInclCard .cornerOrn:nth-child(1) { top: 5px; left: 5px }
+.feeInclCard .cornerOrn:nth-child(2) { top: 5px; right: 5px }
+.feeInclCard .cornerOrn:nth-child(3) { bottom: 5px; left: 5px }
+.feeInclCard .cornerOrn:nth-child(4) { bottom: 5px; right: 5px }
 
 .feeInclTitle {
   font-family: var(--font-body);
@@ -695,25 +681,10 @@
   aspect-ratio: 4/3;
 }
 
-.moduleDetailImg .cornerOrn:nth-child(1) {
-  top: 5px;
-  left: 5px
-}
-
-.moduleDetailImg .cornerOrn:nth-child(2) {
-  top: 5px;
-  right: 5px
-}
-
-.moduleDetailImg .cornerOrn:nth-child(3) {
-  bottom: 5px;
-  left: 5px
-}
-
-.moduleDetailImg .cornerOrn:nth-child(4) {
-  bottom: 5px;
-  right: 5px
-}
+.moduleDetailImg .cornerOrn:nth-child(1) { top: 5px; left: 5px }
+.moduleDetailImg .cornerOrn:nth-child(2) { top: 5px; right: 5px }
+.moduleDetailImg .cornerOrn:nth-child(3) { bottom: 5px; left: 5px }
+.moduleDetailImg .cornerOrn:nth-child(4) { bottom: 5px; right: 5px }
 
 .modImg {
   width: 100%;
@@ -751,25 +722,10 @@
   margin-bottom: 2rem;
 }
 
-.primaryCurrCard .cornerOrn:nth-child(1) {
-  top: 6px;
-  left: 6px
-}
-
-.primaryCurrCard .cornerOrn:nth-child(2) {
-  top: 6px;
-  right: 6px
-}
-
-.primaryCurrCard .cornerOrn:nth-child(3) {
-  bottom: 6px;
-  left: 6px
-}
-
-.primaryCurrCard .cornerOrn:nth-child(4) {
-  bottom: 6px;
-  right: 6px
-}
+.primaryCurrCard .cornerOrn:nth-child(1) { top: 6px; left: 6px }
+.primaryCurrCard .cornerOrn:nth-child(2) { top: 6px; right: 6px }
+.primaryCurrCard .cornerOrn:nth-child(3) { bottom: 6px; left: 6px }
+.primaryCurrCard .cornerOrn:nth-child(4) { bottom: 6px; right: 6px }
 
 .foundationBox {
   border: 1.5px solid var(--saffron-gold);
@@ -790,9 +746,7 @@
   color: var(--saffron);
 }
 
-.foundIcon {
-  font-size: 1.2rem;
-}
+.foundIcon { font-size: 1.2rem; }
 
 .foundList {
   font-family: var(--font-body);
@@ -842,9 +796,7 @@
   font-size: 0.88rem;
 }
 
-.weekItem:last-child {
-  border-bottom: none;
-}
+.weekItem:last-child { border-bottom: none; }
 
 .weekDot {
   color: var(--saffron);
@@ -952,25 +904,10 @@
   box-shadow: inset 0 0 0 5px rgba(184, 134, 11, 0.09), 0 4px 20px var(--shadow-warm);
 }
 
-.photoSliderWrap .cornerOrn:nth-child(1) {
-  top: 5px;
-  left: 5px
-}
-
-.photoSliderWrap .cornerOrn:nth-child(2) {
-  top: 5px;
-  right: 5px
-}
-
-.photoSliderWrap .cornerOrn:nth-child(3) {
-  bottom: 5px;
-  left: 5px
-}
-
-.photoSliderWrap .cornerOrn:nth-child(4) {
-  bottom: 5px;
-  right: 5px
-}
+.photoSliderWrap .cornerOrn:nth-child(1) { top: 5px; left: 5px }
+.photoSliderWrap .cornerOrn:nth-child(2) { top: 5px; right: 5px }
+.photoSliderWrap .cornerOrn:nth-child(3) { bottom: 5px; left: 5px }
+.photoSliderWrap .cornerOrn:nth-child(4) { bottom: 5px; right: 5px }
 
 .photoSlider {
   display: grid;
@@ -1005,14 +942,9 @@
   border-bottom: 1px dashed rgba(184, 134, 11, 0.18);
 }
 
-.luxuryItem:last-child {
-  border-bottom: none;
-}
+.luxuryItem:last-child { border-bottom: none; }
 
-.luxuryDot {
-  flex-shrink: 0;
-  line-height: 0;
-}
+.luxuryDot { flex-shrink: 0; line-height: 0; }
 
 .luxuryImgGrid {
   display: grid;
@@ -1052,25 +984,10 @@
   box-shadow: 0 3px 12px var(--shadow-warm);
 }
 
-.indianFeeCard .cornerOrn:nth-child(1) {
-  top: 3px;
-  left: 3px
-}
-
-.indianFeeCard .cornerOrn:nth-child(2) {
-  top: 3px;
-  right: 3px
-}
-
-.indianFeeCard .cornerOrn:nth-child(3) {
-  bottom: 3px;
-  left: 3px
-}
-
-.indianFeeCard .cornerOrn:nth-child(4) {
-  bottom: 3px;
-  right: 3px
-}
+.indianFeeCard .cornerOrn:nth-child(1) { top: 3px; left: 3px }
+.indianFeeCard .cornerOrn:nth-child(2) { top: 3px; right: 3px }
+.indianFeeCard .cornerOrn:nth-child(3) { bottom: 3px; left: 3px }
+.indianFeeCard .cornerOrn:nth-child(4) { bottom: 3px; right: 3px }
 
 .indianFeeLabel {
   display: block;
@@ -1105,25 +1022,10 @@
   box-shadow: inset 0 0 0 4px rgba(184, 134, 11, 0.09), 0 4px 20px var(--shadow-warm);
 }
 
-.schedTableWrap .cornerOrn:nth-child(1) {
-  top: 5px;
-  left: 5px
-}
-
-.schedTableWrap .cornerOrn:nth-child(2) {
-  top: 5px;
-  right: 5px
-}
-
-.schedTableWrap .cornerOrn:nth-child(3) {
-  bottom: 5px;
-  left: 5px
-}
-
-.schedTableWrap .cornerOrn:nth-child(4) {
-  bottom: 5px;
-  right: 5px
-}
+.schedTableWrap .cornerOrn:nth-child(1) { top: 5px; left: 5px }
+.schedTableWrap .cornerOrn:nth-child(2) { top: 5px; right: 5px }
+.schedTableWrap .cornerOrn:nth-child(3) { bottom: 5px; left: 5px }
+.schedTableWrap .cornerOrn:nth-child(4) { bottom: 5px; right: 5px }
 
 .schedTable {
   width: 100%;
@@ -1148,17 +1050,9 @@
   border-bottom: 1px dashed rgba(184, 134, 11, 0.18);
 }
 
-.schedTable tbody tr:nth-child(odd) {
-  background: rgba(245, 230, 200, 0.6);
-}
-
-.schedTable tbody tr:nth-child(even) {
-  background: rgba(232, 210, 168, 0.4);
-}
-
-.schedTable tbody tr:hover {
-  background: rgba(200, 112, 10, 0.08);
-}
+.schedTable tbody tr:nth-child(odd)  { background: rgba(245, 230, 200, 0.6); }
+.schedTable tbody tr:nth-child(even) { background: rgba(232, 210, 168, 0.4); }
+.schedTable tbody tr:hover           { background: rgba(200, 112, 10, 0.08); }
 
 .schedTable tbody td {
   font-family: var(--font-body);
@@ -1183,9 +1077,7 @@
 }
 
 /* Info block */
-.infoBlock {
-  margin: 0.8rem 0;
-}
+.infoBlock { margin: 0.8rem 0; }
 
 .infoDivider {
   height: 1px;
@@ -1215,25 +1107,10 @@
   box-shadow: 0 8px 32px rgba(200, 112, 10, 0.35);
 }
 
-.ctaBanner .cornerOrn:nth-child(1) {
-  top: 6px;
-  left: 6px
-}
-
-.ctaBanner .cornerOrn:nth-child(2) {
-  top: 6px;
-  right: 6px
-}
-
-.ctaBanner .cornerOrn:nth-child(3) {
-  bottom: 6px;
-  left: 6px
-}
-
-.ctaBanner .cornerOrn:nth-child(4) {
-  bottom: 6px;
-  right: 6px
-}
+.ctaBanner .cornerOrn:nth-child(1) { top: 6px; left: 6px }
+.ctaBanner .cornerOrn:nth-child(2) { top: 6px; right: 6px }
+.ctaBanner .cornerOrn:nth-child(3) { bottom: 6px; left: 6px }
+.ctaBanner .cornerOrn:nth-child(4) { bottom: 6px; right: 6px }
 
 .ctaBannerTitle {
   font-family: var(--font-body);
@@ -1281,9 +1158,7 @@
   box-shadow: 2px 2px 0 rgba(80, 40, 5, 0.2);
 }
 
-.applyNowBtn:hover {
-  transform: translateY(-2px);
-}
+.applyNowBtn:hover { transform: translateY(-2px); }
 
 .phoneBtn {
   font-family: var(--font-display);
@@ -1299,9 +1174,7 @@
   transition: border-color 0.18s;
 }
 
-.phoneBtn:hover {
-  border-color: var(--cream);
-}
+.phoneBtn:hover { border-color: var(--cream); }
 
 /* Programs grid */
 .programGrid {
@@ -1323,25 +1196,10 @@
   gap: 0.5rem;
 }
 
-.programCard .cornerOrn:nth-child(1) {
-  top: 5px;
-  left: 5px
-}
-
-.programCard .cornerOrn:nth-child(2) {
-  top: 5px;
-  right: 5px
-}
-
-.programCard .cornerOrn:nth-child(3) {
-  bottom: 5px;
-  left: 5px
-}
-
-.programCard .cornerOrn:nth-child(4) {
-  bottom: 5px;
-  right: 5px
-}
+.programCard .cornerOrn:nth-child(1) { top: 5px; left: 5px }
+.programCard .cornerOrn:nth-child(2) { top: 5px; right: 5px }
+.programCard .cornerOrn:nth-child(3) { bottom: 5px; left: 5px }
+.programCard .cornerOrn:nth-child(4) { bottom: 5px; right: 5px }
 
 .programIcon {
   display: flex;
@@ -1378,9 +1236,7 @@
   margin-top: 0.4rem;
 }
 
-.metaLabel {
-  color: var(--ink-soft);
-}
+.metaLabel { color: var(--ink-soft); }
 
 .oldPrice {
   color: var(--ink-soft);
@@ -1388,9 +1244,7 @@
   margin-right: 4px;
 }
 
-.newPrice {
-  color: var(--saffron-bright);
-}
+.newPrice { color: var(--saffron-bright); }
 
 .learnMoreBtn {
   display: block;
@@ -1410,9 +1264,7 @@
   box-shadow: 0 3px 12px rgba(200, 112, 10, 0.3);
 }
 
-.learnMoreBtn:hover {
-  transform: translateY(-2px);
-}
+.learnMoreBtn:hover { transform: translateY(-2px); }
 
 /* Requirements grid */
 .requirementsGrid {
@@ -1431,25 +1283,10 @@
   box-shadow: inset 0 0 0 5px rgba(184, 134, 11, 0.1), 0 6px 28px var(--shadow-warm);
 }
 
-.requirementsImg .cornerOrn:nth-child(1) {
-  top: 5px;
-  left: 5px
-}
-
-.requirementsImg .cornerOrn:nth-child(2) {
-  top: 5px;
-  right: 5px
-}
-
-.requirementsImg .cornerOrn:nth-child(3) {
-  bottom: 5px;
-  left: 5px
-}
-
-.requirementsImg .cornerOrn:nth-child(4) {
-  bottom: 5px;
-  right: 5px
-}
+.requirementsImg .cornerOrn:nth-child(1) { top: 5px; left: 5px }
+.requirementsImg .cornerOrn:nth-child(2) { top: 5px; right: 5px }
+.requirementsImg .cornerOrn:nth-child(3) { bottom: 5px; left: 5px }
+.requirementsImg .cornerOrn:nth-child(4) { bottom: 5px; right: 5px }
 
 .reqImg {
   width: 100%;
@@ -1484,25 +1321,10 @@
   box-shadow: inset 0 0 0 4px rgba(184, 134, 11, 0.07), 0 4px 18px var(--shadow-warm);
 }
 
-.reviewCard .cornerOrn:nth-child(1) {
-  top: 5px;
-  left: 5px
-}
-
-.reviewCard .cornerOrn:nth-child(2) {
-  top: 5px;
-  right: 5px
-}
-
-.reviewCard .cornerOrn:nth-child(3) {
-  bottom: 5px;
-  left: 5px
-}
-
-.reviewCard .cornerOrn:nth-child(4) {
-  bottom: 5px;
-  right: 5px
-}
+.reviewCard .cornerOrn:nth-child(1) { top: 5px; left: 5px }
+.reviewCard .cornerOrn:nth-child(2) { top: 5px; right: 5px }
+.reviewCard .cornerOrn:nth-child(3) { bottom: 5px; left: 5px }
+.reviewCard .cornerOrn:nth-child(4) { bottom: 5px; right: 5px }
 
 .reviewHeader {
   display: flex;
@@ -1617,30 +1439,12 @@
   box-shadow: 0 4px 16px var(--shadow-warm);
 }
 
-.bookingStep .cornerOrn:nth-child(1) {
-  top: 4px;
-  left: 4px
-}
+.bookingStep .cornerOrn:nth-child(1) { top: 4px; left: 4px }
+.bookingStep .cornerOrn:nth-child(2) { top: 4px; right: 4px }
+.bookingStep .cornerOrn:nth-child(3) { bottom: 4px; left: 4px }
+.bookingStep .cornerOrn:nth-child(4) { bottom: 4px; right: 4px }
 
-.bookingStep .cornerOrn:nth-child(2) {
-  top: 4px;
-  right: 4px
-}
-
-.bookingStep .cornerOrn:nth-child(3) {
-  bottom: 4px;
-  left: 4px
-}
-
-.bookingStep .cornerOrn:nth-child(4) {
-  bottom: 4px;
-  right: 4px
-}
-
-.bookingStepIcon {
-  font-size: 2rem;
-  margin-bottom: 0.6rem;
-}
+.bookingStepIcon { font-size: 2rem; margin-bottom: 0.6rem; }
 
 .bookingStepTitle {
   font-family: var(--font-display);
@@ -1675,9 +1479,7 @@
   border-bottom: 1px dashed rgba(184, 134, 11, 0.25);
 }
 
-.faqItem:last-child {
-  border-bottom: none;
-}
+.faqItem:last-child { border-bottom: none; }
 
 .faqBtn {
   width: 100%;
@@ -1696,9 +1498,7 @@
   color: var(--ink-sepia);
 }
 
-.faqBtn:hover {
-  background: linear-gradient(135deg, #fff0cc, #eed8a0);
-}
+.faqBtn:hover { background: linear-gradient(135deg, #fff0cc, #eed8a0); }
 
 .faqIcon {
   color: var(--saffron);
@@ -1713,253 +1513,90 @@
   background: rgba(245, 230, 200, 0.5);
 }
 
-/* Footer stamp */
-.footerStamp {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem 1rem;
-  gap: 0.6rem;
-  background: linear-gradient(180deg, var(--parchment-2), var(--parchment-3));
-}
-
-.footerStampText {
-  font-family: var(--font-display);
-  font-size: 0.7rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--saffron-gold);
-}
-
 /* ════════════════════════════════
    RESPONSIVE BREAKPOINTS
 ════════════════════════════════ */
 
 /* 1100px */
-@media (max-width:1100px) {
-  .sectionMandalaL {
-    left: -40px;
-  }
-
-  .sectionMandalaR {
-    right: -40px;
-  }
-
-  .weekGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .indianFeeGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+@media (max-width: 1100px) {
+  .sectionMandalaL { left: -40px; }
+  .sectionMandalaR { right: -40px; }
+  .weekGrid         { grid-template-columns: repeat(2, 1fr); }
+  .indianFeeGrid    { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* 960px */
-@media (max-width:960px) {
-  .moduleDetailGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .requirementsGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .reviewsGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .bookingSteps {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .schedLayout {
-    grid-template-columns: 1fr;
-  }
-
-  .schedImgGrid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .schedImg {
-    height: clamp(70px, 12vw, 120px);
-  }
+@media (max-width: 960px) {
+  .moduleDetailGrid  { grid-template-columns: 1fr; }
+  .requirementsGrid  { grid-template-columns: 1fr; }
+  .reviewsGrid       { grid-template-columns: 1fr 1fr; }
+  .bookingSteps      { grid-template-columns: repeat(2, 1fr); }
+  .schedLayout       { grid-template-columns: 1fr; }
+  .schedImgGrid      { grid-template-columns: repeat(4, 1fr); }
+  .schedImg          { height: clamp(70px, 12vw, 120px); }
+  /* Table: wrap room price cell on smaller screens */
+  .roomPriceCell     { white-space: normal !important; }
 }
 
-/* 860px tablet */
-@media (max-width:860px) {
-  .statsRow {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .moduleGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .feeInclGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .programGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .luxuryGrid {
-    grid-template-columns: 1fr;
-  }
-
+/* 860px */
+@media (max-width: 860px) {
+  .statsRow          { grid-template-columns: repeat(2, 1fr); }
+  .moduleGrid        { grid-template-columns: 1fr; }
+  .feeInclGrid       { grid-template-columns: 1fr; }
+  .programGrid       { grid-template-columns: 1fr; }
+  .luxuryGrid        { grid-template-columns: 1fr; }
   .sectionMandalaL,
-  .sectionMandalaR {
-    display: none;
-  }
-
-  .ctaBanner {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-
-  .ctaBannerRight {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .asanaGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .photoSlider {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .sectionMandalaR   { display: none; }
+  .ctaBanner         { grid-template-columns: 1fr; text-align: center; }
+  .ctaBannerRight    { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+  .asanaGrid         { grid-template-columns: repeat(2, 1fr); }
+  .photoSlider       { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* 720px tablet portrait */
-@media (max-width:720px) {
-
-
-
-
-
-  .weekGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .videoGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .reviewsGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .contentSection {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
+/* 720px */
+@media (max-width: 720px) {
+  .weekGrid          { grid-template-columns: 1fr 1fr; }
+  .videoGrid         { grid-template-columns: 1fr 1fr; }
+  .reviewsGrid       { grid-template-columns: 1fr; }
+  .contentSection    { padding-left: 1rem; padding-right: 1rem; }
+  /* Dates table: stack cols sensibly */
+  .datesTable        { min-width: 560px; }
 }
 
-/* 540px phone */
-@media (max-width:540px) {
-
-
-  .heroBannerBar {
-    flex-direction: column;
-    gap: 0.2rem;
-    padding: 0.7rem 1rem;
-  }
-
-
-
-  .statsRow {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .weekGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .asanaGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .indianFeeGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .bookingSteps {
-    grid-template-columns: 1fr;
-  }
-
-  .photoSlider {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .videoGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .schedImgGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .ctaBanner {
-    padding: 1.4rem 1rem;
-  }
-
-  .ctaBannerRight {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
+/* 540px */
+@media (max-width: 540px) {
+  .statsRow          { grid-template-columns: 1fr 1fr; }
+  .weekGrid          { grid-template-columns: 1fr; }
+  .asanaGrid         { grid-template-columns: 1fr 1fr; }
+  .indianFeeGrid     { grid-template-columns: 1fr 1fr; }
+  .bookingSteps      { grid-template-columns: 1fr; }
+  .photoSlider       { grid-template-columns: repeat(2, 1fr); }
+  .videoGrid         { grid-template-columns: 1fr; }
+  .schedImgGrid      { grid-template-columns: repeat(2, 1fr); }
+  .ctaBanner         { padding: 1.4rem 1rem; }
+  .ctaBannerRight    { flex-direction: column; align-items: stretch; }
   .applyNowBtn,
-  .phoneBtn {
-    text-align: center;
-  }
-
-  .overviewBox {
-    padding: 1.1rem;
-  }
-
-  .luxuryImgGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .luxuryImgWide {
-    grid-column: 1;
-  }
-
-  .primaryCurrCard {
-    padding: 1.2rem;
-  }
+  .phoneBtn          { text-align: center; }
+  .overviewBox       { padding: 1.1rem; }
+  .luxuryImgGrid     { grid-template-columns: 1fr; }
+  .luxuryImgWide     { grid-column: 1; }
+  .primaryCurrCard   { padding: 1.2rem; }
+  /* Seats badges smaller */
+  .seatsAvailable,
+  .fullyBooked       { font-size: 0.62rem; padding: 0.18rem 0.55rem; }
+  .applyLink,
+  .applyDisabled     { font-size: 0.65rem; }
 }
 
-/* 400px small phone */
-@media (max-width:400px) {
-
-
-  .asanaGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .indianFeeGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .statsRow {
-    grid-template-columns: 1fr;
-  }
-
-  .cornerOrn {
-    width: 26px;
-    height: 26px;
-  }
-
-  .vintageHeading {
-    font-size: 0.9rem;
-  }
-
-  .bodyText {
-    font-size: 0.92rem;
-  }
+/* 400px */
+@media (max-width: 400px) {
+  .asanaGrid         { grid-template-columns: 1fr; }
+  .indianFeeGrid     { grid-template-columns: 1fr; }
+  .statsRow          { grid-template-columns: 1fr; }
+  .cornerOrn         { width: 26px; height: 26px; }
+  .vintageHeading    { font-size: 0.9rem; }
+  .bodyText          { font-size: 0.92rem; }
+  .datesTable        { min-width: 420px; }
+  .datesTable thead th,
+  .datesTable tbody td { padding: 0.5rem 0.6rem; }
 }
